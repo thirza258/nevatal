@@ -716,6 +716,19 @@ class SocialMediaPostGeneratorView(APIView):
         Handles POST requests to generate a social media post.
         """
         prompt = request.data.get("prompt")
+
+        platform = request.data.get("platform")
+        tone = request.data.get("tone")
+        audience = request.data.get("audience")
+
+        hashtag_count = request.data.get("hashtag_count")
+        include_emojis = request.data.get("include_emojis")
+        include_cta = request.data.get("include_cta")
+        post_length = request.data.get("post_length")
+
+        brand_name = request.data.get("brand_name")
+        brand_keywords = request.data.get("brand_keywords")
+        
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
         if not prompt:
@@ -729,11 +742,23 @@ class SocialMediaPostGeneratorView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
         try:
-            system_instruction_string = f"""
-            You are a skilled social media post generator. Your task is to generate a social media post from a text prompt.
-            The social media post should be generated based on the following prompt:
-            {prompt}
+            prompt = f"""
+            Prompt:{prompt}
+            Platform: {platform}
+            Tone: {tone}
+            Audience: {audience}
+            Hashtag Count: {hashtag_count}
+            Include Emojis: {include_emojis}
+            Include CTA: {include_cta}
+            Post Length: {post_length}
+            Brand Name: {brand_name}
+            Brand Keywords: {brand_keywords}
             """
+
+            system_instruction_string = f"""
+            You are a skilled social media post generator. Your task is to generate a social media post from a platform, tone, audience, hashtag count, include emojis, include cta, post length, brand name, and brand keywords.
+            """
+            
             response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='social_media_post_generation', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
@@ -788,8 +813,6 @@ class SentimentAnalyzerView(APIView):
                 "message": "error",
                 "data": "An unexpected error occurred while processing your request." + str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 
 class HistoryView(APIView):
     """
