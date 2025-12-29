@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: postgres_db
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=${POSTGRES_DB}  
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     ports:
@@ -21,8 +21,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
-      - DEVELOPMENT_MODE=False
+      - DATABASE_URL=${DATABASE_URL}
+      - DEVELOPMENT_MODE=${DEVELOPMENT_MODE}
     depends_on:
       - db
     restart: unless-stopped
