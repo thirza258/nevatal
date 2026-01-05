@@ -231,6 +231,17 @@ const createEmail = async (context: string, recipients: string, sender: string, 
   }
 };
 
+const analyzeSentiment = async (prompt: string) => {
+  const response = await axios.post(`${API_URL}/sentiment/`, { prompt }, {
+    headers: {
+      Authorization: localStorage.getItem("apiKey"),
+    },
+  });
+  if (response.status === 200) {
+    return response.data;
+  }
+}
+
 const services = {
   postPrompt,
   postProofreader,
@@ -246,6 +257,7 @@ const services = {
   handleResponseData,
   generateImage,
   createEmail,
+  analyzeSentiment,
 };
 
 export default services;
