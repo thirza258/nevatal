@@ -31,7 +31,9 @@ Nevatal is a comprehensive AI application that combines multiple AI functionalit
    cd nevatal
    ```
 
-2. Build and run with Docker Compose:
+2. Rename .env.example to .env
+
+3. Build and run with Docker Compose:
    ```bash
    docker-compose up --build
    ```
@@ -60,3 +62,20 @@ For local development without Docker:
    python manage.py migrate
    python manage.py runserver
    ```
+
+### Configuration
+
+If you want to change some of the configuration, adjust the environment variable values in the `.env` file.  
+You can refer to the provided example in [`.env.example`](./.env.example):
+
+```
+ALLOWED_HOSTS="localhost, 127.0.0.1"
+SECRET_KEY="SecretKey"
+
+DATABASE_URL=postgres://postgres:admin123@db:5432/postgres
+DEVELOPMENT_MODE=False
+
+POSTGRES_DB="postgres"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="admin123"
+```
