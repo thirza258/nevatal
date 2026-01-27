@@ -1,0 +1,105 @@
+name: Build and Deploy Nevatal
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Build and Push Backend
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app/backend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:latest
+
+      # Build and Push Frontend
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app/frontend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:latest
+
+      - name: Install Cloudflared
+        run: |
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Deploy via SSH
+        run: |
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh \
+            -o StrictHostKeyChecking=no \
+            -o ProxyCommand="/usr/bin/cloudflared access ssh --hostname %h --id ${{ secrets.CF_CLIENT_ID }} --secret ${{ secrets.CF_CLIENT_SECRET }}" \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "
+              mkdir -p ~/nevatal_app
+              cd ~/nevatal_app
+
+              # 1. Create .env file
+              echo 'POSTGRES_DB=${{ secrets.POSTGRES_DB }}' > .env
+              echo 'POSTGRES_USER=${{ secrets.POSTGRES_USER }}' >> .env
+              echo 'POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}' >> .env
+              echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' >> .env
+              echo 'DEVELOPMENT_MODE=${{ secrets.DEVELOPMENT_MODE }}' >> .env
+
+              # 2. Create Production Docker Compose file
+              cat <<EOF > docker-compose.prod.yml
+              services:
+                db:
+                  image: postgres:16-alpine
+                  container_name: postgres_db
+                  environment:
+                    - POSTGRES_DB=\${POSTGRES_DB}
+                    - POSTGRES_USER=\${POSTGRES_USER}
+                    - POSTGRES_PASSWORD=\${POSTGRES_PASSWORD}
+                  volumes:
+                    - postgres_data:/var/lib/postgresql/data
+                  restart: unless-stopped
+
+                backend:
+                  image: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:latest
+                  container_name: nevatal_backend
+                  command: /app/entrypoint.sh
+                  environment:
+                    - DATABASE_URL=\${DATABASE_URL}
+                    - DEVELOPMENT_MODE=\${DEVELOPMENT_MODE}
+                  depends_on:
+                    - db
+                  restart: unless-stopped
+
+                frontend:
+                  image: ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:latest
+                  container_name: nevatal_frontend
+                  ports:
+                    - '5175:80'
+                  depends_on:
+                    - backend
+                  restart: unless-stopped
+
+              volumes:
+                postgres_data:
+              EOF
+
+              # 3. Pull and Start
+              docker compose -f docker-compose.prod.yml pull
+              docker compose -f docker-compose.prod.yml up -d --remove-orphans
+              
+              # 4. Cleanup old images
+              docker image prune -f
+            "
