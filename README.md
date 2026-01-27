@@ -4,6 +4,7 @@ Nevatal is a comprehensive AI application that combines multiple AI functionalit
 
 ## Features
 
+
 - Prompt-based interactions
 - Proofreading assistance
 - Text summarization
