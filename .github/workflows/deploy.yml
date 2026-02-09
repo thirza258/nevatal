@@ -101,6 +101,12 @@ jobs:
               docker compose -f docker-compose.prod.yml pull
               docker compose -f docker-compose.prod.yml up -d --remove-orphans
               
+              echo "=== DOCKER PS ==="
+              docker ps -a
+              
+              echo "=== IMAGES ==="
+              docker images
+                            
               # 4. Cleanup old/unused Docker images to save disk space
               docker image prune -f
             "
