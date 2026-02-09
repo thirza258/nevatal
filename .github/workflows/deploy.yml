@@ -46,6 +46,8 @@ jobs:
         run: |
           sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh \
             -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=5 \
             -o ProxyCommand="/usr/bin/cloudflared access ssh --hostname %h --id ${{ secrets.CF_CLIENT_ID }} --secret ${{ secrets.CF_CLIENT_SECRET }}" \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'REMOTE_SCRIPT'
 
@@ -115,7 +117,9 @@ jobs:
                     cat docker-compose.prod.yml
           
                     echo "=== PULLING IMAGES ==="
-                    docker compose -f docker-compose.prod.yml pull
+                    for i in {1..5}; do 
+                      docker compose -f docker-compose.prod.yml pull && break || sleep 15; 
+                    done
           
                     echo "=== STARTING STACK ==="
                     docker compose -f docker-compose.prod.yml up -d --remove-orphans
