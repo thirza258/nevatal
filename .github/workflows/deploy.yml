@@ -7,6 +7,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,7 +18,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 1. Build and Push Backend (using context ./backend)
+      # Build & push backend
       - name: Build and push Backend image
         uses: docker/build-push-action@v5
         with:
@@ -25,7 +26,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:latest
 
-      # 2. Build and Push Frontend (using context ./frontend)
+      # Build & push frontend
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
@@ -39,68 +40,97 @@ jobs:
           sudo dpkg -i cloudflared.deb
 
       - name: Install sshpass
-        run: sudo apt-get install -y sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Deploy via SSH
         run: |
           sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh \
             -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=5 \
             -o ProxyCommand="/usr/bin/cloudflared access ssh --hostname %h --id ${{ secrets.CF_CLIENT_ID }} --secret ${{ secrets.CF_CLIENT_SECRET }}" \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "
-              mkdir -p ~/nevatal_app
-              cd ~/nevatal_app
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'REMOTE_SCRIPT'
 
-              # 1. Create .env file with your specific secrets
-              echo 'POSTGRES_DB=${{ secrets.POSTGRES_DB }}' > .env
-              echo 'POSTGRES_USER=${{ secrets.POSTGRES_USER }}' >> .env
-              echo 'POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}' >> .env
-              echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' >> .env
-              echo 'DEVELOPMENT_MODE=${{ secrets.DEVELOPMENT_MODE }}' >> .env
+          set -euxo pipefail
 
-              # 2. Create Production Docker Compose file on the server
-              # This uses the images we just pushed to Docker Hub
-              cat <<EOF > docker-compose.prod.yml
-              services:
-                db:
-                  image: postgres:16-alpine
-                  container_name: postgres_db
-                  environment:
-                    - POSTGRES_DB=\${POSTGRES_DB}
-                    - POSTGRES_USER=\${POSTGRES_USER}
-                    - POSTGRES_PASSWORD=\${POSTGRES_PASSWORD}
-                  volumes:
-                    - postgres_data:/var/lib/postgresql/data
-                  restart: unless-stopped
+          echo "=== CONNECTED TO SERVER ==="
+          whoami
+          hostname
 
-                backend:
-                  image: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:latest
-                  container_name: nevatal_backend
-                  command: /app/entrypoint.sh
-                  environment:
-                    - DATABASE_URL=\${DATABASE_URL}
-                    - DEVELOPMENT_MODE=\${DEVELOPMENT_MODE}
-                  depends_on:
-                    - db
-                  restart: unless-stopped
+          mkdir -p ~/nevatal_app
+          cd ~/nevatal_app
 
-                frontend:
-                  image: ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:latest
-                  container_name: nevatal_frontend
-                  ports:
-                    - '5175:80'
-                  depends_on:
-                    - backend
-                  restart: unless-stopped
+          echo "=== DOCKER INFO ==="
+          docker --version
+          docker compose version
 
+          # Create .env safely
+          cat > .env <<EOF
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          DEVELOPMENT_MODE=${{ secrets.DEVELOPMENT_MODE }}
+          EOF
+          
+          echo "=== ENV CREATED ==="
+          cat .env
+
+          # Write compose file
+          cat > docker-compose.prod.yml <<EOF
+          services:
+            db:
+              image: postgres:16-alpine
+              container_name: postgres_db
+              environment:
+                POSTGRES_DB: \${POSTGRES_DB}
+                POSTGRES_USER: \${POSTGRES_USER}
+                POSTGRES_PASSWORD: \${POSTGRES_PASSWORD}
               volumes:
-                postgres_data:
-              EOF
-
-              # 3. Pull newest images and restart services
-              docker compose -f docker-compose.prod.yml pull
-              docker compose -f docker-compose.prod.yml up -d --remove-orphans
-              
-              # 4. Cleanup old/unused Docker images to save disk space
-              docker image prune -f
-            "
+                - postgres_data:/var/lib/postgresql/data
+              restart: unless-stopped
+          
+            backend:
+              image: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:latest
+              container_name: nevatal_backend
+              command: /app/entrypoint.sh
+              environment:
+                DATABASE_URL: \${DATABASE_URL}
+                DEVELOPMENT_MODE: \${DEVELOPMENT_MODE}
+              depends_on:
+                - db
+              restart: unless-stopped
+          
+            frontend:
+              image: ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:latest
+              container_name: nevatal_frontend
+              ports:
+                - "5176:80"
+              depends_on:
+                - backend
+              restart: unless-stopped
+          
+          volumes:
+            postgres_data:
+          EOF
+                    echo "=== COMPOSE FILE ==="
+                    cat docker-compose.prod.yml
+          
+                    echo "=== PULLING IMAGES ==="
+                    for i in {1..5}; do 
+                      docker compose -f docker-compose.prod.yml pull && break || sleep 15; 
+                    done
+          
+                    echo "=== STARTING STACK ==="
+                    docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          
+                    echo "=== RUNNING CONTAINERS ==="
+                    docker ps -a
+          
+                    echo "=== IMAGES ON SERVER ==="
+                    docker images
+          
+                    echo "=== CLEANUP ==="
+                    docker image prune -f
+          
+          REMOTE_SCRIPT
