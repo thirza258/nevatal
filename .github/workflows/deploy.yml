@@ -24,7 +24,9 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:${{ github.sha }}
 
       # Build & push frontend
       - name: Build and push Frontend image
@@ -32,7 +34,9 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:latest
+            ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:${{ github.sha }}
 
       - name: Install Cloudflared
         run: |
@@ -43,6 +47,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Deploy via SSH
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh \
             -o StrictHostKeyChecking=no \
@@ -93,7 +99,7 @@ jobs:
               restart: unless-stopped
           
             backend:
-              image: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:latest
+              image: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:${{ github.sha }}
               container_name: nevatal_backend
               command: /app/entrypoint.sh
               environment:
@@ -106,7 +112,7 @@ jobs:
               restart: unless-stopped
           
             frontend:
-              image: ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:latest
+              image: ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:${{ github.sha }}
               container_name: nevatal_frontend
               ports:
                 - "5176:80"
