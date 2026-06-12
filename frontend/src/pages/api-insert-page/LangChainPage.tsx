@@ -16,13 +16,13 @@ const LangChainPage: React.FC<LangChainPageProps> = ({ onKeySubmit }) => {
       return;
     }
 
-    axios.get(`${API_URL}/langchain/api-key-check`, {
+    axios.get(`${API_URL}/langchain/api-key-check/`, {
       headers: {
         Authorization: apiKey,
       },
+      withCredentials: true,
     }).then((response) => {
     if (response.status === 200) {
-      localStorage.setItem('langchainApiKey', apiKey);
       setError('');
       onKeySubmit();
     } else {

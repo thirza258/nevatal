@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom'; // Import routing components
 import { v4 as uuidv4 } from 'uuid';
 import services from './services/services';
+import { clearLegacyApiKey, getLegacyApiKey } from './services/auth';
 import NavBar from './components/NavBar';
 import Sidebar from './components/Sidebar';
 import AboutPage from './pages/about/AboutPage';
@@ -29,14 +30,44 @@ function App() {
   const navigate = useNavigate(); // Hook to programmatically navigate
 
   useEffect(() => {
-    const storedKey = localStorage.getItem('apiKey');
-    if (storedKey) {
-      setHasApiKey(true);
-    }
-
     if (!localStorage.getItem('conversationId')) {
       localStorage.setItem('conversationId', uuidv4());
     }
+
+    let isMounted = true;
+
+    const bootstrapAuth = async () => {
+      try {
+        await services.checkApiKeySession();
+        if (!isMounted) return;
+        clearLegacyApiKey();
+        setHasApiKey(true);
+        return;
+      } catch {
+        // Fall through to the legacy migration path below.
+      }
+
+      const legacyKey = getLegacyApiKey();
+      if (!legacyKey) {
+        return;
+      }
+
+      try {
+        await services.validateApiKey(legacyKey);
+        clearLegacyApiKey();
+        if (isMounted) {
+          setHasApiKey(true);
+        }
+      } catch {
+        clearLegacyApiKey();
+      }
+    };
+
+    void bootstrapAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
 
@@ -59,9 +90,13 @@ function App() {
     setHasApiKey(true);
   };
 
-  const handleClearKey = () => {
-    localStorage.removeItem('apiKey');
-    setHasApiKey(false);
+  const handleClearKey = async () => {
+    try {
+      await services.clearApiKeySession();
+    } finally {
+      clearLegacyApiKey();
+      setHasApiKey(false);
+    }
   };
 
   const handleToolSelection = (tool: string) => {

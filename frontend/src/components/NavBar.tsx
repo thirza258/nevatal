@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 interface NavBarProps {
   selectedTool: string;
   hasApiKey: boolean;
-  onClearApiKey: () => void;
+  onClearApiKey: () => Promise<void> | void;
   onClearDocument: () => void;
 }
 
@@ -47,8 +47,8 @@ const NavBar: React.FC<NavBarProps> = ({ selectedTool, hasApiKey, onClearApiKey,
         ) : (
           <button
             className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded-md text-sm"
-            onClick={() => {
-              localStorage.setItem("apiKey", "dummy-key");
+            onClick={async () => {
+              await onClearApiKey();
               window.location.reload();
             }}
           >

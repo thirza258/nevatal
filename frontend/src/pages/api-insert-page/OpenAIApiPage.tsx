@@ -16,13 +16,13 @@ const OpenAIApiPage: React.FC<OpenAIApiPageProps> = ({ onKeySubmit }) => {
       return;
     }
 
-    axios.get(`${API_URL}/openai/api-key-check`, {
+    axios.get(`${API_URL}/openai/api-key-check/`, {
       headers: {
         Authorization: apiKey,
       },
+      withCredentials: true,
     }).then((response) => {
     if (response.status === 200) {
-      localStorage.setItem('openaiApiKey', apiKey);
       setError('');
       onKeySubmit();
     } else {

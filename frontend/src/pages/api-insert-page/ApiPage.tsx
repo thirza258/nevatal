@@ -16,13 +16,13 @@ const ApiPage: React.FC<ApiKeyPageProps> = ({ onKeySubmit }) => {
       return;
     }
 
-    axios.get(`${API_URL}/api-key-check`, {
+    axios.get(`${API_URL}/api-key-check/`, {
       headers: {
         Authorization: apiKey,
       },
+      withCredentials: true,
     }).then((response) => {
     if (response.status === 200) {
-      localStorage.setItem('apiKey', apiKey);
       setError('');
       onKeySubmit();
     } else {
