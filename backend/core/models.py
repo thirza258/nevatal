@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import JSONField
+from core.helper import decrypt_api_key, encrypt_api_key, fingerprint_api_key
 
 
 class ChatRecord(models.Model):
@@ -23,10 +24,21 @@ class ChatRecord(models.Model):
     prompt = models.TextField()
     response = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    api_key = models.CharField(max_length=255, default='')
+    api_key = models.TextField(default='')
+    api_key_hash = models.CharField(max_length=64, db_index=True, default='')
 
     def __str__(self):
         return self.method
+
+    def save(self, *args, **kwargs):
+        raw_api_key = decrypt_api_key(self.api_key)
+        if raw_api_key:
+            self.api_key = encrypt_api_key(raw_api_key)
+            self.api_key_hash = fingerprint_api_key(raw_api_key)
+        elif not self.api_key_hash:
+            self.api_key_hash = ""
+
+        super().save(*args, **kwargs)
 
 class RagChunk(models.Model):
     source = models.CharField(max_length=255)       

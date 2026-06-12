@@ -5,27 +5,49 @@ from typing import Optional
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
-from .ai_service import BaseAIService, PROVIDER_OPENAI
+from .ai_service import BaseAIService, PROVIDER_OPENROUTER
 
 logger = logging.getLogger(__name__)
 
+try:
+    from langchain_openrouter import ChatOpenRouter
+except Exception:  # pragma: no cover - fallback for environments without the package
+    ChatOpenRouter = None
 
-class OpenAIService(BaseAIService):
-    provider_name = PROVIDER_OPENAI
-    default_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+class OpenRouterService(BaseAIService):
+    provider_name = PROVIDER_OPENROUTER
+    default_model = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+    base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
     def _build_llm(self, api_key: str, model: Optional[str] = None):
         model_name = self.normalize_model(model)
+
+        if ChatOpenRouter is not None:
+            for key_name in ("api_key", "openai_api_key"):
+                try:
+                    return ChatOpenRouter(
+                        model=model_name,
+                        temperature=0,
+                        **{key_name: api_key},
+                    )
+                except Exception:
+                    continue
+
         base_kwargs = {
             "model": model_name,
             "temperature": 0,
         }
 
-        for key_name in ("api_key", "openai_api_key"):
-            try:
-                return ChatOpenAI(**base_kwargs, **{key_name: api_key})
-            except Exception:
-                continue
+        for base_url_key in ("base_url", "openai_api_base"):
+            for key_name in ("api_key", "openai_api_key"):
+                try:
+                    return ChatOpenAI(
+                        **base_kwargs,
+                        **{base_url_key: self.base_url, key_name: api_key},
+                    )
+                except Exception:
+                    continue
 
         return ChatOpenAI(**base_kwargs)
 
@@ -64,5 +86,5 @@ class OpenAIService(BaseAIService):
             response_text = self.coerce_text(response)
             return self.ensure_json_response(response_text, response_schema_param)
         except Exception as e:
-            logger.error(f"An error occurred during OpenAI API call: {e}")
+            logger.error(f"An error occurred during OpenRouter API call: {e}")
             raise

@@ -2,7 +2,11 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from core.helper import strip_authentication_header, extract_text_from_pdf, save_file
+from core.helper import (
+    extract_text_from_pdf,
+    resolve_api_key_header as strip_authentication_header,
+    save_file,
+)
 from ai_service.gemini_service import generate_response, process_text_with_function_calling_vertex
 from core.models import ChatRecord
 from io import StringIO

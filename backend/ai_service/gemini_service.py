@@ -1,50 +1,51 @@
-from google import genai
 import base64
-import mimetypes
-from google.genai import types
 import logging
+import mimetypes
+from typing import Optional
+
+from google import genai
+from google.genai import types
+
+from .ai_service import BaseAIService, get_ai_service, normalize_provider, PROVIDER_GEMINI
 
 logger = logging.getLogger(__name__)
 
-def test_api_key(api_key: str):
-    try:
-        client = genai.Client(api_key=api_key)
 
+class GeminiService(BaseAIService):
+    provider_name = PROVIDER_GEMINI
+    default_model = "gemini-2.5-flash-lite"
+
+    def test_api_key(self, api_key: Optional[str] = None) -> str:
+        key = self.resolve_api_key(api_key)
+        client = genai.Client(api_key=key)
         response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents="test"
+            model=self.default_model,
+            contents="test",
         )
+        return self.coerce_text(response)
 
-        return response.text
-    except Exception as e:
-        logger.error(f"API key validation failed: {e}")
-        return False
-
-def generate_response(
-    api_key: str,
-    prompt: str,
-    model: str = "gemini-2.5-flash-lite",
-    system_instruction_string: str = "Answer this prompt make sure answer that",
-    response_schema_param: list = ["response"],
-    response_mime_type_param: str = "application/json",
-) -> str:
-        """
-        Generates a response using the Gemini API.
-
-        This method encapsulates the logic for interacting with the external
-        Gemini API. It is designed to be called by the `post` method.
-        """
+    def generate_response(
+        self,
+        prompt: str,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        system_instruction_string: str = "Answer this prompt make sure answer that",
+        response_schema_param: Optional[list[str]] = None,
+        response_mime_type_param: str = "application/json",
+    ) -> str:
         try:
+            key = self.resolve_api_key(api_key)
+            model_name = self.normalize_model(model)
+            schema_fields = response_schema_param or ["response"]
 
             response_schema_properties = {
                 param: genai.types.Schema(
                     type=genai.types.Type.STRING,
                 )
-                for param in response_schema_param
+                for param in schema_fields
             }
 
-            client = genai.Client(api_key=api_key)
-            model = "gemini-2.5-flash-lite"
+            client = genai.Client(api_key=key)
             contents = [
                 genai.types.Content(
                     role="user",
@@ -53,40 +54,43 @@ def generate_response(
                     ],
                 ),
             ]
-            generate_content_config = genai.types.GenerateContentConfig(
-                thinking_config=genai.types.ThinkingConfig(
+
+            config_kwargs = {
+                "thinking_config": genai.types.ThinkingConfig(
                     thinking_budget=-1,
                 ),
-                response_mime_type=response_mime_type_param,
-                response_schema=genai.types.Schema(
-                    type=genai.types.Type.OBJECT,
-                    required=response_schema_param,
-                    properties=response_schema_properties,
-                ),
-                system_instruction=[
+                "response_mime_type": response_mime_type_param,
+                "system_instruction": [
                     genai.types.Part.from_text(text=system_instruction_string),
                 ],
-            )
+            }
+
+            if schema_fields:
+                config_kwargs["response_schema"] = genai.types.Schema(
+                    type=genai.types.Type.OBJECT,
+                    required=schema_fields,
+                    properties=response_schema_properties,
+                )
+
+            generate_content_config = genai.types.GenerateContentConfig(**config_kwargs)
 
             response = client.models.generate_content(
-                model=model,
+                model=model_name,
                 contents=contents,
                 config=generate_content_config,
             )
-            return response.text
+
+            response_text = self.coerce_text(response)
+            return self.ensure_json_response(response_text, schema_fields)
         except Exception as e:
             logger.error(f"An error occurred during Gemini API call: {e}")
             raise
 
-
-def generate_image(self, prompt: str, api_key: str):
-    """
-    Generates an image using Gemini's image model.
-    """
-    try:
-        client = genai.Client(api_key=api_key)
+    def generate_image(self, prompt: str, api_key: Optional[str] = None):
+        key = self.resolve_api_key(api_key)
+        client = genai.Client(api_key=key)
         model = "gemini-2.5-flash-image"
-        
+
         contents = [
             types.Content(
                 role="user",
@@ -119,28 +123,37 @@ def generate_image(self, prompt: str, api_key: str):
                         "extension": extension,
                         "base64_image": base64_str,
                     }
+
         raise Exception("No image data returned from Gemini API.")
-    except Exception as e:
-        logger.error(f"Error during image generation: {e}")
-        raise
+
 
 def classify_text(category: str):
     """Classifies the text into a given category."""
-    return {"status": "success", "classification_result": f"The text has been classified under the category: {category}"}
+    return {
+        "status": "success",
+        "classification_result": f"The text has been classified under the category: {category}",
+    }
+
 
 def analyze_sentiment(sentiment: str, score: float):
     """Analyzes the sentiment of the text."""
-    return {"status": "success", "sentiment_analysis": {"sentiment": sentiment, "confidence_score": score}}
+    return {
+        "status": "success",
+        "sentiment_analysis": {"sentiment": sentiment, "confidence_score": score},
+    }
+
 
 def determine_topic(topic: str, keywords: list[str]):
     """Determines the main topic of the text and extracts key words."""
-    return {"status": "success", "topic_analysis": {"main_topic": topic, "keywords": keywords}}
+    return {
+        "status": "success",
+        "topic_analysis": {"main_topic": topic, "keywords": keywords},
+    }
 
 
 def process_text_with_function_calling_vertex(prompt: str, api_key: str):
     """
-    Orchestrates the multi-turn conversation with Gemini for function calling
-    using the Vertex AI SDK (google.genai).
+    Orchestrates the multi-turn conversation with Gemini for function calling.
     """
     client = genai.Client(api_key=api_key)
 
@@ -156,11 +169,11 @@ def process_text_with_function_calling_vertex(prompt: str, api_key: str):
                             "category": types.Schema(
                                 type=types.Type.STRING,
                                 description="The category to classify the text into.",
-                                enum=["Technology", "Finance", "Health", "General"]
+                                enum=["Technology", "Finance", "Health", "General"],
                             )
                         },
-                        required=["category"]
-                    )
+                        required=["category"],
+                    ),
                 ),
                 types.FunctionDeclaration(
                     name="analyze_sentiment",
@@ -171,15 +184,15 @@ def process_text_with_function_calling_vertex(prompt: str, api_key: str):
                             "sentiment": types.Schema(
                                 type=types.Type.STRING,
                                 description="The sentiment of the text.",
-                                enum=["Positive", "Negative", "Neutral"]
+                                enum=["Positive", "Negative", "Neutral"],
                             ),
                             "score": types.Schema(
                                 type=types.Type.NUMBER,
-                                description="The confidence score of the sentiment analysis, from 0.0 to 1.0."
-                            )
+                                description="The confidence score of the sentiment analysis, from 0.0 to 1.0.",
+                            ),
                         },
-                        required=["sentiment", "score"]
-                    )
+                        required=["sentiment", "score"],
+                    ),
                 ),
                 types.FunctionDeclaration(
                     name="determine_topic",
@@ -187,16 +200,19 @@ def process_text_with_function_calling_vertex(prompt: str, api_key: str):
                     parameters=types.Schema(
                         type=types.Type.OBJECT,
                         properties={
-                            "topic": types.Schema(type=types.Type.STRING, description="The primary topic of the text."),
+                            "topic": types.Schema(
+                                type=types.Type.STRING,
+                                description="The primary topic of the text.",
+                            ),
                             "keywords": types.Schema(
                                 type=types.Type.ARRAY,
                                 items=types.Schema(type=types.Type.STRING),
-                                description="A list of 2-3 main keywords from the text."
-                            )
+                                description="A list of 2-3 main keywords from the text.",
+                            ),
                         },
-                        required=["topic", "keywords"]
-                    )
-                )
+                        required=["topic", "keywords"],
+                    ),
+                ),
             ]
         )
     ]
@@ -208,9 +224,7 @@ def process_text_with_function_calling_vertex(prompt: str, api_key: str):
     }
 
     model_name = "gemini-2.5-flash-lite"
-
     contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
-    
     config = types.GenerateContentConfig(tools=tools)
 
     response = client.models.generate_content(
@@ -219,39 +233,72 @@ def process_text_with_function_calling_vertex(prompt: str, api_key: str):
         config=config,
     )
 
+    if response.candidates and response.candidates[0].content:
+        tool_calls = getattr(response.candidates[0].content, "parts", [])
+        for part in tool_calls:
+            function_call = getattr(part, "function_call", None)
+            if function_call and function_call.name in available_functions:
+                function_name = function_call.name
+                function_args = dict(function_call.args or {})
+                function_result = available_functions[function_name](**function_args)
+
+                follow_up_response = client.models.generate_content(
+                    model=model_name,
+                    contents=[
+                        types.Content(
+                            role="user",
+                            parts=[
+                                types.Part.from_text(text=prompt),
+                            ],
+                        ),
+                        types.Content(
+                            role="tool",
+                            parts=[
+                                types.Part.from_text(text=str(function_result)),
+                            ],
+                        ),
+                    ],
+                    config=config,
+                )
+                return follow_up_response.text or str(function_result)
+
+    return response.text or ""
+
+
+def _resolve_service(api_key: Optional[str], provider: Optional[str] = None):
+    return get_ai_service(provider=provider, api_key=api_key)
+
+
+def test_api_key(api_key: str, provider: Optional[str] = None):
     try:
-        function_call = response.candidates[0].content.parts[0].function_call
-    except (IndexError, AttributeError):
-        return {
-            "natural_language_response": response.text,
-            "function_data": None
-        }
+        service = _resolve_service(api_key, provider)
+        return service.test_api_key(api_key)
+    except Exception as e:
+        logger.error(f"API key validation failed: {e}")
+        return False
 
-    function_name = function_call.name
-    function_args = function_call.args
 
-    if function_name in available_functions:
-        function_to_call = available_functions[function_name]
-        args_dict = {key: value for key, value in function_args.items()}
-        function_response_data = function_to_call(**args_dict)
+def generate_response(
+    api_key: str,
+    prompt: str,
+    model: str = "gemini-2.5-flash-lite",
+    system_instruction_string: str = "Answer this prompt make sure answer that",
+    response_schema_param: Optional[list[str]] = None,
+    response_mime_type_param: str = "application/json",
+    provider: Optional[str] = None,
+) -> str:
+    service = _resolve_service(api_key, provider)
+    schema_fields = response_schema_param or ["response"]
+    return service.generate_response(
+        prompt=prompt,
+        api_key=api_key,
+        model=model,
+        system_instruction_string=system_instruction_string,
+        response_schema_param=schema_fields,
+        response_mime_type_param=response_mime_type_param,
+    )
 
-        function_response_part = types.Part.from_function_response(
-            name=function_name,
-            response={"result": function_response_data}
-        )
 
-        contents.append(response.candidates[0].content)
-        contents.append(types.Content(parts=[function_response_part]))
-
-        final_response = client.models.generate_content(
-            model=model_name,
-            contents=contents,
-        )
-
-        return {
-            "natural_language_response": final_response.text,
-            "function_data": function_response_data
-        }
-    else:
-        logger.error(f"Model requested an unknown function: {function_name}")
-        raise ValueError(f"Model requested an unknown function: {function_name}")
+def generate_image(prompt: str, api_key: str, provider: Optional[str] = None):
+    service = _resolve_service(api_key, provider)
+    return service.generate_image(prompt=prompt, api_key=api_key)

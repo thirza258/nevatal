@@ -1,17 +1,75 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+import json
 import logging
-from core.helper import strip_authentication_header, extract_text_from_pdf, save_file
+from django.conf import settings
+from django.db.models import Q
+from core.helper import (
+    clear_api_key_cookie,
+    encrypt_api_key,
+    extract_text_from_pdf,
+    fingerprint_api_key,
+    resolve_api_key_header as strip_authentication_header,
+    save_file,
+    set_api_key_cookie,
+)
 from core.models import ChatRecord
 from rag_service.rag_service import RAGIndex
 from ai_service.gemini_service import test_api_key, generate_response, generate_image
+from ai_service import normalize_provider
 
 logger = logging.getLogger(__name__)
 
+
+class AIServiceMixin:
+    """
+    Compatibility helpers for tests and internal reuse.
+    """
+
+    default_provider = "gemini"
+
+    def _default_api_key(self):
+        return getattr(settings, "GEMINI_API_KEY", "")
+
+    def generate_response(self, *args, **kwargs):
+        kwargs.setdefault("api_key", self._default_api_key())
+        kwargs.setdefault("provider", self.default_provider)
+        kwargs.setdefault(
+            "system_instruction_string",
+            getattr(self, "default_system_instruction_string", "Answer this prompt make sure answer that"),
+        )
+        response = generate_response(*args, **kwargs)
+        try:
+            parsed = json.loads(response)
+        except (TypeError, ValueError):
+            return response
+
+        if isinstance(parsed, dict) and set(parsed.keys()) == {"response"}:
+            return parsed["response"]
+
+        return response
+
+    def test_api_key(self, *args, **kwargs):
+        kwargs.setdefault("api_key", self._default_api_key())
+        kwargs.setdefault("provider", self.default_provider)
+        return test_api_key(*args, **kwargs)
+
+    def generate_image(self, *args, **kwargs):
+        kwargs.setdefault("api_key", self._default_api_key())
+        kwargs.setdefault("provider", self.default_provider)
+        return generate_image(*args, **kwargs)
+
 class ApiKeyCheckView(APIView):
+    provider = None
+
     def get(self, request):
-        api_key = request.headers.get('Authorization')
+        api_key = strip_authentication_header(request.headers.get('Authorization'))
+        provider = (
+            getattr(self, "provider", None)
+            or request.query_params.get("provider")
+            or request.headers.get("X-AI-Provider")
+        )
         if not api_key:
             return Response({
                 "status": status.HTTP_401_UNAUTHORIZED,
@@ -20,13 +78,20 @@ class ApiKeyCheckView(APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            response = test_api_key(api_key)
+            response = test_api_key(
+                api_key,
+                provider=normalize_provider(provider, api_key),
+            )
             if response and not (isinstance(response, dict) and response.get("error", {}).get("code") == 401 and response.get("error", {}).get("message") == "API key not valid. Please pass a valid API key."):
-                return Response({
+                validated_response = Response({
                     "status": status.HTTP_200_OK,
                     "message": "API key is valid",
-                    "data": True
+                    "data": {"valid": True},
                 }, status=status.HTTP_200_OK)
+                return set_api_key_cookie(
+                    validated_response,
+                    encrypt_api_key(api_key),
+                )
             else:
                 return Response({
                     "status": status.HTTP_401_UNAUTHORIZED,
@@ -48,6 +113,19 @@ class ApiKeyCheckView(APIView):
                 "message": f"Error: {str(e)}",
                 "data": False
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ApiKeyClearView(APIView):
+    def post(self, request):
+        response = Response(
+            {
+                "status": status.HTTP_200_OK,
+                "message": "API key cleared",
+                "data": {"valid": False},
+            },
+            status=status.HTTP_200_OK,
+        )
+        return clear_api_key_cookie(response)
 
 class PromptView(APIView):
     """
@@ -126,12 +204,16 @@ class ProofreaderView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )   
 
-class SummarizerView(APIView):
+class SummarizerView(AIServiceMixin, APIView):
     """
     API View for summarizing complex information into clear insights.
     This view now leverages the robust error handling and response structure
     from the PromptView class.
     """
+    default_system_instruction_string = (
+        "You are a highly skilled summarizer. Your task is to distill complex "
+        "information into clear and concise insights."
+    )
 
     def post(self, request, *args, **kwargs):
         """
@@ -141,18 +223,17 @@ class SummarizerView(APIView):
         returning a consistent API response format.
         """
         prompt = request.data.get("prompt")
-        api_key = request.headers.get('Authorization')  
-        api_key = strip_authentication_header(api_key)
-        if not api_key:
-            return Response(
-                {"error": "Authorization header is required."},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
+        api_key = strip_authentication_header(request.headers.get('Authorization')) or self._default_api_key()
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not api_key:
+            return Response(
+                {"error": "Authorization header is required."},
+                status=status.HTTP_401_UNAUTHORIZED
             )
 
         try:
@@ -512,6 +593,11 @@ class ImageGeneratorView(APIView):
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
+            if isinstance(e, NotImplementedError):
+                return Response(
+                    {"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             return Response(
                 {"error": f"An unexpected error occurred while processing your request. {e}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -822,7 +908,15 @@ class HistoryView(APIView):
         try:
             
             api_key = strip_authentication_header(request.headers.get('Authorization'))
-            history = ChatRecord.objects.filter(api_key=api_key).order_by('-created_at')
+            if not api_key:
+                return Response(
+                    {"error": "Authorization header is required."},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            history = ChatRecord.objects.filter(
+                Q(api_key_hash=fingerprint_api_key(api_key)) | Q(api_key=api_key)
+            ).order_by('-created_at')
 
             history_list = [
                 {

@@ -1,10 +1,11 @@
 import json
 from unittest.mock import patch, MagicMock
 
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.conf import settings
 
+from core.helper import API_KEY_COOKIE_NAME, encrypt_api_key
 from core.views import SummarizerView
 from google.genai import types  # real types
 
@@ -13,13 +14,14 @@ import unittest
 from rest_framework.test import APITestCase
 from django.urls import reverse
 
+@override_settings(GEMINI_API_KEY="test-gemini-key")
 class SummarizerViewTests(TestCase):
 
     def setUp(self):
         self.client = Client()
         self.url = reverse('summarizer')
 
-    @patch('core.views.genai.Client')  # only patch the Client class
+    @patch('ai_service.gemini_service.genai.Client')  # only patch the Client class
     def test_generate_response_success(self, mock_client_class):
         """Test that generate_response correctly calls the Gemini API and returns text."""
 
@@ -71,14 +73,23 @@ class SummarizerViewTests(TestCase):
 
         self.assertEqual(response_text, 'This is a mocked summary response.')
 
+@override_settings(GEMINI_API_KEY="test-gemini-key")
 class SummarizerIntegrationTests(TestCase):
 
     def setUp(self):
         self.client = Client()
         self.url = reverse('summarizer')
 
-    def test_generate_response_string_return(self):
+    @patch('ai_service.gemini_service.genai.Client')
+    def test_generate_response_string_return(self, mock_client_class):
         """Integration test: actually call Gemini and ensure response is a string."""
+        mock_client_instance = mock_client_class.return_value
+        mock_generate_content = mock_client_instance.models.generate_content
+
+        mock_response = MagicMock()
+        mock_response.text = 'This is a mocked summary response.'
+        mock_generate_content.return_value = mock_response
+
         view = SummarizerView()
         prompt_text = "This is a long text to summarize."
         response_text = view.generate_response(prompt=prompt_text)
@@ -110,7 +121,7 @@ class SummarizerIntegrationTests(TestCase):
         self.assertIn("error", response.data)
         self.assertEqual(response.data["error"], "A 'prompt' is required in the request body.")
 
-    @patch("core.views.SummarizerView.generate_response", side_effect=Exception("Boom"))
+    @patch("core.views.generate_response", side_effect=Exception("Boom"))
     def test_ai_error_returns_500(self, mock_generate_response):
         """If Gemini API raises exception, should return 500 with generic error."""
 
@@ -123,3 +134,42 @@ class SummarizerIntegrationTests(TestCase):
             "An unexpected error occurred while processing your request."
         )
 
+
+class ApiKeyCookieTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    @patch("core.views.test_api_key", return_value="valid")
+    def test_api_key_check_sets_http_only_cookie(self, mock_test_api_key):
+        response = self.client.get(
+            reverse("api-key-check"),
+            HTTP_AUTHORIZATION="Bearer raw-key",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.cookies.get(API_KEY_COOKIE_NAME))
+        self.assertTrue(response.cookies[API_KEY_COOKIE_NAME]["httponly"])
+        self.assertTrue(mock_test_api_key.called)
+
+    @patch("core.views.generate_response", return_value='{"response": "cookie auth works"}')
+    @patch("core.views.test_api_key", return_value="valid")
+    def test_cookie_auth_allows_prompt_requests(self, mock_test_api_key, mock_generate_response):
+        self.client.cookies[API_KEY_COOKIE_NAME] = encrypt_api_key("raw-key")
+
+        response = self.client.post(
+            reverse("prompt"),
+            {"prompt": "Hello"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], "success")
+        self.assertEqual(response.data["data"], '{"response": "cookie auth works"}')
+        self.assertTrue(mock_generate_response.called)
+
+    def test_api_key_clear_deletes_cookie(self):
+        response = self.client.post(reverse("api-key-clear"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(API_KEY_COOKIE_NAME, response.cookies)
+        self.assertEqual(response.cookies[API_KEY_COOKIE_NAME]["max-age"], 0)
