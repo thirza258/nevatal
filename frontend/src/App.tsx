@@ -27,7 +27,7 @@ function App() {
   const [history, setHistory] = useState([]);
   const [isRagChatActive, setIsRagChatActive] = useState(false);
   const [documentName, setDocumentName] = useState("");
-  const navigate = useNavigate(); // Hook to programmatically navigate
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     if (!localStorage.getItem('conversationId')) {
@@ -131,6 +131,7 @@ function App() {
   if (!hasApiKey) {
     return <ApiKeyPage onKeySubmit={handleKeySubmission} />;
   }
+  
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
