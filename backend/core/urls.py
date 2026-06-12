@@ -19,7 +19,7 @@ urlpatterns = [
     path("api-key-clear/", ApiKeyClearView.as_view(), name="api-key-clear"),
     path("openai/api-key-check/", ApiKeyCheckView.as_view(provider="openai"), name="openai-api-key-check"),
     path("openrouter/api-key-check/", ApiKeyCheckView.as_view(provider="openrouter"), name="openrouter-api-key-check"),
-    path("langchain/api-key-check/", ApiKeyCheckView.as_view(provider="gemini"), name="langchain-api-key-check"),
+    path("gemini/api-key-check/", ApiKeyCheckView.as_view(provider="gemini"), name="gemini-api-key-check"),
     path("history/", HistoryView.as_view(), name="history"),
     path("email/", EmailGeneratorView.as_view(), name="email"),
     path("meeting-summary/", MeetingSummaryView.as_view(), name="meeting-summary"),

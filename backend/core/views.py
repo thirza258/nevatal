@@ -16,8 +16,9 @@ from core.helper import (
 )
 from core.models import ChatRecord
 from rag_service.rag_service import RAGIndex
-from ai_service.gemini_service import test_api_key, generate_response, generate_image
-from ai_service import normalize_provider
+from ai_service import normalize_provider, test_api_key, generate_response, generate_image
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ class AIServiceMixin:
         kwargs.setdefault("provider", self.default_provider)
         return generate_image(*args, **kwargs)
 
-class ApiKeyCheckView(APIView):
+class ApiKeyCheckView(AIServiceMixin,APIView):
     provider = None
 
     def get(self, request):
@@ -82,6 +83,15 @@ class ApiKeyCheckView(APIView):
                 api_key,
                 provider=normalize_provider(provider, api_key),
             )
+            if isinstance(response, dict) and "error" in response:
+                return Response(
+                    {
+                        "status": status.HTTP_401_UNAUTHORIZED,
+                        "message": "Invalid API key",
+                        "data": False,
+                    },
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
             if response and not (isinstance(response, dict) and response.get("error", {}).get("code") == 401 and response.get("error", {}).get("message") == "API key not valid. Please pass a valid API key."):
                 validated_response = Response({
                     "status": status.HTTP_200_OK,
@@ -127,7 +137,7 @@ class ApiKeyClearView(APIView):
         )
         return clear_api_key_cookie(response)
 
-class PromptView(APIView):
+class PromptView(AIServiceMixin, APIView):
     """
     API View for generating a response to a prompt.
     """
@@ -323,7 +333,7 @@ class WriterView(APIView):
             return Response({
                 "status": 200,
                 "message": "success",
-                "data": {"written_text": response_data}
+                "data": response_data
             }, status=status.HTTP_200_OK)
         except Exception as e:
            
@@ -364,7 +374,7 @@ class RewriterView(APIView):
             return Response({
                 "status": 200,
                 "message": "success",
-                "data": {"rewritten_text": response_data}
+                "data": response_data
             }, status=status.HTTP_200_OK)
         except Exception as e:
            

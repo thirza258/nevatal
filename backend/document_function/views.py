@@ -7,10 +7,11 @@ from core.helper import (
     resolve_api_key_header as strip_authentication_header,
     save_file,
 )
-from ai_service.gemini_service import generate_response, process_text_with_function_calling_vertex
+from ai_service.gemini_service import  process_text_with_function_calling_vertex
 from core.models import ChatRecord
 from io import StringIO
 import pandas as pd
+from ai_service import normalize_provider, test_api_key, generate_response, generate_image
 
 class DirectExtractionView(APIView):
     """

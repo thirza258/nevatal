@@ -1,7 +1,9 @@
 import json
 from abc import ABC, abstractmethod
 from typing import Any, Optional
+import logging
 
+logger = logging.getLogger(__name__)
 
 PROVIDER_GEMINI = "gemini"
 PROVIDER_OPENAI = "openai"
@@ -12,6 +14,66 @@ SUPPORTED_PROVIDERS = {
     PROVIDER_OPENAI,
     PROVIDER_OPENROUTER,
 }
+
+def get_ai_service(provider: Optional[str] = None, api_key: Optional[str] = None):
+    """
+    Resolve a provider-specific service class.
+    """
+    normalized_provider = normalize_provider(provider, api_key)
+    print(f"Resolved provider: {normalized_provider}") 
+    if normalized_provider == PROVIDER_OPENAI:
+        from .openai_service import OpenAIService
+        print("Returning OpenAIService")
+        return OpenAIService(api_key=api_key)
+
+    if normalized_provider == PROVIDER_OPENROUTER:
+        from .openrouter_service import OpenRouterService
+        print("Returning OpenRouterService")
+
+        return OpenRouterService(api_key=api_key)
+
+    from .gemini_service import GeminiService
+    print("Returning GeminiService")
+    return GeminiService(api_key=api_key)
+
+def _resolve_service(api_key: Optional[str], provider: Optional[str] = None):
+    return get_ai_service(provider=provider, api_key=api_key)
+
+
+def test_api_key(api_key: str, provider: Optional[str] = None):
+    try:
+        service = _resolve_service(api_key, provider)
+        return service.test_api_key(api_key)
+    except Exception as e:
+        logger.error(f"API key validation failed: {e}")
+        return False
+
+
+def generate_response(
+    api_key: str,
+    prompt: str,
+    model: str = None,
+    system_instruction_string: str = "Answer this prompt make sure answer that",
+    response_schema_param: Optional[list[str]] = None,
+    response_mime_type_param: str = "application/json",
+    provider: Optional[str] = None,
+) -> str:
+    service = _resolve_service(api_key, provider)
+    schema_fields = response_schema_param or ["response"]
+    return service.generate_response(
+        prompt=prompt,
+        api_key=api_key,
+        model=model,
+        system_instruction_string=system_instruction_string,
+        response_schema_param=schema_fields,
+        response_mime_type_param=response_mime_type_param,
+    )
+
+
+def generate_image(prompt: str, api_key: str, provider: Optional[str] = None):
+    service = _resolve_service(api_key, provider)
+    return service.generate_image(prompt=prompt, api_key=api_key)
+
 
 
 def normalize_provider(provider: Optional[str], api_key: Optional[str] = None) -> str:
@@ -145,22 +207,4 @@ class BaseAIService(ABC):
         )
 
 
-def get_ai_service(provider: Optional[str] = None, api_key: Optional[str] = None):
-    """
-    Resolve a provider-specific service class.
-    """
-    normalized_provider = normalize_provider(provider, api_key)
 
-    if normalized_provider == PROVIDER_OPENAI:
-        from .openai_service import OpenAIService
-
-        return OpenAIService(api_key=api_key)
-
-    if normalized_provider == PROVIDER_OPENROUTER:
-        from .openrouter_service import OpenRouterService
-
-        return OpenRouterService(api_key=api_key)
-
-    from .gemini_service import GeminiService
-
-    return GeminiService(api_key=api_key)

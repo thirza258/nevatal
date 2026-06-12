@@ -6,7 +6,7 @@ from typing import Optional
 from google import genai
 from google.genai import types
 
-from .ai_service import BaseAIService, get_ai_service, normalize_provider, PROVIDER_GEMINI
+from .ai_service import BaseAIService, PROVIDER_GEMINI
 
 logger = logging.getLogger(__name__)
 
@@ -265,40 +265,3 @@ def process_text_with_function_calling_vertex(prompt: str, api_key: str):
     return response.text or ""
 
 
-def _resolve_service(api_key: Optional[str], provider: Optional[str] = None):
-    return get_ai_service(provider=provider, api_key=api_key)
-
-
-def test_api_key(api_key: str, provider: Optional[str] = None):
-    try:
-        service = _resolve_service(api_key, provider)
-        return service.test_api_key(api_key)
-    except Exception as e:
-        logger.error(f"API key validation failed: {e}")
-        return False
-
-
-def generate_response(
-    api_key: str,
-    prompt: str,
-    model: str = "gemini-2.5-flash-lite",
-    system_instruction_string: str = "Answer this prompt make sure answer that",
-    response_schema_param: Optional[list[str]] = None,
-    response_mime_type_param: str = "application/json",
-    provider: Optional[str] = None,
-) -> str:
-    service = _resolve_service(api_key, provider)
-    schema_fields = response_schema_param or ["response"]
-    return service.generate_response(
-        prompt=prompt,
-        api_key=api_key,
-        model=model,
-        system_instruction_string=system_instruction_string,
-        response_schema_param=schema_fields,
-        response_mime_type_param=response_mime_type_param,
-    )
-
-
-def generate_image(prompt: str, api_key: str, provider: Optional[str] = None):
-    service = _resolve_service(api_key, provider)
-    return service.generate_image(prompt=prompt, api_key=api_key)
