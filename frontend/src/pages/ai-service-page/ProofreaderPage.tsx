@@ -1,82 +1,135 @@
-import { useState } from "react";
-import services from "../../services/services";
-import type { Response } from "../../interface";
+import React, { useState } from 'react';
+import services from '../../services/services';
+import { useAiTask } from '../../hooks/useAiTask';
+import PageLayout from '../../components/PageLayout';
+import InputPanel from '../../components/InputPanel';
+import ResultDisplay from '../../components/ResultDisplay';
+import TwoColumnLayout from '../../components/TwoColumnLayout';
+import {
+  CheckboxField,
+  SelectField,
+  SubmitButton,
+  type Option,
+} from '../../components/FormControls';
 
-import PageLayout from "../../components/PageLayout";
-import ResultDisplay from "../../components/ResultDisplay";
-import TwoColumnLayout from "../../components/TwoColumnLayout";
+const MODES: Option[] = [
+  { value: 'spelling, grammar, and punctuation only, leaving the wording untouched', label: 'Spelling & grammar only' },
+  { value: 'spelling, grammar, punctuation, and awkward phrasing that hurts clarity', label: 'Grammar + clarity' },
+  { value: 'spelling, grammar, punctuation, clarity, and overall style and flow', label: 'Grammar, clarity & style' },
+];
+
+const VARIANTS: Option[] = [
+  { value: '', label: 'No preference' },
+  { value: 'British English', label: 'British English' },
+  { value: 'American English', label: 'American English' },
+];
 
 const ProofreaderPage: React.FC = () => {
-  const [inputText, setInputText] = useState<string>('');
-  const [resultText, setResultText] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [inputText, setInputText] = useState('');
+  const [mode, setMode] = useState(MODES[1].value);
+  const [variant, setVariant] = useState(VARIANTS[0].value);
+  const [listChanges, setListChanges] = useState(true);
+
+  const { result, error, isLoading, run, reset } = useAiTask();
 
   const handleClear = () => {
     setInputText('');
-    setResultText('');
+    reset();
   };
 
-  const handleProofread = async () => {
-    if (!inputText.trim()) return;
-    setIsLoading(true);
-    setResultText('');
-    try {
-      const response: Response = await services.postProofreader(inputText);
-      setResultText(services.handleResponseData(response.data));
-    } catch (error) {
-      console.error("Error fetching response:", error);
-      setResultText("Sorry, there was an error. Please try again.");
-    } finally {
-      setIsLoading(false);
+  const handleProofread = () => {
+    if (!inputText.trim() || isLoading) return;
+
+    const instructions = [`Proofread the text below, correcting ${mode}.`];
+
+    if (variant) {
+      instructions.push(`Use ${variant} spelling and conventions.`);
     }
+
+    instructions.push(
+      'Preserve the author\'s voice and meaning — do not rewrite it into something new.'
+    );
+
+    if (listChanges) {
+      instructions.push(
+        'Respond with the corrected text under a "## Corrected text" heading, then a "## Changes" heading with a bullet per correction explaining what changed and why.'
+      );
+    } else {
+      instructions.push('Respond with the corrected text only, with no commentary.');
+    }
+
+    instructions.push('', 'Text to proofread:', inputText.trim());
+
+    run(() => services.postProofreader(instructions.join('\n')));
   };
 
-  // The unique Input component for this page
-  const InputPanel = (
-    <div className="bg-white rounded-lg shadow-md flex flex-col outline outline-1 outline-gray-800">
-      <div className="flex justify-between items-center p-2 border-b">
-        <h2 className="text-lg font-semibold text-gray-700">Input</h2>
-        <button
-          onClick={() => navigator.clipboard.readText().then(text => setInputText(text))}
-          className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-        >
-          Paste
-        </button>
-      </div>
-      <div className="flex flex-col h-full">
-        <textarea
-          className="w-full flex-grow p-4 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter your text here..."
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          disabled={isLoading}
-        />
-        <div className="p-2 text-sm text-gray-500 border-t">
-          Words: {inputText.trim() ? inputText.trim().split(/\s+/).length : 0}
-        </div>
-      </div>
-    </div>
+  const controls = (
+    <>
+      <SelectField
+        id="proofread-mode"
+        label="What to correct"
+        value={mode}
+        options={MODES}
+        onChange={setMode}
+        disabled={isLoading}
+      />
+      <SelectField
+        id="proofread-variant"
+        label="English variant"
+        value={variant}
+        options={VARIANTS}
+        onChange={setVariant}
+        disabled={isLoading}
+      />
+      <CheckboxField
+        id="proofread-list-changes"
+        label="List the changes made"
+        checked={listChanges}
+        onChange={setListChanges}
+        disabled={isLoading}
+      />
+    </>
   );
 
   return (
     <PageLayout
       title="Proofreader"
-      description="Enhance your writing with our AI-powered proofreading tool. Simply paste your text and let us help you catch errors and improve clarity."
+      description="Catch errors without losing your voice. Choose how deep the pass should go and get the corrected text back — optionally with every change explained."
       onClear={handleClear}
+      error={error}
+      actions={
+        <SubmitButton
+          onClick={handleProofread}
+          disabled={!inputText.trim()}
+          isLoading={isLoading}
+          loadingLabel="Proofreading..."
+        >
+          Proofread
+        </SubmitButton>
+      }
     >
       <TwoColumnLayout
-        inputComponent={InputPanel}
-        resultComponent={<ResultDisplay isLoading={isLoading} resultText={resultText} />}
+        inputComponent={
+          <InputPanel
+            title="Your text"
+            value={inputText}
+            onChange={setInputText}
+            placeholder="Paste the text you want proofread..."
+            disabled={isLoading}
+            controls={controls}
+          />
+        }
+        resultComponent={
+          <ResultDisplay
+            isLoading={isLoading}
+            resultText={result}
+            title="Corrected"
+            loadingLabel="Checking your text..."
+            downloadName="proofread"
+            placeholderText="The corrected text will appear here."
+          />
+        }
       />
-      <div className="flex justify-center mt-4">
-        <button
-          className="w-full bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300"
-          onClick={handleProofread}
-          disabled={!inputText.trim() || isLoading}
-        >
-          {isLoading ? "Proofreading..." : "Proofread"}
-        </button>
-      </div>
     </PageLayout>
   );
 };

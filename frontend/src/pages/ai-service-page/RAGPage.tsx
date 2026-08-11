@@ -1,111 +1,67 @@
-import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import React from 'react';
 import services from '../../services/services';
+import ChatPanel from '../../components/ChatPanel';
+import { useChat } from '../../hooks/useChat';
 
-const RAGPage: React.FC<{documentName: string}> = ({documentName}) => {
-  const [messages, setMessages] = useState<{ text: string; user: 'me' | 'bot' }[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+interface RAGPageProps {
+  documentName: string;
+  onReplaceDocument: () => void;
+}
 
-  const sendMessage = async () => {
-    if (input.trim() === '' || isLoading) return;
-
-    const userInput = input;
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { text: userInput, user: 'me' },
-    ]);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const response = await services.chatWithRAG(userInput);
-      if (!response) throw new Error("No response received");
-
-      if (typeof response.data === 'string' && response.data.charAt(0) === '{') {
-        const parsedData = JSON.parse(response.data);
-        if (parsedData.response) {
-          response.data = parsedData.response;
-        }
-      }
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: response.data, user: 'bot' },
-      ]);
-    } catch (error) {
-      console.error('Error fetching response:', error);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          text: 'Sorry, something went wrong while connecting to the service.',
-          user: 'bot',
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      sendMessage();
-    }
-  };
+const RAGPage: React.FC<RAGPageProps> = ({ documentName, onReplaceDocument }) => {
+  const { messages, isLoading, sendMessage, clearMessages } = useChat(
+    services.chatWithRAG
+  );
 
   return (
-   
-      
-    <div className="flex flex-col h-full relative">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-[800px] h-[800px] bg-blue-300/20 rounded-full blur-3xl -top-1/4 -right-1/4"></div>
-        <div className="absolute w-[600px] h-[600px] bg-blue-200/20 rounded-full blur-3xl bottom-0 -left-1/4"></div>
-      </div>
-
-      <div className="flex-grow overflow-y-auto p-4">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`mb-4 flex ${msg.user === 'me' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-md lg:max-w-2xl inline-block px-4 py-2 rounded-lg shadow ${
-                msg.user === 'me' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'
-              }`}
-            >
-              <ReactMarkdown>{msg.text}</ReactMarkdown>
-            </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="mb-4 flex justify-start">
-            <div className="max-w-md lg:max-w-2xl inline-block px-4 py-2 rounded-lg shadow bg-white text-gray-800">
-              Thinking...
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex-shrink-0 flex flex-col p-4 bg-white border-t relative">
-        <span className="text-sm text-gray-500 mb-2">Current Document: {documentName}</span>
-        <div className="flex">
-          <input
-            type="text"
-            className="flex-grow border-y border-l rounded-l-md px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask a question about the document"
-            disabled={isLoading}
-          />
+    <div className="h-full flex flex-col gap-3">
+      <header className="flex-shrink-0 bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-3 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-gray-900">Document AI</h1>
+          <p className="text-sm text-gray-600 mt-0.5 truncate">
+            Answering from{' '}
+            <span className="font-medium text-gray-800">{documentName}</span>
+          </p>
+        </div>
+        <div className="flex-shrink-0 flex gap-2">
           <button
-            className="bg-blue-500 text-white px-6 py-2 rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300"
-            onClick={sendMessage}
-            disabled={isLoading}
+            type="button"
+            onClick={clearMessages}
+            disabled={messages.length === 0 || isLoading}
+            className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 border border-gray-200 disabled:opacity-50"
           >
-            Send
+            Clear chat
+          </button>
+          <button
+            type="button"
+            onClick={onReplaceDocument}
+            disabled={isLoading}
+            className="px-3 py-1.5 text-sm bg-white hover:bg-gray-100 rounded-md text-gray-700 border border-gray-300 disabled:opacity-50"
+          >
+            Replace document
           </button>
         </div>
+      </header>
+
+      <div className="flex-1 min-h-0">
+        <ChatPanel
+          messages={messages}
+          isLoading={isLoading}
+          onSend={sendMessage}
+          placeholder="Ask a question about this document..."
+          emptyState={
+            <div className="max-w-md">
+              <p className="text-2xl font-bold text-gray-400">
+                Ask about your document
+              </p>
+              <p className="text-gray-400 mt-2 text-sm">
+                Answers are drawn from the passages of{' '}
+                <span className="font-medium">{documentName}</span> that best match
+                your question, so ask about what is actually in it.
+              </p>
+            </div>
+          }
+        />
       </div>
     </div>
   );

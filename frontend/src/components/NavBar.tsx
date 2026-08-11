@@ -1,60 +1,72 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { findToolByPath } from '../tools';
 
 interface NavBarProps {
-  selectedTool: string;
-  hasApiKey: boolean;
+  provider: string;
   onClearApiKey: () => Promise<void> | void;
-  onClearDocument: () => void;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ selectedTool, hasApiKey, onClearApiKey, onClearDocument }) => {
-  const navigate = useNavigate();
-    return (
-    <nav className="w-full h-16 bg-gray-800 text-white flex items-center justify-between px-4 border-b-2 border-white z-10">
-      <div className="flex items-center gap-4">
-        <img src="/logo.png" alt="Nevatal Logo" className="h-8 w-8" />
-        <h1 className="text-lg font-bold">Nevatal</h1>
-        <button
-          className="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded-md text-sm"
-          onClick={() => {
-            navigate("/about");
-          }}
-        >
-          About Us
-        </button>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="flex gap-4">
-          <span className="font-bold text-blue-400">
-            {selectedTool} Page 
+const PROVIDER_LABELS: Record<string, string> = {
+  openai: 'OpenAI',
+  gemini: 'Google Gemini',
+  openrouter: 'OpenRouter',
+};
+
+const NavBar: React.FC<NavBarProps> = ({ provider, onClearApiKey }) => {
+  const { pathname } = useLocation();
+  const activeTool = findToolByPath(pathname);
+  const isAboutPage = pathname === '/about';
+
+  const handleClearApiKey = async () => {
+    const confirmed = window.confirm(
+      'Remove your API key from this browser? You will need to enter it again to keep using Nevatal.'
+    );
+    if (!confirmed) return;
+    await onClearApiKey();
+  };
+
+  return (
+    <nav className="flex-shrink-0 w-full h-16 bg-gray-900 text-white flex items-center justify-between px-4 gap-4">
+      <div className="flex items-center gap-3 min-w-0">
+        <img src="/logo.png" alt="" className="h-8 w-8" />
+        <Link to="/" className="text-lg font-bold hover:text-blue-300">
+          Nevatal
+        </Link>
+        {activeTool && (
+          <span className="text-gray-500" aria-hidden="true">
+            /
           </span>
-        </div>
-          {selectedTool === "Document AI" && (
-            <button className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded-md text-sm" onClick={() => {
-              onClearDocument();
-            }}>
-              Clear Document
-            </button>
-          )}
-        {hasApiKey ? (
-          <button
-            className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded-md text-sm"
-            onClick={onClearApiKey}  
-          >
-            Clear API Key
-          </button>
-        ) : (
-          <button
-            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded-md text-sm"
-            onClick={async () => {
-              await onClearApiKey();
-              window.location.reload();
-            }}
-          >
-            Renew API Key
-          </button>
         )}
+        <span className="font-medium text-blue-300 truncate">
+          {activeTool?.name ?? (isAboutPage ? 'About' : '')}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {provider && (
+          <span
+            className="hidden sm:inline text-xs bg-gray-800 border border-gray-700 rounded-full px-3 py-1 text-gray-300"
+            title="The provider this session's API key belongs to"
+          >
+            {PROVIDER_LABELS[provider] ?? provider}
+          </span>
+        )}
+
+        <Link
+          to="/about"
+          className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-md text-sm"
+        >
+          About
+        </Link>
+
+        <button
+          type="button"
+          className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-md text-sm"
+          onClick={handleClearApiKey}
+        >
+          Clear API key
+        </button>
       </div>
     </nav>
   );

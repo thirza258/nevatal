@@ -472,6 +472,13 @@ class PDFUploadRAGView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        api_key = strip_authentication_header(request.headers.get('Authorization'))
+        if not api_key:
+            return Response(
+                {"error": "Authorization header is required."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         try:
             file_path = save_file(pdf_file)
         except Exception as e:
@@ -480,36 +487,29 @@ class PDFUploadRAGView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        try:
-            api_key = request.headers.get('Authorization')
-            api_key = strip_authentication_header(api_key)
-            text_content = extract_text_from_pdf(pdf_file)
-            rag_index = RAGIndex(api_key=api_key)
-            rag_index.delete_all_chunks()
-            rag_index.add_document(pdf_file.name, text_content)
-            if not text_content:
-                return Response(
-                    {"error": "No text could be extracted from PDF."},
-                    status=status.HTTP_422_UNPROCESSABLE_ENTITY
-                )
-        except Exception as e:
+        # Check the extraction before indexing: passing None to add_document
+        # raised a TypeError that surfaced as a confusing 500 instead of this.
+        text_content = extract_text_from_pdf(pdf_file)
+        if not text_content:
             return Response(
-                {"error": f"Error extracting PDF text: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "No text could be extracted from this PDF. Scanned or image-only files are not supported."},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY
             )
 
         try:
-            result = rag_index.retrieve_documents(text_content, k=3)
+            rag_index = RAGIndex(api_key=api_key)
+            rag_index.delete_all_chunks()
+            rag_index.add_document(pdf_file.name, text_content)
         except Exception as e:
             return Response(
-                {"error": f"RAG service failed: {str(e)}"},
+                {"error": f"Failed to index the document: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
         return Response({
             "message": "PDF processed successfully",
             "file_path": file_path,
-            "rag_result": result
+            "document_name": pdf_file.name,
         }, status=status.HTTP_200_OK)
 
 class RAGChatView(APIView):
@@ -629,6 +629,21 @@ class EmailGeneratorView(APIView):
 
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
+
+        # Validate before building the composed prompt — the old order
+        # overwrote `prompt` first, so these checks could never fail.
+        for field_name, value in (
+            ("context", context),
+            ("recipients", recipients),
+            ("sender", sender),
+            ("prompt", prompt),
+        ):
+            if not value:
+                return Response(
+                    {"error": f"A '{field_name}' is required in the request body."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         prompt = f"""
             You are a skilled email generator. Your task is to generate an email from a text prompt.
             The email should be generated based on the following context:
@@ -644,26 +659,6 @@ class EmailGeneratorView(APIView):
         system_instruction_string = f"""
         You are a skilled email generator. Your task is to generate an email from a text prompt.
         """
-        if not prompt:
-            return Response(
-                {"error": "A 'context' is required in the request body."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if not recipients:
-            return Response(
-                {"error": "A 'recipients' is required in the request body."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if not sender:
-            return Response(
-                {"error": "A 'sender' is required in the request body."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if not prompt:
-            return Response(
-                {"error": "A 'prompt' is required in the request body."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
         try:
             response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='email_generation', prompt=prompt, response=response_data, api_key=api_key)

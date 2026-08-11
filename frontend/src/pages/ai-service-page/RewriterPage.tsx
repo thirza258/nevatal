@@ -1,92 +1,122 @@
 import React, { useState } from 'react';
 import services from '../../services/services';
-import ReactMarkdown from 'react-markdown';
+import { useAiTask } from '../../hooks/useAiTask';
+import PageLayout from '../../components/PageLayout';
+import InputPanel from '../../components/InputPanel';
+import ResultDisplay from '../../components/ResultDisplay';
+import TwoColumnLayout from '../../components/TwoColumnLayout';
+import { SelectField, SubmitButton, type Option } from '../../components/FormControls';
 
+const GOALS: Option[] = [
+  { value: 'keep the meaning but make it clearer and better written', label: 'Improve clarity' },
+  { value: 'make it significantly shorter without losing the key information', label: 'Make it shorter' },
+  { value: 'expand it with more detail and supporting explanation', label: 'Expand it' },
+  { value: 'simplify the language so a non-expert can follow it', label: 'Simplify language' },
+  { value: 'make it more persuasive', label: 'Make it persuasive' },
+  { value: 'rephrase it so the wording is original while the meaning is unchanged', label: 'Rephrase / paraphrase' },
+];
+
+const TONES: Option[] = [
+  { value: '', label: 'Keep original tone' },
+  { value: 'professional', label: 'Professional' },
+  { value: 'friendly and conversational', label: 'Friendly' },
+  { value: 'formal', label: 'Formal' },
+  { value: 'casual', label: 'Casual' },
+  { value: 'confident and direct', label: 'Confident' },
+];
 
 const RewriterPage: React.FC = () => {
-  const [inputText, setInputText] = useState<string>('');
-  const [resultText, setResultText] = useState<string>('');
+  const [inputText, setInputText] = useState('');
+  const [goal, setGoal] = useState(GOALS[0].value);
+  const [tone, setTone] = useState(TONES[0].value);
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(event.target.value);
+  const { result, error, isLoading, run, reset } = useAiTask();
+
+  const handleClear = () => {
+    setInputText('');
+    reset();
   };
 
-  const handleRewrite = async () => {
-    try { 
-      const response = await services.postRewriter(inputText);
-      setResultText(services.handleResponseData(response.data));
-    } catch (error) {
-      console.error("Error fetching response:", error);
+  const handleRewrite = () => {
+    if (!inputText.trim() || isLoading) return;
+
+    const instructions = [`Rewrite the text below: ${goal}.`];
+
+    if (tone) {
+      instructions.push(`Use a ${tone} tone.`);
     }
+
+    instructions.push(
+      'Return only the rewritten text, with no preamble and no explanation of the changes.',
+      '',
+      'Text to rewrite:',
+      inputText.trim()
+    );
+
+    run(() => services.postRewriter(instructions.join('\n')));
   };
+
+  const controls = (
+    <>
+      <SelectField
+        id="rewrite-goal"
+        label="Rewrite goal"
+        value={goal}
+        options={GOALS}
+        onChange={setGoal}
+        disabled={isLoading}
+      />
+      <SelectField
+        id="rewrite-tone"
+        label="Tone"
+        value={tone}
+        options={TONES}
+        onChange={setTone}
+        disabled={isLoading}
+      />
+    </>
+  );
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Rewriter Page</h1>
-          <p>Turn your ideas into beautifully written words and effortlessly create articles, blogs, and stories with a natural human touch.</p>
-          <p>Enhance it with our AI-powered rewriter.</p>
-        </div>
-      </header>
-
-      <main className="flex-grow container mx-auto px-4 py-6 flex flex-col">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-gray-700">Input</h2>
-            <button
-              onClick={() => navigator.clipboard.readText().then(text => setInputText(text))}
-              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-            >
-              Paste
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-gray-700">Result</h2>
-            <button
-              onClick={() => navigator.clipboard.writeText(resultText)}
-              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-            >
-              Copy
-            </button>
-          </div>
-        </div>
-
-      
-        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-md flex flex-col h-[70vh] outline outline-1 outline-gray-800">
-            <div className="flex flex-col h-full">
-              <textarea
-                className="w-full flex-grow p-4 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your text here..."
-                value={inputText}
-                onChange={handleInputChange}
-              />
-              <div className="p-2 text-sm text-gray-500 border-t">
-                Words: {inputText.trim().split(/\s+/).filter(word => word.length > 0).length}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md flex flex-col h-[70vh] outline outline-1 outline-gray-800">
-            <div className="w-full h-full p-4 rounded-lg">
-                <ReactMarkdown>{resultText as string}</ReactMarkdown>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-center mt-4">
-          <button
-            className="w-full bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={handleRewrite}
-          >
-            Rewrite
-          </button>
-        </div>
-      </main>
-
-      
-    </div>
+    <PageLayout
+      title="Rewriter"
+      description="Rework existing text towards a specific goal — shorter, clearer, simpler, or in a different tone — with the original kept alongside for comparison."
+      onClear={handleClear}
+      error={error}
+      actions={
+        <SubmitButton
+          onClick={handleRewrite}
+          disabled={!inputText.trim()}
+          isLoading={isLoading}
+          loadingLabel="Rewriting..."
+        >
+          Rewrite
+        </SubmitButton>
+      }
+    >
+      <TwoColumnLayout
+        inputComponent={
+          <InputPanel
+            title="Original"
+            value={inputText}
+            onChange={setInputText}
+            placeholder="Paste the text you want to rewrite..."
+            disabled={isLoading}
+            controls={controls}
+          />
+        }
+        resultComponent={
+          <ResultDisplay
+            isLoading={isLoading}
+            resultText={result}
+            title="Rewritten"
+            loadingLabel="Rewriting your text..."
+            downloadName="rewritten"
+            placeholderText="The rewritten version will appear here, next to your original."
+          />
+        }
+      />
+    </PageLayout>
   );
 };
 

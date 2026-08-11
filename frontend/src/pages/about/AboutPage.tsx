@@ -1,50 +1,61 @@
 import React from 'react';
 import FeatureCard from '../../components/FeatureCard';
+import { TOOL_GROUPS } from '../../tools';
 
 const AboutPage: React.FC = () => {
   return (
-    <div className="flex items-center justify-center bg-gray-100">
-      <div className="bg-white rounded-lg shadow-xl">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          About Nevatal
-        </h1>
-        
-        <p className="text-gray-600 mb-8 text-center">
-          Nevatal is a comprehensive AI application that combines multiple AI functionalities into a single, easy-to-use platform. 
-          Our platform integrates various AI capabilities to help streamline your workflow.
-        </p>
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-4xl mx-auto flex flex-col gap-6 pb-8">
+        <header className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-5">
+          <h1 className="text-2xl font-bold text-gray-900">About Nevatal</h1>
+          <p className="text-gray-600 mt-2">
+            Nevatal puts a set of focused AI tools behind one interface. You
+            bring your own API key, it stays in an httpOnly cookie on the
+            server, and every request is made with that key.
+          </p>
+        </header>
 
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Key Features</h2>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <FeatureCard title="Prompt-based Interactions" 
-              description="Intuitive interface for AI interactions through natural language prompts" />
-            <FeatureCard title="Proofreading Assistance" 
-              description="Advanced proofreading tools to perfect your writing" />
-            <FeatureCard title="Text Summarization" 
-              description="Quick and accurate summarization of long-form content" />
-            <FeatureCard title="Translation Services" 
-              description="High-quality translation across multiple languages" />
-            <FeatureCard title="Content Writing" 
-              description="AI-powered content creation and rewriting capabilities" />
-          </div>
-          
-          <div className="space-y-4">
-            <FeatureCard title="AI Explanations" 
-              description="Clear explanations of complex topics using AI" />
-            <FeatureCard title="Copywriting Assistance" 
-              description="Professional copywriting help for marketing and content" />
-            <FeatureCard title="Document AI" 
-              description="Advanced document processing and analysis" />
-            <FeatureCard title="RAG Chat" 
-              description="Retrieval Augmented Generation for context-aware conversations" />
-          </div>
-        </div>
+        {TOOL_GROUPS.map((group) => (
+          <section key={group.name}>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              {group.name}
+            </h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {group.tools.map((tool) => (
+                <FeatureCard
+                  key={tool.path}
+                  title={tool.name}
+                  description={tool.description}
+                  to={tool.path}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <section className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-5">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Which key do I need?
+          </h2>
+          <ul className="mt-3 space-y-2 text-sm text-gray-600 list-disc list-inside">
+            <li>
+              <strong>Any provider</strong> — OpenAI, Google Gemini, or
+              OpenRouter works for all the text tools.
+            </li>
+            <li>
+              <strong>Google Gemini only</strong> — Document AI builds its search
+              index with Google embeddings, and Image Generation uses Google's
+              image model. Both fail with an OpenAI or OpenRouter key.
+            </li>
+          </ul>
+          <p className="mt-4 text-sm text-gray-500">
+            Your key is never stored in the browser's local storage, and you can
+            remove it at any time with "Clear API key" in the top bar.
+          </p>
+        </section>
       </div>
     </div>
   );
 };
-
 
 export default AboutPage;

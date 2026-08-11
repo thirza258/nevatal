@@ -1,158 +1,170 @@
-import { useState } from "react";
-import services from "../../services/services";
-import type { Response } from "../../interface";
-import ReactMarkdown from "react-markdown";
+import React, { useState } from 'react';
+import services from '../../services/services';
+import { useAiTask } from '../../hooks/useAiTask';
+import PageLayout from '../../components/PageLayout';
+import ResultDisplay from '../../components/ResultDisplay';
+import TwoColumnLayout from '../../components/TwoColumnLayout';
+import {
+  SelectField,
+  SubmitButton,
+  TextAreaField,
+  type Option,
+} from '../../components/FormControls';
+
+const CHANNELS: Option[] = [
+  { value: 'a landing page hero section', label: 'Landing page' },
+  { value: 'a short paid ad', label: 'Paid ad' },
+  { value: 'a marketing email', label: 'Marketing email' },
+  { value: 'a social media post', label: 'Social post' },
+  { value: 'a product page description', label: 'Product page' },
+];
+
+const TONES: Option[] = [
+  { value: 'clear and confident', label: 'Clear & confident' },
+  { value: 'warm and friendly', label: 'Warm & friendly' },
+  { value: 'bold and punchy', label: 'Bold & punchy' },
+  { value: 'premium and understated', label: 'Premium' },
+  { value: 'technical and precise', label: 'Technical' },
+];
 
 const CopyWritingPage: React.FC = () => {
-  const [formData, setFormData] = useState({
-    product: '',
-    goals: '',
-    audience: '',
-    usp: '',
-  });
-  const [resultText, setResultText] = useState<string>('');
+  const [product, setProduct] = useState('');
+  const [goals, setGoals] = useState('');
+  const [audience, setAudience] = useState('');
+  const [usp, setUsp] = useState('');
+  const [channel, setChannel] = useState(CHANNELS[0].value);
+  const [tone, setTone] = useState(TONES[0].value);
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const { result, error, isLoading, run, reset } = useAiTask();
+
+  const handleClear = () => {
+    setProduct('');
+    setGoals('');
+    setAudience('');
+    setUsp('');
+    reset();
   };
 
-  const handleClearForm = () => {
-    setFormData({
-      product: '',
-      goals: '',
-      audience: '',
-      usp: '',
-    });
-    setResultText('');
+  const handleGenerateCopy = () => {
+    if (!product.trim() || isLoading) return;
+
+    const brief = [
+      `Write ${channel} copy in a ${tone} tone.`,
+      '',
+      `Product or service: ${product.trim()}`,
+      `Goal: ${goals.trim() || 'drive interest and sign-ups'}`,
+      `Target audience: ${audience.trim() || 'a general audience'}`,
+      `Unique selling proposition: ${usp.trim() || 'not specified — infer from the product description'}`,
+      '',
+      'Give a headline, a subheadline, the body copy, and a call to action, each under its own markdown heading.',
+      'Keep every claim supportable by the details above — do not invent statistics, awards, or customer numbers.',
+    ].join('\n');
+
+    run(() => services.postCopywriting(brief));
   };
 
-  const handleGenerateCopy = async () => {
-    try {
-      const payload = `
-        Product/Service: ${formData.product}
-        Goals/Objectives: ${formData.goals}
-        Target Audience: ${formData.audience}
-        Unique Selling Proposition: ${formData.usp}
-      `;
-      const response: Response = await services.postCopywriting(payload); 
-      setResultText(services.handleResponseData(response.data));
-    } catch (error) {
-      console.error("Error fetching response:", error);
-      setResultText("Sorry, there was an error generating the copy. Please try again.");
-    }
-  };
+  const briefPanel = (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
+      <div className="px-4 py-2.5 border-b border-gray-200">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          Campaign brief
+        </h2>
+      </div>
+
+      <div className="p-4 flex flex-col gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SelectField
+            id="copy-channel"
+            label="Where will this run?"
+            value={channel}
+            options={CHANNELS}
+            onChange={setChannel}
+            disabled={isLoading}
+          />
+          <SelectField
+            id="copy-tone"
+            label="Tone"
+            value={tone}
+            options={TONES}
+            onChange={setTone}
+            disabled={isLoading}
+          />
+        </div>
+
+        <TextAreaField
+          id="copy-product"
+          label="What is your product or service?"
+          value={product}
+          onChange={setProduct}
+          placeholder="e.g., A mobile app that tracks household budgets automatically"
+          disabled={isLoading}
+          rows={3}
+        />
+        <TextAreaField
+          id="copy-goals"
+          label="What should this copy achieve?"
+          value={goals}
+          onChange={setGoals}
+          placeholder="e.g., Increase free-trial sign-ups"
+          disabled={isLoading}
+          rows={2}
+          hint="Optional."
+        />
+        <TextAreaField
+          id="copy-audience"
+          label="Who is the audience?"
+          value={audience}
+          onChange={setAudience}
+          placeholder="e.g., People aged 25-35 who have never budgeted before"
+          disabled={isLoading}
+          rows={2}
+          hint="Optional."
+        />
+        <TextAreaField
+          id="copy-usp"
+          label="What makes it different?"
+          value={usp}
+          onChange={setUsp}
+          placeholder="e.g., Categorises spending automatically, no manual entry"
+          disabled={isLoading}
+          rows={2}
+          hint="Optional."
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Copywriting Assistant</h1>
-          <p className="text-gray-600 mt-2">Generate compelling marketing copy by providing key details about your product, goals, and audience. Let our AI craft the perfect message for you.</p>
-          <button
-            onClick={handleClearForm}
-            className="mt-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-          >
-            Clear Form
-          </button>
-        </div>
-      </header>
-
-      <main className="flex-grow container mx-auto px-4 py-6 flex flex-col">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-700">Input Details</h2>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-gray-700">Results</h2>
-            <button
-              onClick={() => navigator.clipboard.writeText(resultText)}
-              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-              disabled={!resultText}
-            >
-              Copy
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Form Input Section */}
-          <div className="bg-white rounded-lg shadow-md flex flex-col outline outline-1 outline-gray-800 p-4 space-y-4">
-            <div>
-              <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
-                What is your product or service?
-              </label>
-              <textarea
-                id="product"
-                name="product"
-                className="w-full p-2 rounded-md resize-none border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., A mobile app for budget tracking"
-                value={formData.product}
-                onChange={handleInputChange}
-                rows={3}
-              />
-            </div>
-            <div>
-              <label htmlFor="goals" className="block text-sm font-medium text-gray-700 mb-1">
-                What are your goals and objectives?
-              </label>
-              <textarea
-                id="goals"
-                name="goals"
-                className="w-full p-2 rounded-md resize-none border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., Increase user sign-ups by 20%"
-                value={formData.goals}
-                onChange={handleInputChange}
-                rows={3}
-              />
-            </div>
-            <div>
-              <label htmlFor="audience" className="block text-sm font-medium text-gray-700 mb-1">
-                Who is your target audience?
-              </label>
-              <textarea
-                id="audience"
-                name="audience"
-                className="w-full p-2 rounded-md resize-none border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., Millennials aged 25-35 interested in personal finance"
-                value={formData.audience}
-                onChange={handleInputChange}
-                rows={3}
-              />
-            </div>
-            <div>
-              <label htmlFor="usp" className="block text-sm font-medium text-gray-700 mb-1">
-                What is your unique selling proposition (USP)?
-              </label>
-              <textarea
-                id="usp"
-                name="usp"
-                className="w-full p-2 rounded-md resize-none border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., We automatically categorize expenses using AI"
-                value={formData.usp}
-                onChange={handleInputChange}
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md flex flex-col outline outline-1 outline-gray-800">
-            <div className="w-full h-full p-4 rounded-lg prose">
-              <ReactMarkdown>
-                {resultText || "Your generated copy will appear here..."}
-              </ReactMarkdown>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-center mt-4">
-          <button
-            className="w-full bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={handleGenerateCopy}
-          >
-            Generate CopyWriting
-          </button>
-        </div>
-      </main>
-    </div>
+    <PageLayout
+      title="Copywriting"
+      description="Generate marketing copy shaped for the channel it will run on — headline, subheadline, body, and call to action."
+      onClear={handleClear}
+      error={error}
+      actions={
+        <SubmitButton
+          onClick={handleGenerateCopy}
+          disabled={!product.trim()}
+          isLoading={isLoading}
+          loadingLabel="Writing copy..."
+        >
+          Generate copy
+        </SubmitButton>
+      }
+    >
+      <TwoColumnLayout
+        inputComponent={briefPanel}
+        resultComponent={
+          <ResultDisplay
+            isLoading={isLoading}
+            resultText={result}
+            title="Copy"
+            loadingLabel="Writing your copy..."
+            downloadName="copy"
+            placeholderText="Describe your product and your copy will appear here."
+          />
+        }
+      />
+    </PageLayout>
   );
 };
 

@@ -1,138 +1,177 @@
 import React, { useState } from 'react';
-import services from '../../services/services';
+import services, { toApiError } from '../../services/services';
+import type { GeneratedImage } from '../../interface';
+import PageLayout from '../../components/PageLayout';
+import { SelectField, SubmitButton, type Option } from '../../components/FormControls';
+
+const STYLES: Option[] = [
+  { value: '', label: 'No particular style' },
+  { value: 'a photorealistic photograph', label: 'Photorealistic' },
+  { value: 'a digital illustration', label: 'Illustration' },
+  { value: 'a 3D render', label: '3D render' },
+  { value: 'a watercolour painting', label: 'Watercolour' },
+  { value: 'a minimal flat vector graphic', label: 'Flat vector' },
+  { value: 'a pencil sketch', label: 'Pencil sketch' },
+];
+
+const ASPECTS: Option[] = [
+  { value: '', label: 'No preference' },
+  { value: 'square 1:1 framing', label: 'Square (1:1)' },
+  { value: 'landscape 16:9 framing', label: 'Landscape (16:9)' },
+  { value: 'portrait 3:4 framing', label: 'Portrait (3:4)' },
+];
 
 const ImaGenPage: React.FC = () => {
-  const [prompt, setPrompt] = useState<string>('');
-  const [imageUrl, setImageUrl] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [prompt, setPrompt] = useState('');
+  const [style, setStyle] = useState('');
+  const [aspect, setAspect] = useState('');
+  const [image, setImage] = useState<GeneratedImage | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handlePromptChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPrompt(event.target.value);
+  const handleClear = () => {
+    setPrompt('');
+    setImage(null);
+    setError('');
   };
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      setError('Please enter a prompt.');
-      return;
-    }
+    if (!prompt.trim() || isLoading) return;
 
     setIsLoading(true);
     setError('');
-    setImageUrl(''); 
+    setImage(null);
+
+    const description = [prompt.trim(), style && `Render it as ${style}.`, aspect && `Use ${aspect}.`]
+      .filter(Boolean)
+      .join(' ');
 
     try {
-      const response = await services.generateImage(prompt);
-      
-      if (response.data && response.data.url) {
-        setImageUrl(response.data.url);
-      } else {
-        throw new Error("Invalid response format from server.");
-      }
-
+      setImage(await services.generateImage(description));
     } catch (err) {
-      console.error("Error generating image:", err);
-      setError("Failed to generate image. Please try again later.");
+      const apiError = toApiError(err);
+      setError(
+        apiError.message.toLowerCase().includes('not supported')
+          ? `${apiError.message} Image generation runs on Google's image model, so it needs a Gemini API key.`
+          : apiError.message
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  // The backend returns raw base64, not a URL — build the data URI here.
+  const imageSrc = image
+    ? `data:${image.mime_type};base64,${image.image_base64}`
+    : '';
+
   const handleDownload = () => {
-    if (!imageUrl) return;
+    if (!image) return;
     const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `${prompt.slice(0, 20).replace(/\s+/g, '_') || 'generated-image'}.png`; 
+    link.href = imageSrc;
+    link.download = `${
+      prompt.trim().slice(0, 40).replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_') ||
+      'generated-image'
+    }${image.extension || '.png'}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100">
+    <PageLayout
+      title="Image Generation"
+      description="Describe an image and generate it. Be specific about subject, setting, and lighting — vague prompts give vague pictures."
+      onClear={handleClear}
+      error={error}
+      actions={
+        <SubmitButton
+          onClick={handleGenerate}
+          disabled={!prompt.trim()}
+          isLoading={isLoading}
+          loadingLabel="Generating..."
+        >
+          Generate image
+        </SubmitButton>
+      }
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
+          <div className="px-4 py-2.5 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Prompt
+            </h2>
+          </div>
 
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Image Generation</h1>
-          <p className="text-gray-600 mt-2">Describe the image you want our AI to create. Be as specific as you want.</p>
-          <p className="text-red-600 font-medium bg-red-50 p-2 rounded-md border border-red-200">⚠️ To use this page, make sure you have an API key and Google Cloud connected to your account</p>
-          <button
-            onClick={() => setPrompt('')}
-            className="mt-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-          >
-            Clear Prompt
-          </button>
-
-        </div>
-      </header>
-
-      <main className="flex-grow container mx-auto px-4 py-6 flex flex-col">
-        <div className="flex-grow grid grid-rows-2 gap-6">
-          {/* Input Section */}
-          <div className="bg-white rounded-lg shadow-md flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-700">Your Prompt</h2>
-              <button
-                onClick={() => navigator.clipboard.readText().then(text => setPrompt(text))}
-                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-              >
-                Paste
-              </button>
-            </div>
-            <textarea
-              className="w-full h-full p-4 rounded-b-lg resize-none focus:outline-none"
-              placeholder="e.g., A photorealistic portrait of a cat wearing a monocle"
-              value={prompt}
-              onChange={handlePromptChange}
+          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <SelectField
+              id="image-style"
+              label="Style"
+              value={style}
+              options={STYLES}
+              onChange={setStyle}
+              disabled={isLoading}
+            />
+            <SelectField
+              id="image-aspect"
+              label="Framing"
+              value={aspect}
+              options={ASPECTS}
+              onChange={setAspect}
+              disabled={isLoading}
             />
           </div>
 
-          {/* Result Section */}
-          <div className="bg-white rounded-lg shadow-md flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-700">Generated Image</h2>
-              <div className="space-x-2">
-                <button
-                  onClick={() => navigator.clipboard.writeText(imageUrl)}
-                  className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600 disabled:opacity-50"
-                  disabled={!imageUrl}
-                >
-                  Copy URL
-                </button>
-                <button
-                  onClick={handleDownload}
-                  className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600 disabled:opacity-50"
-                  disabled={!imageUrl}
-                >
-                  Download
-                </button>
-              </div>
-            </div>
-            <div className="w-full h-full p-4 flex items-center justify-center bg-gray-50 rounded-b-lg">
-              {isLoading ? (
-                <div className="text-gray-600">Generating your image...</div>
-              ) : error ? (
-                <div className="text-red-500 px-4 text-center">{error}</div>
-              ) : imageUrl ? (
-                <img src={imageUrl} alt={prompt} className="max-h-full max-w-full object-contain rounded-md shadow-sm" />
-              ) : (
-                <div className="text-gray-500">Your generated image will appear here.</div>
-              )}
-            </div>
-          </div>
+          <textarea
+            className="w-full flex-grow min-h-[14rem] p-4 resize-y text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 disabled:bg-gray-50"
+            placeholder="e.g., A red fox sitting in tall grass at sunrise, backlit, shallow depth of field"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            disabled={isLoading}
+          />
+
+          <p className="px-4 py-2 text-xs text-gray-500 border-t border-gray-200">
+            Requires a Google Gemini API key — OpenAI and OpenRouter keys cannot
+            generate images here.
+          </p>
         </div>
 
-        <div className="flex justify-center mt-4">
-          <button
-            className="w-full bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300"
-            onClick={handleGenerate}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Generating...' : 'Generate Image'}
-          </button>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col min-h-[24rem]">
+          <div className="flex justify-between items-center px-4 py-2.5 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Generated image
+            </h2>
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 disabled:opacity-50"
+              disabled={!image}
+            >
+              Download
+            </button>
+          </div>
+
+          <div className="flex-grow p-4 flex items-center justify-center bg-gray-50">
+            {isLoading ? (
+              <div className="flex flex-col items-center gap-3 text-gray-500">
+                <span className="h-6 w-6 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
+                <p className="text-sm">Generating your image...</p>
+              </div>
+            ) : imageSrc ? (
+              <img
+                src={imageSrc}
+                alt={prompt}
+                className="max-h-[28rem] max-w-full object-contain rounded-md shadow-sm"
+              />
+            ) : (
+              <p className="text-gray-400 text-sm">
+                Your generated image will appear here.
+              </p>
+            )}
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

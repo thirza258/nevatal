@@ -188,7 +188,10 @@ def save_file(file) -> Optional[str]:
     try:
         os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
 
-        file_path = os.path.join(settings.MEDIA_ROOT, file.name)
+        # Never join a caller-supplied path: "../../etc/passwd" would escape
+        # MEDIA_ROOT entirely.
+        safe_name = os.path.basename(file.name or "").strip() or "upload"
+        file_path = os.path.join(settings.MEDIA_ROOT, safe_name)
         with open(file_path, "wb") as f:
             for chunk in file.chunks() if hasattr(file, "chunks") else [file.read()]:
                 f.write(chunk)

@@ -1,3 +1,5 @@
+import typography from '@tailwindcss/typography'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,6 +9,7 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
+  // `prose` was already used on every result panel but rendered as a no-op
+  // without this plugin, so markdown answers came out unstyled.
+  plugins: [typography],
 }
-

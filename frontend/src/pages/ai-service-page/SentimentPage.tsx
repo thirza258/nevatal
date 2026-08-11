@@ -1,82 +1,105 @@
-import { useState } from "react";
-import services from "../../services/services";
-import type { Response } from "../../interface";
-import PageLayout from "../../components/PageLayout";
-import ResultDisplay from "../../components/ResultDisplay";
-import TwoColumnLayout from "../../components/TwoColumnLayout";
+import React, { useState } from 'react';
+import services from '../../services/services';
+import { useAiTask } from '../../hooks/useAiTask';
+import PageLayout from '../../components/PageLayout';
+import InputPanel from '../../components/InputPanel';
+import ResultDisplay from '../../components/ResultDisplay';
+import TwoColumnLayout from '../../components/TwoColumnLayout';
+import { SelectField, SubmitButton, type Option } from '../../components/FormControls';
+
+const DEPTHS: Option[] = [
+  { value: 'overall', label: 'Overall sentiment' },
+  { value: 'aspects', label: 'Sentiment per topic' },
+  { value: 'entries', label: 'One verdict per line/review' },
+];
 
 const SentimentPage: React.FC = () => {
-  const [inputText, setInputText] = useState<string>('');
-  const [resultText, setResultText] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [inputText, setInputText] = useState('');
+  const [depth, setDepth] = useState(DEPTHS[0].value);
+
+  const { result, error, isLoading, run, reset } = useAiTask();
 
   const handleClear = () => {
     setInputText('');
-    setResultText('');
+    reset();
   };
 
-  const handleAnalyze = async () => {
-    if (!inputText.trim()) return;
-    setIsLoading(true);
-    setResultText('');
-    try {
-      // Assuming you have a service function for this
-      const response: Response = await services.analyzeSentiment(inputText);
-      setResultText(services.handleResponseData(response.data));
-    } catch (error) {
-      console.error("Error fetching response:", error);
-      setResultText("Sorry, there was an error analyzing the text. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleAnalyze = () => {
+    if (!inputText.trim() || isLoading) return;
+
+    const shape: Record<string, string> = {
+      overall:
+        'Report the overall sentiment as **Positive**, **Negative**, **Neutral**, or **Mixed**, with a confidence between 0 and 1.',
+      aspects:
+        'Report the overall sentiment, then a markdown table with one row per topic discussed: Topic | Sentiment | Evidence.',
+      entries:
+        'Treat each line as a separate entry and return a markdown table: Entry | Sentiment | Confidence | Why.',
+    };
+
+    const instructions = [
+      'Analyse the sentiment of the text below.',
+      shape[depth],
+      'Then list the words or phrases that drove the verdict, and note any sarcasm or negation you accounted for.',
+      'Base the analysis only on the text given.',
+      '',
+      'Text to analyse:',
+      inputText.trim(),
+    ];
+
+    run(() => services.analyzeSentiment(instructions.join('\n')));
   };
 
-  const InputPanel = (
-    <div className="bg-white rounded-lg shadow-md flex flex-col outline outline-1 outline-gray-800">
-      <div className="flex justify-between items-center p-2 border-b">
-        <h2 className="text-lg font-semibold text-gray-700">Text to Analyze</h2>
-        <button
-          onClick={() => navigator.clipboard.readText().then(text => setInputText(text))}
-          className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-        >
-          Paste
-        </button>
-      </div>
-      <textarea
-        className="w-full flex-grow p-4 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Enter text to analyze its sentiment..."
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        disabled={isLoading}
-      />
-    </div>
+  const controls = (
+    <SelectField
+      id="sentiment-depth"
+      label="Analysis type"
+      value={depth}
+      options={DEPTHS}
+      onChange={setDepth}
+      disabled={isLoading}
+      hint="Use per-line mode for a batch of reviews or comments."
+    />
   );
 
   return (
     <PageLayout
       title="Sentiment Analysis"
-      description="Analyze the sentiment of any text. Discover if the tone is positive, negative, or neutral."
+      description="Judge the tone of feedback, reviews, or messages — overall, broken down by topic, or one verdict per line."
       onClear={handleClear}
+      error={error}
+      actions={
+        <SubmitButton
+          onClick={handleAnalyze}
+          disabled={!inputText.trim()}
+          isLoading={isLoading}
+          loadingLabel="Analyzing..."
+        >
+          Analyze sentiment
+        </SubmitButton>
+      }
     >
       <TwoColumnLayout
-        inputComponent={InputPanel}
+        inputComponent={
+          <InputPanel
+            title="Text to analyse"
+            value={inputText}
+            onChange={setInputText}
+            placeholder={'Paste feedback, reviews, or messages...\nOne per line for batch analysis.'}
+            disabled={isLoading}
+            controls={controls}
+          />
+        }
         resultComponent={
-            <ResultDisplay 
-                isLoading={isLoading} 
-                resultText={resultText}
-                placeholderText="The sentiment analysis will appear here..." 
-            />
+          <ResultDisplay
+            isLoading={isLoading}
+            resultText={result}
+            title="Analysis"
+            loadingLabel="Reading the tone..."
+            downloadName="sentiment-analysis"
+            placeholderText="The sentiment breakdown will appear here."
+          />
         }
       />
-      <div className="flex justify-center mt-4">
-        <button
-          className="w-full bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-green-300"
-          onClick={handleAnalyze}
-          disabled={!inputText.trim() || isLoading}
-        >
-          {isLoading ? "Analyzing..." : "Analyze Sentiment"}
-        </button>
-      </div>
     </PageLayout>
   );
 };

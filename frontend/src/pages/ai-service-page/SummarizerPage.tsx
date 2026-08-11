@@ -1,87 +1,144 @@
 import React, { useState } from 'react';
 import services from '../../services/services';
-import ReactMarkdown from 'react-markdown';
+import { useAiTask } from '../../hooks/useAiTask';
+import PageLayout from '../../components/PageLayout';
+import InputPanel from '../../components/InputPanel';
+import ResultDisplay from '../../components/ResultDisplay';
+import TwoColumnLayout from '../../components/TwoColumnLayout';
+import {
+  SelectField,
+  SubmitButton,
+  TextField,
+  type Option,
+} from '../../components/FormControls';
+import { countWords } from '../../utils/text';
+
+const LENGTHS: Option[] = [
+  { value: 'a very brief summary of one or two sentences', label: 'Brief' },
+  { value: 'a summary of roughly one paragraph', label: 'Standard' },
+  { value: 'a detailed summary that keeps the supporting detail', label: 'Detailed' },
+];
+
+const FORMATS: Option[] = [
+  { value: 'continuous prose', label: 'Paragraph' },
+  { value: 'a bulleted list', label: 'Bullet points' },
+  { value: 'a list of key takeaways, each on its own line', label: 'Key takeaways' },
+  { value: 'a single TL;DR line followed by three supporting bullets', label: 'TL;DR + bullets' },
+];
 
 const SummarizerPage: React.FC = () => {
-  const [inputText, setInputText] = useState<string>('');
-  const [resultText, setResultText] = useState<string>('');
+  const [inputText, setInputText] = useState('');
+  const [length, setLength] = useState(LENGTHS[1].value);
+  const [format, setFormat] = useState(FORMATS[0].value);
+  const [focus, setFocus] = useState('');
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const text = event.target.value;
-    setInputText(text);
-    setResultText(services.handleResponseData(text));
+  const { result, error, isLoading, run, reset } = useAiTask();
+
+  const handleClear = () => {
+    setInputText('');
+    setFocus('');
+    reset();
   };
 
-  const handleSummarize = async () => {
-    try {
-      const response = await services.postSummarizer(inputText);
-      setResultText(services.handleResponseData(response.data));
-    } catch (error) {
-      console.error("Error fetching response:", error);
+  const handleSummarize = () => {
+    if (!inputText.trim() || isLoading) return;
+
+    const instructions = [
+      `Summarise the text below as ${length}.`,
+      `Present the summary as ${format}.`,
+    ];
+
+    if (focus.trim()) {
+      instructions.push(`Focus especially on: ${focus.trim()}.`);
     }
+
+    instructions.push(
+      'Stay faithful to the source: do not add facts that are not in the text.',
+      '',
+      'Text to summarise:',
+      inputText.trim()
+    );
+
+    run(() => services.postSummarizer(instructions.join('\n')));
   };
+
+  const controls = (
+    <>
+      <SelectField
+        id="summary-length"
+        label="Summary length"
+        value={length}
+        options={LENGTHS}
+        onChange={setLength}
+        disabled={isLoading}
+      />
+      <SelectField
+        id="summary-format"
+        label="Format"
+        value={format}
+        options={FORMATS}
+        onChange={setFormat}
+        disabled={isLoading}
+      />
+      <div className="sm:col-span-2">
+        <TextField
+          id="summary-focus"
+          label="Focus on (optional)"
+          value={focus}
+          onChange={setFocus}
+          placeholder="e.g., the financial risks, the action items"
+          disabled={isLoading}
+        />
+      </div>
+    </>
+  );
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Summarizer Page</h1>
-          <p className="text-gray-600 mt-2">Enhance your writing with our AI-powered summarizer tool. Simply paste your text and let us help you summarize it.</p>
-        </div>
-      </header>
+    <PageLayout
+      title="Summarizer"
+      description="Condense long text into the shape you actually need — a paragraph, a bullet list, or a set of key takeaways."
+      onClear={handleClear}
+      error={error}
+      actions={
+        <SubmitButton
+          onClick={handleSummarize}
+          disabled={!inputText.trim()}
+          isLoading={isLoading}
+          loadingLabel="Summarizing..."
+        >
+          Summarize
+        </SubmitButton>
+      }
+    >
+      <TwoColumnLayout
+        inputComponent={
+          <InputPanel
+            title="Source text"
+            value={inputText}
+            onChange={setInputText}
+            placeholder="Paste the article, transcript, or report you want summarised..."
+            disabled={isLoading}
+            controls={controls}
+          />
+        }
+        resultComponent={
+          <ResultDisplay
+            isLoading={isLoading}
+            resultText={result}
+            title="Summary"
+            loadingLabel="Reading and condensing..."
+            downloadName="summary"
+            placeholderText="Your summary will appear here."
+          />
+        }
+      />
 
-      <main className="flex-grow container mx-auto px-4 py-6 flex flex-col">
-        <div className="flex-grow grid grid-rows-2 gap-6">
-          <div className="bg-white rounded-lg shadow-md flex flex-col outline outline-1 outline-gray-800">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-700">Input</h2>
-              <button
-                onClick={() => navigator.clipboard.readText().then(text => setInputText(text))}
-                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-              >
-                Paste
-              </button>
-            </div>
-            <div className="flex flex-col h-full">
-              <textarea
-                className="w-full flex-grow p-4 rounded-b-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your text here..."
-                value={inputText}
-                onChange={handleInputChange}
-              />
-              <div className="p-2 text-sm text-gray-500 border-t">
-                Words: {inputText.trim().split(/\s+/).filter(word => word.length > 0).length}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md flex flex-col outline outline-1 outline-gray-800">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-700">Result</h2>
-              <button
-                onClick={() => navigator.clipboard.writeText(resultText)}
-                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-600"
-              >
-                Copy
-              </button>
-            </div>
-            <div className="w-full h-full p-4">
-              <ReactMarkdown>{resultText}</ReactMarkdown>
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-center mt-4">
-          <button
-            className="w-full bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={handleSummarize}
-          >
-            Summarize
-          </button>
-        </div>
-      </main>
-
-     
-    </div>
+      {result && !isLoading && (
+        <p className="text-xs text-gray-500 text-right">
+          {countWords(inputText)} words in → {countWords(result)} words out
+        </p>
+      )}
+    </PageLayout>
   );
 };
 

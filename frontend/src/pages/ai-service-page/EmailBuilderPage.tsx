@@ -1,105 +1,136 @@
-import { useState } from "react";
-import services from "../../services/services";
-import type { Response } from "../../interface";
-// Import new components
-import PageLayout from "../../components/PageLayout";
-import ResultDisplay from "../../components/ResultDisplay";
-import TwoColumnLayout from "../../components/TwoColumnLayout";
+import React, { useState } from 'react';
+import services from '../../services/services';
+import { useAiTask } from '../../hooks/useAiTask';
+import PageLayout from '../../components/PageLayout';
+import ResultDisplay from '../../components/ResultDisplay';
+import TwoColumnLayout from '../../components/TwoColumnLayout';
+import {
+  SelectField,
+  SubmitButton,
+  TextAreaField,
+  TextField,
+  type Option,
+} from '../../components/FormControls';
+
+const TONES: Option[] = [
+  { value: 'professional', label: 'Professional' },
+  { value: 'warm and friendly', label: 'Friendly' },
+  { value: 'direct and brief', label: 'Direct' },
+  { value: 'formal', label: 'Formal' },
+  { value: 'apologetic and considerate', label: 'Apologetic' },
+];
+
+const LENGTHS: Option[] = [
+  { value: 'no more than three short sentences', label: 'Very short' },
+  { value: 'a short email of one or two paragraphs', label: 'Short' },
+  { value: 'a full email with the detail spelled out', label: 'Detailed' },
+];
 
 const EmailBuilderPage: React.FC = () => {
-  const [formData, setFormData] = useState({ context: '', recipients: '', sender: '', prompt: '' });
-  const [resultText, setResultText] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [context, setContext] = useState('');
+  const [recipients, setRecipients] = useState('');
+  const [sender, setSender] = useState('');
+  const [prompt, setPrompt] = useState('');
+  const [tone, setTone] = useState(TONES[0].value);
+  const [length, setLength] = useState(LENGTHS[1].value);
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const { result, error, isLoading, run, reset } = useAiTask();
+
+  const handleClear = () => {
+    setContext('');
+    setRecipients('');
+    setSender('');
+    setPrompt('');
+    reset();
   };
 
-  const handleClearForm = () => {
-    setFormData({ context: '', recipients: '', sender: '', prompt: '' });
-    setResultText('');
+  // The backend rejects the request unless all four are present, so mirror
+  // that here rather than letting the user submit into a 400.
+  const missing = [
+    !context.trim() && 'context',
+    !recipients.trim() && 'recipients',
+    !sender.trim() && 'sender',
+    !prompt.trim() && 'instructions',
+  ].filter(Boolean) as string[];
+
+  const handleGenerateEmail = () => {
+    if (missing.length > 0 || isLoading) return;
+
+    const instructions = [
+      prompt.trim(),
+      '',
+      `Tone: ${tone}.`,
+      `Length: ${length}.`,
+      'Start with a "Subject:" line, then the email body with a greeting and sign-off.',
+    ].join('\n');
+
+    run(() =>
+      services.createEmail(context.trim(), recipients.trim(), sender.trim(), instructions)
+    );
   };
 
-  const handleGenerateEmail = async () => {
-    setIsLoading(true);
-    setResultText('');
-    try {
-      const { context, recipients, sender, prompt } = formData;
-      const response: Response = await services.createEmail(context, recipients, sender, prompt);
-      setResultText(services.handleResponseData(response.data));
-    } catch (error) {
-      console.error("Error fetching response:", error);
-      setResultText("Sorry, there was an error generating the email. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const formPanel = (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
+      <div className="px-4 py-2.5 border-b border-gray-200">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          Email details
+        </h2>
+      </div>
 
-  const isFormIncomplete = !formData.context || !formData.recipients || !formData.sender || !formData.prompt;
+      <div className="p-4 flex flex-col gap-4">
+        <TextAreaField
+          id="email-context"
+          label="What is the background?"
+          value={context}
+          onChange={setContext}
+          placeholder="e.g., We met on Tuesday to review the Q3 campaign and agreed to move the launch date."
+          disabled={isLoading}
+          rows={3}
+        />
 
-  const InputPanel = (
-    <div className="bg-white rounded-lg shadow-md flex flex-col outline outline-1 outline-gray-800 p-4 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Input Details</h2>
-      
-      <div>
-        <label htmlFor="context" className="block text-sm font-medium text-gray-700 mb-1">
-          What is the context of the email?
-        </label>
-        <textarea
-          id="context"
-          name="context"
-          className="w-full p-2 rounded-md resize-none border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g., Following up on our meeting last Tuesday about the Q3 marketing campaign."
-          value={formData.context}
-          onChange={handleInputChange}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <TextField
+            id="email-recipients"
+            label="To"
+            value={recipients}
+            onChange={setRecipients}
+            placeholder="e.g., the marketing team"
+            disabled={isLoading}
+          />
+          <TextField
+            id="email-sender"
+            label="From"
+            value={sender}
+            onChange={setSender}
+            placeholder="e.g., Jane Smith, Project Manager"
+            disabled={isLoading}
+          />
+          <SelectField
+            id="email-tone"
+            label="Tone"
+            value={tone}
+            options={TONES}
+            onChange={setTone}
+            disabled={isLoading}
+          />
+          <SelectField
+            id="email-length"
+            label="Length"
+            value={length}
+            options={LENGTHS}
+            onChange={setLength}
+            disabled={isLoading}
+          />
+        </div>
+
+        <TextAreaField
+          id="email-prompt"
+          label="What should the email say?"
+          value={prompt}
+          onChange={setPrompt}
+          placeholder="e.g., Confirm the new launch date and ask each lead to send updated timelines by Friday."
+          disabled={isLoading}
           rows={3}
-          disabled={isLoading}
-        />
-      </div>
-      <div>
-        <label htmlFor="recipients" className="block text-sm font-medium text-gray-700 mb-1">
-          Who are the recipients?
-        </label>
-        <textarea
-          id="recipients"
-          name="recipients"
-          className="w-full p-2 rounded-md resize-none border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g., The marketing team, John Doe (john.doe@example.com)"
-          value={formData.recipients}
-          onChange={handleInputChange}
-          rows={3}
-          disabled={isLoading}
-        />
-      </div>
-      <div>
-        <label htmlFor="sender" className="block text-sm font-medium text-gray-700 mb-1">
-          Who is the sender?
-        </label>
-        <input
-          id="sender"
-          name="sender"
-          type="text"
-          className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g., Jane Smith, Project Manager"
-          value={formData.sender}
-          onChange={handleInputChange}
-          disabled={isLoading}
-        />
-      </div>
-      <div>
-        <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-1">
-          What should the email be about? (Prompt)
-        </label>
-        <textarea
-          id="prompt"
-          name="prompt"
-          className="w-full p-2 rounded-md resize-none border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g., Write a concise summary of the key decisions and action items."
-          value={formData.prompt}
-          onChange={handleInputChange}
-          rows={3}
-          disabled={isLoading}
         />
       </div>
     </div>
@@ -108,28 +139,40 @@ const EmailBuilderPage: React.FC = () => {
   return (
     <PageLayout
       title="Email Builder"
-      description="Craft professional emails by providing the context, recipients, sender, and a specific prompt. Let the AI handle the composition."
-      onClear={handleClearForm}
+      description="Draft an email from its context — who it is going to, who it is from, and what it needs to accomplish."
+      onClear={handleClear}
+      error={error}
+      actions={
+        <div className="flex items-center gap-3">
+          {missing.length > 0 && (
+            <span className="text-sm text-gray-500">
+              Still needed: {missing.join(', ')}
+            </span>
+          )}
+          <SubmitButton
+            onClick={handleGenerateEmail}
+            disabled={missing.length > 0}
+            isLoading={isLoading}
+            loadingLabel="Drafting..."
+          >
+            Generate email
+          </SubmitButton>
+        </div>
+      }
     >
       <TwoColumnLayout
-        inputComponent={InputPanel}
+        inputComponent={formPanel}
         resultComponent={
-            <ResultDisplay 
-                isLoading={isLoading} 
-                resultText={resultText} 
-                placeholderText="Your generated email will appear here..."
-            />
+          <ResultDisplay
+            isLoading={isLoading}
+            resultText={result}
+            title="Draft email"
+            loadingLabel="Drafting your email..."
+            downloadName="email"
+            placeholderText="Your generated email will appear here."
+          />
         }
       />
-      <div className="flex justify-center mt-4">
-        <button
-          className="w-full bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300"
-          onClick={handleGenerateEmail}
-          disabled={isFormIncomplete || isLoading}
-        >
-          {isLoading ? "Generating..." : "Generate Email"}
-        </button>
-      </div>
     </PageLayout>
   );
 };

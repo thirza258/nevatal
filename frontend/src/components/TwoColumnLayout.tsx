@@ -7,7 +7,7 @@ interface TwoColumnLayoutProps {
 
 const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({ inputComponent, resultComponent }) => {
   return (
-    <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       {inputComponent}
       {resultComponent}
     </div>
