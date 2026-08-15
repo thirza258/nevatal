@@ -1,17 +1,24 @@
-from django.shortcuts import render
+"""
+File and media endpoints: PDF and CSV extraction, the persisted RAG store,
+meeting transcripts, and image generation.
+
+Text-only tools live in `grammar_function`; the API key session, history, and
+open-ended prompting stay in `core`.
+"""
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from core.helper import (
     extract_text_from_pdf,
     resolve_api_key_header as strip_authentication_header,
-    save_file,
 )
 from ai_service.gemini_service import  process_text_with_function_calling_vertex
 from core.models import ChatRecord
+from rag_service.rag_service import RAGIndex
 from io import StringIO
 import pandas as pd
-from ai_service import normalize_provider, test_api_key, generate_response, generate_image
+from ai_service import generate_response, generate_image
 
 class DirectExtractionView(APIView):
     """
@@ -238,4 +245,298 @@ class AnalyzeTextView(APIView):
             return Response(
                 {"error": f"An error occurred during processing: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+# ----------------------------------------------------------------------
+# Document AI (persisted RAG)
+# ----------------------------------------------------------------------
+
+class PDFUploadRAGView(APIView):
+    """
+    API endpoint to upload a PDF, extract its text,
+    and persist its index through the RAG service.
+
+    Each upload gets its own numbered folder under MEDIA_ROOT (1/, 2/, 3/ ...),
+    so earlier documents stay searchable instead of being wiped by the next
+    upload, and their embeddings survive a restart.
+    """
+
+    def post(self, request):
+        pdf_file = request.FILES.get("file")
+
+        if not pdf_file:
+            return Response(
+                {"error": "No PDF file provided."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        api_key = strip_authentication_header(request.headers.get('Authorization'))
+        if not api_key:
+            return Response(
+                {"error": "Authorization header is required."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # Check the extraction before indexing: passing None to add_document
+        # raised a TypeError that surfaced as a confusing 500 instead of this.
+        text_content = extract_text_from_pdf(pdf_file)
+        if not text_content:
+            return Response(
+                {"error": "No text could be extracted from this PDF. Scanned or image-only files are not supported."},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
+
+        try:
+            rag_index = RAGIndex(api_key=api_key)
+            # The PDF is stored inside the folder it was indexed into, so the
+            # source and the vectors built from it cannot drift apart.
+            document = rag_index.add_document(
+                pdf_file.name, text_content, source_file=pdf_file
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to index the document: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response({
+            "message": "PDF processed successfully",
+            "file_path": document.get("file_path"),
+            "document_name": pdf_file.name,
+            "document_id": document.get("document_id"),
+            "chunk_count": document.get("chunk_count"),
+            "documents": rag_index.list_documents(),
+        }, status=status.HTTP_200_OK)
+
+class RAGChatView(APIView):
+    """
+    API View for chatting with the RAG service.
+
+    Answers draw on every document persisted for this API key. Pass
+    `document_ids` to narrow the search to particular folders.
+    """
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests to chat with the RAG service.
+        """
+        prompt = request.data.get("prompt")
+        document_ids = request.data.get("document_ids")
+        api_key = request.headers.get('Authorization')
+        api_key = strip_authentication_header(api_key)
+        if not prompt:
+            return Response(
+                {"error": "A 'prompt' is required in the request body."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            rag_index = RAGIndex(api_key=api_key)
+            chunks = rag_index.retrieve_chunks(prompt, k=3, document_ids=document_ids)
+
+            if not chunks:
+                return Response(
+                    {"error": "No indexed documents yet. Upload a PDF before asking questions."},
+                    status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                )
+
+            augmented_prompt = (
+                f"User Question: {prompt}\n"
+                "Context Information:\n"
+                + "\n".join(
+                    f"Document {i+1} ({chunk['source']}): {chunk['text']}"
+                    for i, chunk in enumerate(chunks)
+                )
+            )
+
+            system_instruction_string = f"""
+            You are a helpful assistant. Your task is to answer the user's question based on the given context.
+            """
+            response_data = generate_response(prompt=augmented_prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            # Record the question, not the context blob built around it.
+            ChatRecord.objects.create(method='rag_chat', prompt=prompt, response=response_data, api_key=api_key)
+            return Response({
+                "status": 200,
+                "message": "success",
+                "data": response_data,
+                "sources": [
+                    {"document_id": document_id, "source": source}
+                    for document_id, source in dict.fromkeys(
+                        (chunk["document_id"], chunk["source"]) for chunk in chunks
+                    )
+                ],
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "status": 500,
+                "message": "error",
+                "data": "An unexpected error occurred while processing your request." + str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RAGDocumentsView(APIView):
+    """
+    API View for listing and removing the persisted RAG documents.
+
+    Reads meta.json rather than the pkl files, so listing never has to
+    unpickle the embeddings.
+    """
+
+    def get(self, request):
+        api_key = strip_authentication_header(request.headers.get('Authorization'))
+        if not api_key:
+            return Response(
+                {"error": "Authorization header is required."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            documents = RAGIndex(api_key=api_key).list_documents()
+        except Exception as e:
+            return Response({
+                "status": 500,
+                "message": "error",
+                "data": "An unexpected error occurred while processing your request." + str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({
+            "status": 200,
+            "message": "success",
+            "data": documents,
+        }, status=status.HTTP_200_OK)
+
+    def delete(self, request, document_id=None):
+        api_key = strip_authentication_header(request.headers.get('Authorization'))
+        if not api_key:
+            return Response(
+                {"error": "Authorization header is required."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            rag_index = RAGIndex(api_key=api_key)
+
+            if document_id is None:
+                removed = rag_index.delete_all_documents()
+            elif rag_index.delete_document(document_id):
+                removed = 1
+            else:
+                return Response(
+                    {"error": f"Document {document_id} was not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            return Response({
+                "status": 500,
+                "message": "error",
+                "data": "An unexpected error occurred while processing your request." + str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({
+            "status": 200,
+            "message": "success",
+            "data": {"removed": removed, "documents": rag_index.list_documents()},
+        }, status=status.HTTP_200_OK)
+
+
+# ----------------------------------------------------------------------
+# Transcripts & media
+# ----------------------------------------------------------------------
+
+class MeetingSummaryView(APIView):
+    """
+    API View for summarizing a meeting from a text prompt using the Gemini API.
+    """
+    def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests to summarize a meeting.
+        """
+        prompt = request.data.get("prompt")
+        api_key = request.headers.get("Authorization")
+        api_key = strip_authentication_header(api_key)
+        if not prompt:
+            return Response(
+                {"error": "A 'prompt' is required in the request body."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not api_key:
+            return Response(
+                {"error": "Authorization header is required."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        try:
+            system_instruction_string = f"""
+            You are a skilled meeting summarizer. Your task is to summarize a meeting from a text prompt.
+            The meeting should be summarized based on the following prompt:
+            {prompt}
+            """
+            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            ChatRecord.objects.create(method='meeting_summary', prompt=prompt, response=response_data, api_key=api_key)
+            return Response({
+                "status": 200,
+                "message": "success",
+                "data": response_data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "status": 500,
+                "message": "error",
+                "data": "An unexpected error occurred while processing your request." + str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ImageGeneratorView(APIView):
+    """
+    API View for generating an image from a text prompt using the Gemini API.
+    """
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests to generate an image.
+        """
+        prompt = request.data.get("prompt")
+        api_key = request.headers.get("Authorization")
+        api_key = strip_authentication_header(api_key)
+
+        if not prompt:
+            return Response(
+                {"error": "A 'prompt' is required in the request body."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not api_key:
+            return Response(
+                {"error": "Authorization header is required."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        try:
+            image_info = generate_image(prompt=prompt, api_key=api_key)
+            ChatRecord.objects.create(
+                method="image_generation",
+                prompt=prompt,
+                response=f"[Image generated: {image_info['extension']}]",
+                api_key=api_key
+            )
+
+            return Response(
+                {
+                    "status": 200,
+                    "message": "success",
+                    "data": {
+                        "mime_type": image_info["mime_type"],
+                        "extension": image_info["extension"],
+                        "image_base64": image_info["base64_image"],
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            if isinstance(e, NotImplementedError):
+                return Response(
+                    {"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return Response(
+                {"error": f"An unexpected error occurred while processing your request. {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

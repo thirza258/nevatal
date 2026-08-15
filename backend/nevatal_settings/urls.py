@@ -26,7 +26,10 @@ from django.http import HttpResponse
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", lambda request: HttpResponse("Status: OK")),
+    # One prefix, three apps: core carries the session and history, and each
+    # function app carries its own use case. Paths are unchanged by the split.
     path("api/v1/", include("core.urls")),
+    path("api/v1/", include("grammar_function.urls")),
     path("api/v1/", include("document_function.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

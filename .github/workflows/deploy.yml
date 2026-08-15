@@ -46,9 +46,16 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
+      - name: Copy deploy script to the server
+        run: |
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=5 \
+            -o ProxyCommand="/usr/bin/cloudflared access ssh --hostname %h --id ${{ secrets.CF_CLIENT_ID }} --secret ${{ secrets.CF_CLIENT_SECRET }}" \
+            deploy.sh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:deploy.sh
+
       - name: Deploy via SSH
-        env:
-          IMAGE_TAG: ${{ github.sha }}
         run: |
           sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh \
             -o StrictHostKeyChecking=no \
@@ -57,21 +64,19 @@ jobs:
             -o ProxyCommand="/usr/bin/cloudflared access ssh --hostname %h --id ${{ secrets.CF_CLIENT_ID }} --secret ${{ secrets.CF_CLIENT_SECRET }}" \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'REMOTE_SCRIPT'
 
-          set -euxo pipefail
+          set -euo pipefail
 
           echo "=== CONNECTED TO SERVER ==="
           whoami
           hostname
 
           mkdir -p ~/nevatal_app
-          cd ~/nevatal_app
+          mv ~/deploy.sh ~/nevatal_app/deploy.sh
+          chmod +x ~/nevatal_app/deploy.sh
 
-          echo "=== DOCKER INFO ==="
-          docker --version
-          docker compose version
-
-          # Create .env safely
-          cat > .env <<EOF
+          # Config for both Compose and deploy.sh. Quoted heredoc: a secret
+          # containing $ reaches the file intact.
+          cat > ~/nevatal_app/.env <<'EOF'
           POSTGRES_DB=${{ secrets.POSTGRES_DB }}
           POSTGRES_USER=${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -79,68 +84,13 @@ jobs:
           DEVELOPMENT_MODE=${{ secrets.DEVELOPMENT_MODE }}
           ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
           CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          IMAGE_TAG=${{ github.sha }}
           EOF
-          
-          echo "=== ENV CREATED ==="
-          cat .env
 
-          # Write compose file
-          cat > docker-compose.prod.yml <<EOF
-          services:
-            db:
-              image: postgres:16-alpine
-              container_name: postgres_db
-              environment:
-                POSTGRES_DB: \${POSTGRES_DB}
-                POSTGRES_USER: \${POSTGRES_USER}
-                POSTGRES_PASSWORD: \${POSTGRES_PASSWORD}
-              volumes:
-                - postgres_data:/var/lib/postgresql/data
-              restart: unless-stopped
-          
-            backend:
-              image: ${{ secrets.DOCKER_USERNAME }}/nevatal-backend:${{ github.sha }}
-              container_name: nevatal_backend
-              command: /app/entrypoint.sh
-              environment:
-                DATABASE_URL: \${DATABASE_URL}
-                DEVELOPMENT_MODE: \${DEVELOPMENT_MODE}
-                ALLOWED_HOSTS: \${ALLOWED_HOSTS}
-                CORS_ALLOWED_ORIGINS: \${CORS_ALLOWED_ORIGINS}
-              depends_on:
-                - db
-              restart: unless-stopped
-          
-            frontend:
-              image: ${{ secrets.DOCKER_USERNAME }}/nevatal-frontend:${{ github.sha }}
-              container_name: nevatal_frontend
-              ports:
-                - "5176:80"
-              depends_on:
-                - backend
-              restart: unless-stopped
-          
-          volumes:
-            postgres_data:
-          EOF
-                    echo "=== COMPOSE FILE ==="
-                    cat docker-compose.prod.yml
-          
-                    echo "=== PULLING IMAGES ==="
-                    for i in {1..5}; do 
-                      docker compose -f docker-compose.prod.yml pull && break || sleep 15; 
-                    done
-          
-                    echo "=== STARTING STACK ==="
-                    docker compose -f docker-compose.prod.yml up -d --remove-orphans
-          
-                    echo "=== RUNNING CONTAINERS ==="
-                    docker ps -a
-          
-                    echo "=== IMAGES ON SERVER ==="
-                    docker images
-          
-                    echo "=== CLEANUP ==="
-                    docker image prune -f
-          
+          # Never print .env — it holds the database password.
+          echo "=== ENV CREATED ($(wc -l < ~/nevatal_app/.env) keys) ==="
+
+          ~/nevatal_app/deploy.sh
+
           REMOTE_SCRIPT

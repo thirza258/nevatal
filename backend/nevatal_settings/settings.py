@@ -27,6 +27,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY", "SecretKey")
+
+# PEM (or base64-encoded PEM) of the RSA key the browser wraps provider API
+# keys with. Left unset, one is generated on first use and kept in
+# MEDIA_ROOT/.keys/ — see core/crypto.py.
+API_KEY_PRIVATE_KEY = os.getenv("API_KEY_PRIVATE_KEY", "")
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
@@ -54,6 +60,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "core",
     "rag_service",
+    "grammar_function",
     "document_function",
     "ai_service",
 ]

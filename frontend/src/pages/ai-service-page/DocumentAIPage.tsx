@@ -1,41 +1,94 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import InsertFile from '../insert-page/InsertFile';
 import RAGPage from './RAGPage';
-import { ACTIVE_DOCUMENT_KEY } from '../../constant';
+import services, { toApiError } from '../../services/services';
+import type { RagDocument, UploadResponse } from '../../interface';
 
 /**
- * Owns the Document AI flow: upload a PDF, then chat with it.
+ * Owns the Document AI flow: upload PDFs, then chat with them.
  *
- * The index lives on the server, so the active document name is persisted —
- * otherwise a refresh would show the upload screen while the backend still
- * holds a perfectly good index.
+ * Each upload is indexed into its own folder on the server and stays there, so
+ * the list of documents is fetched rather than remembered in the browser — a
+ * refresh, or a different browser with the same API key, sees the same set.
  */
 const DocumentAIPage: React.FC = () => {
-  const [documentName, setDocumentName] = useState<string>(
-    () => localStorage.getItem(ACTIVE_DOCUMENT_KEY) || ''
-  );
-  const [isReplacing, setIsReplacing] = useState(false);
+  const [documents, setDocuments] = useState<RagDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleUploadSuccess = (name: string) => {
-    localStorage.setItem(ACTIVE_DOCUMENT_KEY, name);
-    setDocumentName(name);
-    setIsReplacing(false);
+  useEffect(() => {
+    let cancelled = false;
+
+    services
+      .listRagDocuments()
+      .then((indexed) => {
+        if (!cancelled) setDocuments(indexed);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(toApiError(err).message);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleUploadSuccess = (uploaded: UploadResponse) => {
+    // The upload response carries the full list back, so there is no second
+    // round trip just to learn what is indexed now.
+    setDocuments(uploaded.documents ?? []);
+    setIsAdding(false);
   };
 
-  if (!documentName || isReplacing) {
+  const handleRemoveDocument = async (documentId: number) => {
+    try {
+      setDocuments(await services.deleteRagDocument(documentId));
+    } catch (err) {
+      setError(toApiError(err).message);
+    }
+  };
+
+  if (isLoading) {
     return (
-      <InsertFile
-        onUploadSuccess={handleUploadSuccess}
-        currentDocument={isReplacing ? documentName : undefined}
-        onCancel={isReplacing ? () => setIsReplacing(false) : undefined}
-      />
+      <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-500">
+        <span className="h-7 w-7 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin" />
+        <p className="text-sm">Loading your documents...</p>
+      </div>
+    );
+  }
+
+  if (documents.length === 0 || isAdding) {
+    return (
+      <div className="h-full flex flex-col">
+        {error && (
+          <p
+            role="alert"
+            className="flex-shrink-0 mx-auto mt-4 w-full max-w-lg text-sm bg-red-50 border border-red-200 text-red-700 rounded-md px-3 py-2"
+          >
+            {error}
+          </p>
+        )}
+        <div className="flex-1 min-h-0">
+          <InsertFile
+            onUploadSuccess={handleUploadSuccess}
+            indexedCount={documents.length}
+            onCancel={isAdding ? () => setIsAdding(false) : undefined}
+          />
+        </div>
+      </div>
     );
   }
 
   return (
     <RAGPage
-      documentName={documentName}
-      onReplaceDocument={() => setIsReplacing(true)}
+      documents={documents}
+      error={error}
+      onAddDocument={() => setIsAdding(true)}
+      onRemoveDocument={handleRemoveDocument}
     />
   );
 };

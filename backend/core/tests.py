@@ -1,138 +1,14 @@
-import json
-from unittest.mock import patch, MagicMock
+import base64
+import tempfile
+from unittest.mock import patch
 
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
-from django.conf import settings
 
-from core.helper import API_KEY_COOKIE_NAME, encrypt_api_key
-from core.views import SummarizerView
-from google.genai import types  # real types
-
-import os
-import unittest
-from rest_framework.test import APITestCase
-from django.urls import reverse
-
-@override_settings(GEMINI_API_KEY="test-gemini-key")
-class SummarizerViewTests(TestCase):
-
-    def setUp(self):
-        self.client = Client()
-        self.url = reverse('summarizer')
-
-    @patch('ai_service.gemini_service.genai.Client')  # only patch the Client class
-    def test_generate_response_success(self, mock_client_class):
-        """Test that generate_response correctly calls the Gemini API and returns text."""
-
-        # Mock client instance and its method
-        mock_client_instance = mock_client_class.return_value
-        mock_generate_content = mock_client_instance.models.generate_content
-
-        # Fake API response
-        mock_response = MagicMock()
-        mock_response.text = 'This is a mocked summary response.'
-        mock_generate_content.return_value = mock_response
-
-        # Run the method under test
-        view = SummarizerView()
-        prompt_text = "This is a long text to summarize."
-        response_text = view.generate_response(prompt=prompt_text)
-
-        # Assert Client is created with correct key
-        mock_client_class.assert_called_once_with(api_key=settings.GEMINI_API_KEY)
-
-        # Build expected arguments using real types
-        expected_contents = [
-            types.Content(
-                role="user",
-                parts=[types.Part.from_text(text=prompt_text)],
-            )
-        ]
-
-        expected_config = types.GenerateContentConfig(
-            thinking_config=types.ThinkingConfig(thinking_budget=-1),
-            response_mime_type="application/json",
-            response_schema=types.Schema(
-                type=types.Type.OBJECT,
-                required=["response"],
-                properties={"response": types.Schema(type=types.Type.STRING)},
-            ),
-            system_instruction=[
-                types.Part.from_text(
-                    text="You are a highly skilled summarizer. Your task is to distill complex information into clear and concise insights."
-                ),
-            ],
-        )
-
-        mock_generate_content.assert_called_once_with(
-            model="gemini-2.5-flash-lite",
-            contents=expected_contents,
-            config=expected_config,
-        )
-
-        self.assertEqual(response_text, 'This is a mocked summary response.')
-
-@override_settings(GEMINI_API_KEY="test-gemini-key")
-class SummarizerIntegrationTests(TestCase):
-
-    def setUp(self):
-        self.client = Client()
-        self.url = reverse('summarizer')
-
-    @patch('ai_service.gemini_service.genai.Client')
-    def test_generate_response_string_return(self, mock_client_class):
-        """Integration test: actually call Gemini and ensure response is a string."""
-        mock_client_instance = mock_client_class.return_value
-        mock_generate_content = mock_client_instance.models.generate_content
-
-        mock_response = MagicMock()
-        mock_response.text = 'This is a mocked summary response.'
-        mock_generate_content.return_value = mock_response
-
-        view = SummarizerView()
-        prompt_text = "This is a long text to summarize."
-        response_text = view.generate_response(prompt=prompt_text)
-
-        self.assertIsInstance(response_text, str)
-        self.assertGreater(len(response_text), 0, "Response should not be empty")
-
-    @unittest.skipUnless(os.getenv("RUN_GEMINI_TESTS") == "1", "Integration test skipped")
-    def test_post_summary_returns_string(self):
-        """
-        Integration test: send POST to SummarizerView and ensure response contains a string.
-        """
-        url = reverse("summarizer")  # make sure your urls.py has name="summarizer"
-        data = {"prompt": "This is a long text to summarize."}
-
-        response = self.client.post(url, data, format="json")
-
-        # Assertions
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["message"], "success")
-        self.assertIn("data", response.data)
-        self.assertIsInstance(response.data["data"], str)
-        self.assertGreater(len(response.data["data"]), 0, "Summary should not be empty")
-
-    def test_missing_prompt_returns_400(self):
-        """If 'prompt' is missing, should return 400 with error message."""
-        response = self.client.post(self.url, {}, format="json")
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("error", response.data)
-        self.assertEqual(response.data["error"], "A 'prompt' is required in the request body.")
-
-    @patch("core.views.generate_response", side_effect=Exception("Boom"))
-    def test_ai_error_returns_500(self, mock_generate_response):
-        """If Gemini API raises exception, should return 500 with generic error."""
-
-        response = self.client.post(self.url, {"prompt": "Cause error"}, format="json")
-
-        self.assertEqual(response.status_code, 500)
-        self.assertIn("error", response.data)
-        self.assertEqual(
-            response.data["error"],
-            "An unexpected error occurred while processing your request."
-        )
+from core.crypto import get_private_key, get_public_key_payload
+from core.helper import API_KEY_COOKIE_NAME, decrypt_api_key, encrypt_api_key
 
 
 class ApiKeyCookieTests(TestCase):
@@ -173,3 +49,106 @@ class ApiKeyCookieTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(API_KEY_COOKIE_NAME, response.cookies)
         self.assertEqual(response.cookies[API_KEY_COOKIE_NAME]["max-age"], 0)
+
+
+OAEP = padding.OAEP(
+    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+    algorithm=hashes.SHA256(),
+    label=None,
+)
+
+
+class ApiKeyTransportEncryptionTests(TestCase):
+    """The provider key is wrapped in the browser and only opened here."""
+
+    def setUp(self):
+        self.client = Client()
+
+        # A generated key must land in a temp directory, never in the repo's
+        # media/, and must not leak between tests through the lru_cache.
+        self._media = tempfile.TemporaryDirectory()
+        self.addCleanup(self._media.cleanup)
+        media_root = override_settings(MEDIA_ROOT=self._media.name, API_KEY_PRIVATE_KEY="")
+        media_root.enable()
+        self.addCleanup(media_root.disable)
+
+        get_private_key.cache_clear()
+        self.addCleanup(get_private_key.cache_clear)
+
+    def wrap(self, api_key):
+        """Do what the browser does: fetch the public key, encrypt, prefix."""
+        payload = self.client.get(reverse("public-key")).data["data"]
+
+        public_key = serialization.load_der_public_key(
+            base64.b64decode(payload["public_key"])
+        )
+        ciphertext = public_key.encrypt(api_key.encode("utf-8"), OAEP)
+
+        return f"rsa:{payload['key_id']}:{base64.b64encode(ciphertext).decode('ascii')}"
+
+    def test_public_key_endpoint_publishes_an_importable_key(self):
+        response = self.client.get(reverse("public-key"))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.data["data"]
+        self.assertEqual(payload["algorithm"], "RSA-OAEP-SHA256")
+        self.assertEqual(payload["key_id"], get_public_key_payload()["key_id"])
+
+        public_key = serialization.load_der_public_key(
+            base64.b64decode(payload["public_key"])
+        )
+        self.assertGreaterEqual(public_key.key_size, 3072)
+
+    def test_a_wrapped_key_unwraps_to_the_original(self):
+        raw = "AIzaSy-not-a-real-gemini-key"
+
+        header = self.wrap(raw)
+
+        self.assertNotIn(raw, header, "the raw key must not appear in the header")
+        self.assertEqual(decrypt_api_key(f"Bearer {header}"), raw)
+
+    def test_a_long_provider_key_still_fits(self):
+        raw = "sk-proj-" + "x" * 300
+
+        self.assertEqual(decrypt_api_key(self.wrap(raw)), raw)
+
+    @patch("core.views.test_api_key", return_value="valid")
+    def test_api_key_check_accepts_a_wrapped_key_and_sets_the_cookie(self, mock_test_api_key):
+        response = self.client.get(
+            reverse("api-key-check"),
+            HTTP_AUTHORIZATION=f"Bearer {self.wrap('raw-key')}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.cookies[API_KEY_COOKIE_NAME]["httponly"])
+        # The provider is checked with the unwrapped key, not the ciphertext.
+        self.assertEqual(mock_test_api_key.call_args.args[0], "raw-key")
+
+    def test_a_key_wrapped_for_another_backend_is_refused(self):
+        stranger = rsa.generate_private_key(public_exponent=65537, key_size=3072)
+        ciphertext = stranger.public_key().encrypt(b"raw-key", OAEP)
+        header = f"rsa:{get_public_key_payload()['key_id']}:{base64.b64encode(ciphertext).decode()}"
+
+        self.assertEqual(decrypt_api_key(header), "")
+
+    def test_a_stale_key_id_is_refused_rather_than_guessed(self):
+        header = self.wrap("raw-key").split(":", 2)
+        stale = f"rsa:0000000000000000:{header[2]}"
+
+        self.assertEqual(decrypt_api_key(stale), "")
+
+    def test_malformed_ciphertext_reads_as_no_key(self):
+        for header in ("rsa:", "rsa:abc", "rsa:abc:not-base64!", "rsa::"):
+            with self.subTest(header=header):
+                self.assertEqual(decrypt_api_key(header), "")
+
+    def test_unwrapped_and_cookie_keys_still_work(self):
+        self.assertEqual(decrypt_api_key("Bearer raw-key"), "raw-key")
+        self.assertEqual(decrypt_api_key(encrypt_api_key("raw-key")), "raw-key")
+
+    def test_the_generated_key_is_reused_across_restarts(self):
+        first = get_public_key_payload()["key_id"]
+
+        get_private_key.cache_clear()  # a fresh process reading the same volume
+
+        self.assertEqual(get_public_key_payload()["key_id"], first)

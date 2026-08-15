@@ -41,6 +41,12 @@ class ChatRecord(models.Model):
         super().save(*args, **kwargs)
 
 class RagChunk(models.Model):
+    """
+    Legacy chunk storage. Document AI now persists chunks and embeddings to
+    media/rag/<owner>/<n>/index.pkl instead, so nothing writes here any more.
+    Kept until the rows can be dropped in a deliberate migration.
+    """
+
     source = models.CharField(max_length=255)       
     text = models.TextField()                       
     embedding = models.JSONField(default=list) 

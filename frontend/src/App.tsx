@@ -4,7 +4,7 @@ import services, { onHistoryChanged } from './services/services';
 import { clearLegacyApiKey, getLegacyApiKey } from './services/auth';
 import type { HistoryEntry } from './interface';
 import { DEFAULT_TOOL_PATH } from './tools';
-import { ACTIVE_DOCUMENT_KEY, PROVIDER_STORAGE_KEY } from './constant';
+import { PROVIDER_STORAGE_KEY } from './constant';
 import NavBar from './components/NavBar';
 import Sidebar from './components/Sidebar';
 import AboutPage from './pages/about/AboutPage';
@@ -104,9 +104,6 @@ function App() {
     } finally {
       clearLegacyApiKey();
       localStorage.removeItem(PROVIDER_STORAGE_KEY);
-      // Otherwise the next user of this browser inherits a document banner
-      // for an index they cannot query.
-      localStorage.removeItem(ACTIVE_DOCUMENT_KEY);
       setProvider('');
       setHistory([]);
       setHasApiKey(false);

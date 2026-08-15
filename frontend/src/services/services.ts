@@ -4,6 +4,8 @@ import type {
   ApiResponse,
   GeneratedImage,
   HistoryEntry,
+  RagDocument,
+  TransportKey,
   UploadResponse,
 } from "../interface";
 
@@ -203,6 +205,32 @@ const insertFile = async (file: File): Promise<UploadResponse> => {
   }
 };
 
+/** The documents indexed for this API key, oldest folder first. */
+const listRagDocuments = async (): Promise<RagDocument[]> => {
+  try {
+    const response = await client.get<ApiResponse<RagDocument[]>>(
+      "/rag-documents/"
+    );
+    return Array.isArray(response.data?.data) ? response.data.data : [];
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
+/** Drop one document's folder; returns what is still indexed. */
+const deleteRagDocument = async (
+  documentId: number
+): Promise<RagDocument[]> => {
+  try {
+    const response = await client.delete<
+      ApiResponse<{ removed: number; documents: RagDocument[] }>
+    >(`/rag-documents/${documentId}/`);
+    return response.data?.data?.documents ?? [];
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
 const getHistory = async (): Promise<HistoryEntry[]> => {
   try {
     const response = await client.get<ApiResponse<HistoryEntry[]>>("/history/");
@@ -221,10 +249,70 @@ const checkApiKeySession = async () => {
   }
 };
 
-const validateApiKey = async (apiKey: string) => {
+/**
+ * Wrap the provider key with the backend's public key before it leaves here.
+ *
+ * The key is the user's own credential and it passes through nginx and a
+ * tunnel on the way in, so only the backend — which holds the private half —
+ * should be able to read it. The public key is fetched per submission rather
+ * than cached, so a backend restart can never leave us encrypting for a key
+ * that no longer exists.
+ *
+ * WebCrypto only exists in a secure context. Served over plain HTTP the key is
+ * sent as-is, which the backend still accepts, rather than blocking sign-in.
+ */
+const encryptApiKeyForTransport = async (apiKey: string): Promise<string> => {
+  if (!window.crypto?.subtle) {
+    console.warn(
+      "Web Crypto is unavailable (this page is not a secure context), so the API key is sent unencrypted."
+    );
+    return apiKey;
+  }
+
+  const { data } = await client.get<ApiResponse<TransportKey>>("/public-key/");
+  const transportKey = data?.data;
+
+  if (!transportKey?.public_key || transportKey.algorithm !== "RSA-OAEP-SHA256") {
+    throw new ApiError("The backend did not provide a usable encryption key.");
+  }
+
+  const spki = Uint8Array.from(atob(transportKey.public_key), (character) =>
+    character.charCodeAt(0)
+  );
+
+  const publicKey = await window.crypto.subtle.importKey(
+    "spki",
+    spki,
+    { name: "RSA-OAEP", hash: "SHA-256" },
+    false,
+    ["encrypt"]
+  );
+
+  const ciphertext = await window.crypto.subtle.encrypt(
+    { name: "RSA-OAEP" },
+    publicKey,
+    new TextEncoder().encode(apiKey)
+  );
+
+  const encoded = btoa(
+    String.fromCharCode(...new Uint8Array(ciphertext))
+  );
+
+  return `rsa:${transportKey.key_id}:${encoded}`;
+};
+
+/**
+ * Validate a provider key and, on success, start the httpOnly cookie session.
+ *
+ * `endpoint` selects the provider-specific check when one is known.
+ */
+const validateApiKey = async (
+  apiKey: string,
+  endpoint: string = "/api-key-check/"
+) => {
   try {
-    const response = await client.get("/api-key-check/", {
-      headers: { Authorization: apiKey },
+    const response = await client.get(endpoint, {
+      headers: { Authorization: await encryptApiKeyForTransport(apiKey) },
     });
     return response.data;
   } catch (error) {
@@ -255,6 +343,8 @@ const services = {
   chatWithRAG,
   generateImage,
   insertFile,
+  listRagDocuments,
+  deleteRagDocument,
   getHistory,
   checkApiKeySession,
   validateApiKey,

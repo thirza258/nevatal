@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import services, { toApiError } from '../../services/services';
+import type { UploadResponse } from '../../interface';
 
 interface InsertFileProps {
-  onUploadSuccess: (documentName: string) => void;
-  /** Shown when the user is replacing a document rather than adding the first. */
-  currentDocument?: string;
+  onUploadSuccess: (uploaded: UploadResponse) => void;
+  /** How many documents are already indexed, for the "adding another" copy. */
+  indexedCount?: number;
   onCancel?: () => void;
 }
 
@@ -12,7 +13,7 @@ const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
 const InsertFile: React.FC<InsertFileProps> = ({
   onUploadSuccess,
-  currentDocument,
+  indexedCount = 0,
   onCancel,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -48,8 +49,7 @@ const InsertFile: React.FC<InsertFileProps> = ({
     setError('');
 
     try {
-      await services.insertFile(selectedFile);
-      onUploadSuccess(selectedFile.name);
+      onUploadSuccess(await services.insertFile(selectedFile));
     } catch (err) {
       const apiError = toApiError(err);
       setError(
@@ -66,17 +66,19 @@ const InsertFile: React.FC<InsertFileProps> = ({
     <div className="h-full overflow-y-auto flex items-start justify-center pt-8">
       <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 w-full max-w-lg">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          {currentDocument ? 'Replace the document' : 'Upload a document'}
+          {indexedCount > 0 ? 'Add another document' : 'Upload a document'}
         </h1>
         <p className="text-gray-600 mb-6 text-sm">
           Nevatal reads the PDF, splits it into passages, and answers your
           questions using the passages that match.
         </p>
 
-        {currentDocument && (
-          <p className="mb-4 text-sm bg-amber-50 border border-amber-200 text-amber-800 rounded-md px-3 py-2">
-            <strong>{currentDocument}</strong> is currently loaded. Uploading a new
-            file replaces it — the previous document is removed from the index.
+        {indexedCount > 0 && (
+          <p className="mb-4 text-sm bg-blue-50 border border-blue-200 text-blue-800 rounded-md px-3 py-2">
+            {indexedCount} document{indexedCount === 1 ? ' is' : 's are'} already
+            indexed. This file is added alongside {indexedCount === 1 ? 'it' : 'them'} —
+            answers can then draw on all of them. Remove a document from the chat
+            screen if you no longer want it searched.
           </p>
         )}
 
@@ -133,7 +135,11 @@ const InsertFile: React.FC<InsertFileProps> = ({
             onClick={handleUpload}
             disabled={!selectedFile || uploading}
           >
-            {uploading ? 'Indexing document...' : 'Upload and start chat'}
+            {uploading
+              ? 'Indexing document...'
+              : indexedCount > 0
+              ? 'Upload and add to index'
+              : 'Upload and start chat'}
           </button>
         </div>
       </div>

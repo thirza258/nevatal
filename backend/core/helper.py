@@ -8,6 +8,8 @@ import PyPDF2
 from nevatal_settings import settings
 from cryptography.fernet import Fernet, InvalidToken
 
+from core.crypto import decrypt_transport_value, is_transport_encrypted
+
 API_KEY_COOKIE_NAME = "nevatal_api_key"
 API_KEY_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
 
@@ -62,12 +64,16 @@ def decrypt_api_key(api_key: Optional[str]) -> str:
     """
     Convert an Authorization header value into a raw provider key.
 
-    Legacy raw keys are still accepted for backwards compatibility. Encrypted
-    values must use the `enc:` prefix returned by `encrypt_api_key`.
+    Three forms arrive here: `rsa:` values wrapped by the browser with the
+    backend's public key, `enc:` values from the session cookie, and legacy raw
+    keys, still accepted for backwards compatibility.
     """
     normalized = _normalize_api_key_value(api_key)
     if not normalized:
         return ""
+
+    if is_transport_encrypted(normalized):
+        return decrypt_transport_value(normalized)
 
     if not normalized.startswith("enc:"):
         return normalized
@@ -181,17 +187,21 @@ def extract_text_from_pdf(pdf_file) -> Optional[str]:
         print(f"❌ Error extracting text from PDF: {e}")
         return None
 
-def save_file(file) -> Optional[str]:
+def save_file(file, directory=None) -> Optional[str]:
     """
-    Save a file to the media directory.
+    Save a file to the media directory, or to `directory` when one is given.
+
+    The RAG store passes the numbered folder it just reserved so the upload
+    ends up next to the index built from it.
     """
     try:
-        os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
+        target_dir = directory or settings.MEDIA_ROOT
+        os.makedirs(target_dir, exist_ok=True)
 
         # Never join a caller-supplied path: "../../etc/passwd" would escape
         # MEDIA_ROOT entirely.
         safe_name = os.path.basename(file.name or "").strip() or "upload"
-        file_path = os.path.join(settings.MEDIA_ROOT, safe_name)
+        file_path = os.path.join(target_dir, safe_name)
         with open(file_path, "wb") as f:
             for chunk in file.chunks() if hasattr(file, "chunks") else [file.read()]:
                 f.write(chunk)

@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../../constant';
-import services from '../../services/services';
+import services, { toApiError } from '../../services/services';
 
 interface ApiKeyInputPageProps {
   onKeySubmit: (provider: string) => void;
@@ -17,31 +15,6 @@ interface Provider {
   keyPattern: RegExp;
   invalidKeyMessage: string;
 }
-
-const getAxiosErrorMessage = (error: unknown, fallback: string) => {
-  if (!axios.isAxiosError(error)) {
-    return fallback;
-  }
-
-  const data = error.response?.data;
-
-  if (typeof data === 'string') {
-    return data;
-  }
-
-  if (data && typeof data === 'object') {
-    const responseMessage =
-      (data as { message?: string; error?: string; detail?: string }).message ??
-      (data as { message?: string; error?: string; detail?: string }).error ??
-      (data as { message?: string; error?: string; detail?: string }).detail;
-
-    if (responseMessage) {
-      return responseMessage;
-    }
-  }
-
-  return error.message || fallback;
-};
 
 const PROVIDERS: Provider[] = [
   {
@@ -120,17 +93,9 @@ const ApiInputPage: React.FC<ApiKeyInputPageProps> = ({ onKeySubmit }) => {
     setError('');
 
     try {
-      const response = await axios.get(`${API_URL}${currentProvider.endpoint}`, {
-        headers: {
-          Authorization: trimmedKey,
-        },
-        withCredentials: true,
-      });
-
-      if (response.status !== 200) {
-        setError('Invalid API key');
-        return;
-      }
+      // The key is encrypted with the backend's public key inside
+      // validateApiKey, so it never travels in clear text.
+      await services.validateApiKey(trimmedKey, currentProvider.endpoint);
 
       try {
         await services.checkApiKeySession();
@@ -142,7 +107,7 @@ const ApiInputPage: React.FC<ApiKeyInputPageProps> = ({ onKeySubmit }) => {
       localStorage.setItem('activeProvider', selectedProvider);
       onKeySubmit(selectedProvider);
     } catch (error: unknown) {
-      setError(getAxiosErrorMessage(error, 'Invalid API key or network error'));
+      setError(toApiError(error).message || 'Invalid API key or network error');
     } finally {
       setLoading(false);
     }

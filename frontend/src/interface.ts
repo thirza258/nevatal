@@ -32,8 +32,37 @@ export type HistoryResponse = ApiResponse<HistoryEntry[]>;
 
 export type ApiKeyCheckResponse = ApiResponse<{ valid: boolean } | false>;
 
+/**
+ * The backend's public key, used to encrypt the provider API key before it is
+ * put on the wire. `key_id` lets the backend refuse ciphertext meant for a key
+ * it has since replaced.
+ */
+export interface TransportKey {
+  algorithm: string;
+  key_id: string;
+  /** Base64-encoded SPKI DER, ready for crypto.subtle.importKey. */
+  public_key: string;
+}
+
+/**
+ * One persisted document index, stored server-side as
+ * media/rag/<owner>/<document_id>/index.pkl. `document_id` is the folder
+ * number: the first upload is 1, the second 2, and so on.
+ */
+export interface RagDocument {
+  document_id: number;
+  source: string;
+  chunk_count?: number;
+  created_at?: string;
+  file_path?: string | null;
+  folder?: string;
+}
+
 export interface UploadResponse {
   message: string;
-  file_path: string;
+  file_path: string | null;
   document_name: string;
+  document_id: number;
+  chunk_count: number;
+  documents: RagDocument[];
 }
