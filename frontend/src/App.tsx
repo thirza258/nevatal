@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import services, { onHistoryChanged } from './services/services';
 import { clearLegacyApiKey, getLegacyApiKey } from './services/auth';
 import type { HistoryEntry } from './interface';
-import { DEFAULT_TOOL_PATH } from './tools';
-import { PROVIDER_STORAGE_KEY } from './constant';
+import { DEFAULT_TOOL_PATH, findToolByPath } from './tools';
+import { DEFAULT_PAGE_TITLE, PROVIDER_STORAGE_KEY, SITE_NAME } from './constant';
 import NavBar from './components/NavBar';
 import Sidebar from './components/Sidebar';
 import AboutPage from './pages/about/AboutPage';
 import NotFoundPage from './pages/NotFoundPage';
-import ApiKeyPage from './pages/api-insert-page/ApiPage';
+import LandingPage from './pages/landing/LandingPage';
 
 import PromptPage from './pages/ai-service-page/PromptPage';
 import ProofreaderPage from './pages/ai-service-page/ProofreaderPage';
@@ -25,6 +25,7 @@ import ImaGenPage from './pages/ai-service-page/ImaGenPage';
 import EmailBuilderPage from './pages/ai-service-page/EmailBuilderPage';
 
 function App() {
+  const { pathname } = useLocation();
   const [hasApiKey, setHasApiKey] = useState(false);
   // The session check is a round trip; without this the API key form flashes
   // on every reload before we know the user is already signed in.
@@ -91,6 +92,20 @@ function App() {
     });
   }, [hasApiKey, refreshHistory]);
 
+  // The document title is the one piece of metadata that changes per route.
+  // Everything else a crawler reads is static in index.html, because every
+  // signed-out URL resolves to the landing page.
+  useEffect(() => {
+    const tool = findToolByPath(pathname);
+    if (tool) {
+      document.title = `${tool.name} — ${SITE_NAME}`;
+    } else if (pathname === '/about') {
+      document.title = `About — ${SITE_NAME}`;
+    } else {
+      document.title = DEFAULT_PAGE_TITLE;
+    }
+  }, [pathname]);
+
   const handleKeySubmission = (selectedProvider: string) => {
     setProvider(selectedProvider);
     setHasApiKey(true);
@@ -110,6 +125,20 @@ function App() {
     }
   };
 
+  // The landing page is the public, indexable page, so it paints before the
+  // session check comes back rather than behind the loading spinner.
+  //
+  // The exception is a returning visitor: the provider left in localStorage by
+  // their last session says they will most likely land in the workspace, and
+  // showing them the landing first would be a flash of the wrong page. A
+  // first-time visitor — or a crawler — has no such hint and gets the landing
+  // with no round trip in front of it.
+  const isReturningVisitor = isBootstrapping && Boolean(provider);
+
+  if (pathname === '/' && !hasApiKey && !isReturningVisitor) {
+    return <LandingPage onKeySubmit={handleKeySubmission} />;
+  }
+
   if (isBootstrapping) {
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-3 bg-gray-100 text-gray-500">
@@ -119,8 +148,10 @@ function App() {
     );
   }
 
+  // Every tool lives behind an API key; without one there is nothing to show
+  // on those URLs but the landing page.
   if (!hasApiKey) {
-    return <ApiKeyPage onKeySubmit={handleKeySubmission} />;
+    return <Navigate to="/" replace />;
   }
 
   return (

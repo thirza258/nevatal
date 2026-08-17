@@ -1,0 +1,16 @@
+# https://chat.nevatal.tech/robots.txt
+# Change the host here, in index.html and in sitemap.xml together.
+
+User-agent: *
+Allow: /
+
+# Nothing under /api/ is a page — it is the JSON backend, and every endpoint
+# needs an API key session anyway.
+Disallow: /api/
+
+# The tool routes (/prompt, /translator, ...) are behind an API key and serve
+# the landing page to anyone without one. They are deliberately *not*
+# disallowed: crawlers need to fetch them to see the canonical tag pointing
+# back at /, which is what keeps them out of the index.
+
+Sitemap: https://chat.nevatal.tech/sitemap.xml

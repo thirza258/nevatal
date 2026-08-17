@@ -1,21 +1,27 @@
 # Nevatal - AI Functions Hub
 
-Nevatal is a comprehensive AI application that combines multiple AI functionalities into a single, easy-to-use platform. The application consists of a frontend running on Vue.js and a Django backend that integrates various AI capabilities.
+Nevatal is a comprehensive AI application that combines multiple AI functionalities into a single, easy-to-use platform. The application consists of a React frontend and a Django backend that integrates various AI capabilities. You bring your own OpenAI, Google Gemini or OpenRouter API key; every request is made with it.
 
 ## Features
 
+The twelve tools in the workspace, as defined in
+[`frontend/src/tools.ts`](./frontend/src/tools.ts):
 
-- Prompt-based interactions
-- Proofreading assistance
-- Text summarization
-- Translation services
-- Content writing and rewriting
-- AI-powered explanations
-- Copywriting assistance
-- Document AI processing
-- RAG (Retrieval Augmented Generation) chat functionality
-- Nano Banana Image Generation
-- Email Builder AI
+- **Prompt** — open-ended chat with the model
+- **Explainer** — concepts explained at the depth you choose
+- **Writer** — turn a brief into a finished draft
+- **Rewriter** — rework text towards a specific goal
+- **Proofreader** — fix errors without losing your voice
+- **Summarizer** — condense long text into the shape you need
+- **Copywriting** — marketing copy shaped for its channel
+- **Email Builder** — draft an email from its context
+- **Translator** — translate with control over register
+- **Sentiment Analysis** — judge the tone of feedback and reviews
+- **Document AI** — RAG chat over the contents of an uploaded PDF
+- **Image Generation** — generate an image from a description
+
+Document AI and Image Generation require a Google Gemini key; the rest work
+with any of the three providers.
 
 ## Getting Started
 
@@ -80,6 +86,40 @@ POSTGRES_DB="postgres"
 POSTGRES_USER="postgres"
 POSTGRES_PASSWORD="admin123"
 ```
+
+### Landing page and SEO
+
+`/` is a public landing page ([`frontend/src/pages/landing/`](./frontend/src/pages/landing/)):
+the pitch, the tool list, the key-handling story, an FAQ, and the API key form
+itself. Everything else is behind an API key, and a signed-out visitor on any
+other route is redirected to `/`, so `/` is the only indexable URL — which is
+why [`sitemap.xml`](./frontend/public/sitemap.xml) lists nothing else.
+
+The landing page renders before the session check resolves, so the page a
+crawler reads has no round trip in front of it. A returning visitor (one with
+`activeProvider` in localStorage) sees the loading state instead, to avoid a
+flash of the landing page on the way to the workspace.
+
+The tool cards and the FAQ's tool list are generated from `TOOL_GROUPS` in
+[`frontend/src/tools.ts`](./frontend/src/tools.ts) — the same list the router
+and sidebar use — so the landing page cannot advertise a tool that does not
+exist. The `FAQPage` structured data is built from the array that renders the
+visible FAQ for the same reason; the stable `WebSite` and `SoftwareApplication`
+markup lives in `index.html`.
+
+The public origin is written in four places, and moving the site means changing
+all four:
+
+| File | What it holds |
+| --- | --- |
+| `frontend/index.html` | `<link rel="canonical">`, `og:url`, `og:image`, JSON-LD `@id`/`url` |
+| `frontend/public/sitemap.xml` | the `<loc>` and its `<lastmod>` |
+| `frontend/public/robots.txt` | the `Sitemap:` line |
+| `frontend/src/constant.ts` | `SITE_URL`, used by the footer link |
+
+`og-image.png` (1200×630) is the social preview card. `nginx.conf` gzips text
+responses, caches the fingerprinted `/assets/` for a year, and marks
+`index.html` `no-cache` so a deploy is picked up immediately.
 
 ### API key handling
 
