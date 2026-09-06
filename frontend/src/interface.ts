@@ -33,6 +33,34 @@ export type HistoryResponse = ApiResponse<HistoryEntry[]>;
 export type ApiKeyCheckResponse = ApiResponse<{ valid: boolean } | false>;
 
 /**
+ * One model the session's key can be pointed at.
+ *
+ * Prices are US dollars per million tokens: providers quote per-token figures
+ * like "0.00000015", which the backend converts before sending them here. Null
+ * means the provider publishes no price, which is not the same as free.
+ */
+export interface AiModel {
+  id: string;
+  name: string;
+  context_length: number | null;
+  prompt_price_per_million: number | null;
+  completion_price_per_million: number | null;
+  modality: string;
+  is_free: boolean;
+}
+
+/**
+ * What `/models/` reports for the session's key. `models` is empty for a
+ * provider with no catalogue, which means there is no choice to offer and
+ * generation stays on `default_model`.
+ */
+export interface ModelCatalog {
+  provider: string;
+  default_model: string;
+  models: AiModel[];
+}
+
+/**
  * The backend's public key, used to encrypt the provider API key before it is
  * put on the wire. `key_id` lets the backend refuse ciphertext meant for a key
  * it has since replaced.

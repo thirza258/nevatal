@@ -9,7 +9,10 @@ open-ended prompting stay in `core`.
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from core.helper import resolve_api_key_header as strip_authentication_header
+from core.helper import (
+    resolve_api_key_header as strip_authentication_header,
+    resolve_model_from_request,
+)
 from core.mixins import AIServiceMixin
 from core.models import ChatRecord
 from ai_service import generate_response
@@ -35,6 +38,7 @@ class WriterView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
 
         if not prompt:
 
@@ -45,7 +49,7 @@ class WriterView(APIView):
 
         try:
             system_instruction_string = f"""You are an expert writer. Your goal is to create original, engaging, and high-quality text based on the user's prompt."""
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='writer', prompt=prompt, response=response_data, api_key=api_key)
 
             return Response({
@@ -76,6 +80,7 @@ class RewriterView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
 
         if not prompt:
 
@@ -86,7 +91,7 @@ class RewriterView(APIView):
 
         try:
             system_instruction_string = f"""You are a skilled rewriter. Your task is to rewrite the given text in a way that is more engaging and persuasive."""
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='rewriter', prompt=prompt, response=response_data, api_key=api_key)
 
             return Response({
@@ -106,6 +111,7 @@ class ProofreaderView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -123,7 +129,7 @@ class ProofreaderView(APIView):
                      And make sure to proofread eventough the text is already perfect
                      """
 
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='proofreader', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,
@@ -156,6 +162,7 @@ class SummarizerView(AIServiceMixin, APIView):
         """
         prompt = request.data.get("prompt")
         api_key = strip_authentication_header(request.headers.get('Authorization')) or self._default_api_key()
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -171,7 +178,7 @@ class SummarizerView(AIServiceMixin, APIView):
         try:
             system_instruction_string = f"""You are a highly skilled summarizer. Your task is to distill complex information into clear and concise insights."""
 
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='summarizer', prompt=prompt, response=response_data, api_key=api_key)
 
             return Response({
@@ -203,6 +210,7 @@ class TranslatorView(APIView):
         source_language = request.data.get("source_language", "English")
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
 
         if not prompt:
             return Response(
@@ -213,7 +221,7 @@ class TranslatorView(APIView):
         try:
 
             system_instruction_string = f"""You are a professional translator. Translate the given text into {target_language} from {source_language}."""
-            translation_text = generate_response(api_key=api_key, prompt=prompt, system_instruction_string=system_instruction_string)
+            translation_text = generate_response(api_key=api_key, prompt=prompt, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='translator', prompt=prompt, response=translation_text, api_key=api_key)
 
             return Response({
@@ -239,6 +247,7 @@ class SentimentAnalyzerView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -255,7 +264,7 @@ class SentimentAnalyzerView(APIView):
             The sentiment should be analyzed based on the following prompt:
             {prompt}
             """
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='sentiment_analysis', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,
@@ -286,6 +295,7 @@ class CopyWritingView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -300,7 +310,7 @@ class CopyWritingView(APIView):
             system_instruction_string = f"""
             You are a skilled copywriter. Your task is to create engaging and persuasive copywriting based on the user's prompt.
             """
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='copywriting', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,
@@ -329,6 +339,7 @@ class EmailGeneratorView(APIView):
 
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
 
         # Validate before building the composed prompt — the old order
         # overwrote `prompt` first, so these checks could never fail.
@@ -360,7 +371,7 @@ class EmailGeneratorView(APIView):
         You are a skilled email generator. Your task is to generate an email from a text prompt.
         """
         try:
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='email_generation', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,
@@ -398,6 +409,7 @@ class SocialMediaPostGeneratorView(APIView):
 
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -426,7 +438,7 @@ class SocialMediaPostGeneratorView(APIView):
             You are a skilled social media post generator. Your task is to generate a social media post from a platform, tone, audience, hashtag count, include emojis, include cta, post length, brand name, and brand keywords.
             """
 
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='social_media_post_generation', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,

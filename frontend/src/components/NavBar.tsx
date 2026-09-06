@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { findToolByPath } from '../tools';
+import ModelPicker from './ModelPicker';
 
 interface NavBarProps {
   provider: string;
@@ -52,6 +53,9 @@ const NavBar: React.FC<NavBarProps> = ({ provider, onClearApiKey }) => {
             {PROVIDER_LABELS[provider] ?? provider}
           </span>
         )}
+
+        {/* Renders only when the session's provider publishes a catalogue. */}
+        <ModelPicker provider={provider} />
 
         <Link
           to="/about"

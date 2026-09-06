@@ -43,6 +43,12 @@ const AboutPage: React.FC = () => {
               OpenRouter works for all the text tools.
             </li>
             <li>
+              <strong>OpenRouter</strong> — the top bar lists every model
+              OpenRouter can route to, so you can choose which one the tools
+              run on. OpenAI and Gemini keys run on this app's default model
+              for that provider.
+            </li>
+            <li>
               <strong>Google Gemini only</strong> — Document AI builds its search
               index with Google embeddings, and Image Generation uses Google's
               image model. Both fail with an OpenAI or OpenRouter key.

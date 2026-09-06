@@ -4,7 +4,7 @@ import services, { onHistoryChanged } from './services/services';
 import { clearLegacyApiKey, getLegacyApiKey } from './services/auth';
 import type { HistoryEntry } from './interface';
 import { DEFAULT_TOOL_PATH, findToolByPath } from './tools';
-import { DEFAULT_PAGE_TITLE, PROVIDER_STORAGE_KEY, SITE_NAME } from './constant';
+import { DEFAULT_PAGE_TITLE, MODEL_STORAGE_KEY, PROVIDER_STORAGE_KEY, SITE_NAME } from './constant';
 import NavBar from './components/NavBar';
 import Sidebar from './components/Sidebar';
 import AboutPage from './pages/about/AboutPage';
@@ -119,6 +119,9 @@ function App() {
     } finally {
       clearLegacyApiKey();
       localStorage.removeItem(PROVIDER_STORAGE_KEY);
+      // The next key may be for a provider — or a plan — where this model does
+      // not exist, so the choice goes with the key it was made for.
+      localStorage.removeItem(MODEL_STORAGE_KEY);
       setProvider('');
       setHistory([]);
       setHasApiKey(false);

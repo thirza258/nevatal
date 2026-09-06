@@ -16,13 +16,15 @@ from core.helper import (
     clear_api_key_cookie,
     encrypt_api_key,
     fingerprint_api_key,
+    resolve_api_key_from_request,
     resolve_api_key_header as strip_authentication_header,
+    resolve_model_from_request,
     set_api_key_cookie,
 )
 from core.crypto import get_public_key_payload
 from core.mixins import AIServiceMixin
 from core.models import ChatRecord
-from ai_service import normalize_provider, test_api_key, generate_response
+from ai_service import list_models, normalize_provider, test_api_key, generate_response
 
 
 
@@ -129,6 +131,48 @@ class ApiKeyClearView(APIView):
         )
         return clear_api_key_cookie(response)
 
+class ModelListView(APIView):
+    """
+    The models this session's key can be pointed at.
+
+    OpenRouter routes to hundreds of models and publishes the whole catalogue,
+    so a session on an OpenRouter key gets every one of them and picks with
+    `X-AI-Model`. The other providers answer with an empty list, which the
+    frontend reads as "no choice to make on this key" and shows no picker for.
+
+    `provider` is resolved from the key itself, not from what the browser
+    claims, so a stale provider in localStorage cannot make the frontend
+    believe it may choose a model.
+    """
+
+    def get(self, request):
+        api_key = resolve_api_key_from_request(request)
+        if not api_key:
+            return Response({
+                "status": status.HTTP_401_UNAUTHORIZED,
+                "message": "API key not provided",
+                "data": False,
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            catalogue = list_models(api_key=api_key)
+        except Exception as e:
+            # An empty list would read as "this provider has no models", so a
+            # provider that could not be reached says so instead.
+            logger.error(f"Could not list the provider's models: {e}")
+            return Response({
+                "status": status.HTTP_502_BAD_GATEWAY,
+                "message": "error",
+                "data": "The provider's model list is unavailable right now.",
+            }, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({
+            "status": status.HTTP_200_OK,
+            "message": "success",
+            "data": catalogue,
+        }, status=status.HTTP_200_OK)
+
+
 class PromptView(AIServiceMixin, APIView):
     """
     API View for generating a response to a prompt.
@@ -144,6 +188,7 @@ class PromptView(AIServiceMixin, APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -157,7 +202,7 @@ class PromptView(AIServiceMixin, APIView):
             )
 
         try:
-            response_data = generate_response(prompt=prompt, api_key=api_key)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model)
             ChatRecord.objects.create(method='prompt', prompt=prompt, response=response_data, api_key=api_key)
 
             return Response({
@@ -183,6 +228,7 @@ class ExplainerView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -192,7 +238,7 @@ class ExplainerView(APIView):
             system_instruction_string = f"""
             You are a skilled explainer. Your task is to explain the given prompt in a way that is easy to understand.
             """
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='explainer', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,
@@ -219,6 +265,7 @@ class CodeGeneratorView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -235,7 +282,7 @@ class CodeGeneratorView(APIView):
             The code should be generated based on the following prompt:
             """
 
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='code_generation', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,
@@ -262,6 +309,7 @@ class CodeReviewerView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
 
         if not prompt:
             return Response(
@@ -279,7 +327,7 @@ class CodeReviewerView(APIView):
             The code should be reviewed based on the following prompt:
             {prompt}
             """
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='code_reviewer', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,

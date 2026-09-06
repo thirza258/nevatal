@@ -75,6 +75,23 @@ def generate_image(prompt: str, api_key: str, provider: Optional[str] = None):
     return service.generate_image(prompt=prompt, api_key=api_key)
 
 
+def list_models(api_key: Optional[str] = None, provider: Optional[str] = None) -> dict[str, Any]:
+    """
+    Describe the models the session's key can be pointed at.
+
+    Only a provider that publishes a catalogue returns anything: OpenRouter
+    routes to hundreds of models and lists them all, so a key belonging to it
+    gets a model to choose. The rest report an empty list, which reads as "this
+    key has no choice to make" rather than as an error.
+    """
+    service = _resolve_service(api_key, provider)
+    return {
+        "provider": service.provider_name,
+        "default_model": service.default_model,
+        "models": service.list_models(),
+    }
+
+
 
 def normalize_provider(provider: Optional[str], api_key: Optional[str] = None) -> str:
     """
@@ -205,6 +222,15 @@ class BaseAIService(ABC):
         raise NotImplementedError(
             f"Image generation is not supported by {self.provider_name}."
         )
+
+    def list_models(self) -> list[dict[str, Any]]:
+        """
+        The models this provider can be pointed at.
+
+        Empty unless the provider publishes a catalogue this app reads, in
+        which case the session stays on `default_model`.
+        """
+        return []
 
 
 

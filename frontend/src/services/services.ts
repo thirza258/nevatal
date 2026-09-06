@@ -1,9 +1,10 @@
 import axios from "axios";
-import { API_URL } from "../constant";
+import { AI_MODEL_HEADER, API_URL, MODEL_STORAGE_KEY } from "../constant";
 import type {
   ApiResponse,
   GeneratedImage,
   HistoryEntry,
+  ModelCatalog,
   RagDocument,
   TransportKey,
   UploadResponse,
@@ -17,6 +18,21 @@ const client = axios.create({
   baseURL: API_URL,
   withCredentials: true,
   timeout: 120000,
+});
+
+/**
+ * Send the model the session picked with every request that might generate.
+ *
+ * It is read at request time rather than held in React state so that a tool
+ * page never has to know a picker exists. No stored model means no header,
+ * which the backend reads as "use the provider default".
+ */
+client.interceptors.request.use((config) => {
+  const model = localStorage.getItem(MODEL_STORAGE_KEY);
+  if (model) {
+    config.headers.set(AI_MODEL_HEADER, model);
+  }
+  return config;
 });
 
 /** Error carrying the message the backend actually sent, plus its status. */
@@ -240,6 +256,27 @@ const getHistory = async (): Promise<HistoryEntry[]> => {
   }
 };
 
+/**
+ * The models the session's key can be pointed at.
+ *
+ * Providers differ: OpenRouter lists every model it can route to, the others
+ * report nothing and stay on their default. An empty list is a valid answer,
+ * not a failure.
+ */
+const listModels = async (): Promise<ModelCatalog> => {
+  try {
+    const response = await client.get<ApiResponse<ModelCatalog>>("/models/");
+    const catalogue = response.data?.data;
+    return {
+      provider: catalogue?.provider ?? "",
+      default_model: catalogue?.default_model ?? "",
+      models: Array.isArray(catalogue?.models) ? catalogue.models : [],
+    };
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
 const checkApiKeySession = async () => {
   try {
     const response = await client.get("/api-key-check/");
@@ -346,6 +383,7 @@ const services = {
   listRagDocuments,
   deleteRagDocument,
   getHistory,
+  listModels,
   checkApiKeySession,
   validateApiKey,
   clearApiKeySession,

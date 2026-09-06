@@ -48,7 +48,7 @@ const FAQS: Faq[] = [
   {
     question: 'Which providers are supported?',
     answer:
-      'OpenAI, Google Gemini and OpenRouter. All text tools work with any of the three. Document AI and Image Generation need a Google Gemini key, because they use Google embeddings and Google image models.',
+      'OpenAI, Google Gemini and OpenRouter. All text tools work with any of the three. An OpenRouter key also gets a model picker in the top bar, listing every model OpenRouter can route to, so the tools can run on whichever one you want. Document AI and Image Generation need a Google Gemini key, because they use Google embeddings and Google image models.',
   },
   {
     question: 'What can Nevatal do?',

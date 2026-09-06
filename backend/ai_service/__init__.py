@@ -5,6 +5,7 @@ from .ai_service import (
     PROVIDER_OPENROUTER,
     SUPPORTED_PROVIDERS,
     get_ai_service,
+    list_models,
     normalize_provider,
     test_api_key,
     generate_response,

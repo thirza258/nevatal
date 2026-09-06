@@ -152,3 +152,96 @@ class ApiKeyTransportEncryptionTests(TestCase):
         get_private_key.cache_clear()  # a fresh process reading the same volume
 
         self.assertEqual(get_public_key_payload()["key_id"], first)
+
+
+class ModelSelectionTests(TestCase):
+    """
+    The catalogue endpoint, and the model a session picks from it.
+
+    The picked model rides `X-AI-Model` on every generation: it is a model id,
+    not a credential, so it needs none of the key's encryption.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.client.cookies[API_KEY_COOKIE_NAME] = encrypt_api_key("sk-or-v1-key")
+
+    def test_the_catalogue_needs_a_session(self):
+        anonymous = Client()
+
+        response = anonymous.get(reverse("models"))
+
+        self.assertEqual(response.status_code, 401)
+
+    @patch("core.views.list_models")
+    def test_the_catalogue_is_read_for_the_session_key(self, mock_list_models):
+        mock_list_models.return_value = {
+            "provider": "openrouter",
+            "default_model": "openai/gpt-4o-mini",
+            "models": [{"id": "openai/gpt-4o-mini"}],
+        }
+
+        response = self.client.get(reverse("models"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["data"]["provider"], "openrouter")
+        self.assertEqual(len(response.data["data"]["models"]), 1)
+        # The key decides which provider is asked, not what the browser claims.
+        self.assertEqual(mock_list_models.call_args.kwargs["api_key"], "sk-or-v1-key")
+
+    @patch("core.views.list_models", side_effect=RuntimeError("openrouter is down"))
+    def test_an_unreachable_catalogue_is_not_an_empty_one(self, mock_list_models):
+        response = self.client.get(reverse("models"))
+
+        self.assertEqual(response.status_code, 502)
+
+    @patch("ai_service.ai_service.get_ai_service")
+    def test_the_picked_model_reaches_the_provider(self, mock_get_ai_service):
+        mock_get_ai_service.return_value.generate_response.return_value = (
+            '{"response": "answered by the picked model"}'
+        )
+
+        response = self.client.post(
+            reverse("prompt"),
+            {"prompt": "Hello"},
+            HTTP_X_AI_MODEL="anthropic/claude-sonnet-4",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        service = mock_get_ai_service.return_value
+        self.assertEqual(
+            service.generate_response.call_args.kwargs["model"],
+            "anthropic/claude-sonnet-4",
+        )
+
+    @patch("ai_service.ai_service.get_ai_service")
+    def test_a_session_that_picked_nothing_runs_on_the_provider_default(self, mock_get_ai_service):
+        mock_get_ai_service.return_value.generate_response.return_value = (
+            '{"response": "answered by the default model"}'
+        )
+
+        response = self.client.post(reverse("prompt"), {"prompt": "Hello"})
+
+        self.assertEqual(response.status_code, 200)
+        service = mock_get_ai_service.return_value
+        # Falsy reaches normalize_model(), which is where each provider's
+        # default lives.
+        self.assertFalse(service.generate_response.call_args.kwargs["model"])
+
+    @patch("ai_service.ai_service.get_ai_service")
+    def test_a_header_that_cannot_be_a_model_id_is_ignored(self, mock_get_ai_service):
+        mock_get_ai_service.return_value.generate_response.return_value = (
+            '{"response": "answered by the default model"}'
+        )
+
+        for header in ("not a model id", "x" * 500, "   "):
+            with self.subTest(header=header):
+                response = self.client.post(
+                    reverse("prompt"),
+                    {"prompt": "Hello"},
+                    HTTP_X_AI_MODEL=header,
+                )
+
+                self.assertEqual(response.status_code, 200)
+                service = mock_get_ai_service.return_value
+                self.assertEqual(service.generate_response.call_args.kwargs["model"], "")

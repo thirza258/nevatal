@@ -3,6 +3,18 @@ export const API_URL = "/api/v1";
 /** Provider chosen on the API key screen, shown in the top bar. */
 export const PROVIDER_STORAGE_KEY = "activeProvider";
 
+/**
+ * Model chosen from the provider's catalogue, sent with every generation.
+ *
+ * Only a provider that publishes a catalogue puts anything here — OpenRouter
+ * today. The picker clears it whenever the session's provider turns out to have
+ * no models to choose from, so swapping keys cannot leave a stale id behind.
+ */
+export const MODEL_STORAGE_KEY = "activeModel";
+
+/** A model id is not a credential, so it travels as a plain header. */
+export const AI_MODEL_HEADER = "X-AI-Model";
+
 export const SITE_NAME = "Nevatal";
 
 /**

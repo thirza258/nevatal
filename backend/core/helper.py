@@ -13,6 +13,15 @@ from core.crypto import decrypt_transport_value, is_transport_encrypted
 API_KEY_COOKIE_NAME = "nevatal_api_key"
 API_KEY_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
 
+# The model the browser picked for this session, as sent with every generation.
+# A model id is not a secret, so it rides a plain header rather than the
+# encrypted key path.
+AI_MODEL_HEADER = "X-AI-Model"
+
+# Long enough for any real provider model id, short enough that a junk header
+# cannot be used to push a wall of text into an outbound request.
+AI_MODEL_MAX_LENGTH = 200
+
 def strip_authentication_header(header: str) -> str:
     try:
         if header.startswith("Bearer "):
@@ -129,6 +138,29 @@ def resolve_api_key_from_request(request) -> str:
 
     cookie_value = request.COOKIES.get(API_KEY_COOKIE_NAME)
     return decrypt_api_key(cookie_value)
+
+
+def resolve_model_from_request(request) -> str:
+    """
+    Resolve the model this request should be generated with.
+
+    The browser sends the id it picked from the provider's catalogue — see
+    `/api/v1/models/`. An empty result means "use the provider default", which
+    is what every service does with a falsy model, so a session that never
+    picked one is unaffected.
+
+    Anything that cannot be a model id is dropped rather than rejected: the
+    request is still a valid one, it just runs on the default.
+    """
+    model = (request.headers.get(AI_MODEL_HEADER) or "").strip()
+
+    if not model or len(model) > AI_MODEL_MAX_LENGTH:
+        return ""
+
+    if any(character.isspace() for character in model):
+        return ""
+
+    return model
 
 
 def set_api_key_cookie(response, api_key_token: str):

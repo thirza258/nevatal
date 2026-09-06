@@ -12,6 +12,7 @@ from rest_framework import status
 from core.helper import (
     extract_text_from_pdf,
     resolve_api_key_header as strip_authentication_header,
+    resolve_model_from_request,
 )
 from ai_service.gemini_service import  process_text_with_function_calling_vertex
 from core.models import ChatRecord
@@ -33,6 +34,7 @@ class DirectExtractionView(APIView):
         uploaded_file = request.FILES.get("file")
         prompt = request.data.get("prompt")
         api_key = self._extract_api_key(request)
+        model = resolve_model_from_request(request)
 
         validation_error = self._validate_request(uploaded_file, prompt)
         if validation_error:
@@ -47,9 +49,9 @@ class DirectExtractionView(APIView):
                     status=status.HTTP_422_UNPROCESSABLE_ENTITY
                 )
 
-            combined_response = self._process_chunks(text_content, prompt, api_key)
+            combined_response = self._process_chunks(text_content, prompt, api_key, model)
             
-            adjusted_response = self._adjust_response(combined_response, api_key)
+            adjusted_response = self._adjust_response(combined_response, api_key, model)
             self._save_chat_record(prompt, adjusted_response, api_key)
             return Response({
                 "status": 200,
@@ -63,7 +65,7 @@ class DirectExtractionView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    def _adjust_response(self, response, api_key):
+    def _adjust_response(self, response, api_key, model=""):
         """Adjust the response to the user's request."""
         prompt = f"""
         You are helpful assistant that will adjust the response to the user's request.
@@ -72,7 +74,7 @@ class DirectExtractionView(APIView):
         Return the adjusted response only.
         """
 
-        answer = generate_response(prompt=prompt, api_key=api_key)
+        answer = generate_response(prompt=prompt, api_key=api_key, model=model)
         return answer
 
     def _extract_api_key(self, request):
@@ -143,14 +145,14 @@ class DirectExtractionView(APIView):
         
         return buffer.getvalue()
 
-    def _process_chunks(self, text_content, prompt, api_key):
+    def _process_chunks(self, text_content, prompt, api_key, model=""):
         """Process text content in chunks and combine responses."""
         chunks = self._create_chunks(text_content)
         combined_response = ""
         
         for idx, chunk in enumerate(chunks):
             chunk_response = self._process_single_chunk(
-                chunk, idx, len(chunks), prompt, api_key
+                chunk, idx, len(chunks), prompt, api_key, model
             )
             combined_response = self._combine_responses(
                 combined_response, chunk_response, idx
@@ -165,7 +167,7 @@ class DirectExtractionView(APIView):
             for i in range(0, len(text_content), self.CHUNK_SIZE)
         ]
 
-    def _process_single_chunk(self, chunk, chunk_index, total_chunks, prompt, api_key):
+    def _process_single_chunk(self, chunk, chunk_index, total_chunks, prompt, api_key, model=""):
         """Process a single chunk and return the response."""
         chunk_prompt = self._build_chunk_prompt(
             chunk, chunk_index, total_chunks, prompt
@@ -179,6 +181,7 @@ class DirectExtractionView(APIView):
         answer = generate_response(
             prompt=chunk_prompt,
             api_key=api_key,
+            model=model,
             system_instruction_string=system_instruction
         )
         
@@ -325,6 +328,7 @@ class RAGChatView(APIView):
         document_ids = request.data.get("document_ids")
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -352,7 +356,7 @@ class RAGChatView(APIView):
             system_instruction_string = f"""
             You are a helpful assistant. Your task is to answer the user's question based on the given context.
             """
-            response_data = generate_response(prompt=augmented_prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=augmented_prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             # Record the question, not the context blob built around it.
             ChatRecord.objects.create(method='rag_chat', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
@@ -454,6 +458,7 @@ class MeetingSummaryView(APIView):
         prompt = request.data.get("prompt")
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
+        model = resolve_model_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -470,7 +475,7 @@ class MeetingSummaryView(APIView):
             The meeting should be summarized based on the following prompt:
             {prompt}
             """
-            response_data = generate_response(prompt=prompt, api_key=api_key, system_instruction_string=system_instruction_string)
+            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
             ChatRecord.objects.create(method='meeting_summary', prompt=prompt, response=response_data, api_key=api_key)
             return Response({
                 "status": 200,

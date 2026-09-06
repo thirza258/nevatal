@@ -21,7 +21,8 @@ The twelve tools in the workspace, as defined in
 - **Image Generation** — generate an image from a description
 
 Document AI and Image Generation require a Google Gemini key; the rest work
-with any of the three providers.
+with any of the three providers. An OpenRouter key can also pick which model
+the tools run on, from OpenRouter's whole catalogue.
 
 ## Getting Started
 
@@ -140,6 +141,37 @@ it does not protect against a compromised frontend, which necessarily sees the
 key before encrypting it. Unencrypted keys are still accepted, so a page served
 without a secure context (where WebCrypto is unavailable) can still sign in.
 
+### Model selection
+
+Providers differ in how much choice they offer. OpenRouter routes to hundreds
+of models and publishes the whole catalogue, so a session on an OpenRouter key
+gets a model picker in the top bar; an OpenAI or Gemini key has no catalogue to
+read and stays on this app's default model for that provider.
+
+1. `GET /api/v1/models/` resolves the provider from the session's key — not
+   from what the browser claims — and, for OpenRouter, reads
+   `https://openrouter.ai/api/v1/models`. That endpoint is public: a key pays
+   for generation, not for reading the catalogue, so the full list is available
+   to any valid session.
+2. Each entry is trimmed to what a picker needs — id, name, context length,
+   price, modality — which turns a 700KB response into about 90KB, and prices
+   are converted from the per-token figures OpenRouter quotes ("0.00000015") to
+   dollars per million tokens (0.15). The result is cached in-process for ten
+   minutes.
+3. The browser keeps the chosen id in `localStorage` under `activeModel` and
+   sends it as `X-AI-Model` with every request. Each view passes it on to
+   `generate_response`, and an absent or unusable header means the provider's
+   default, so a session that never picked anything is unaffected. A model id
+   is not a credential and does not travel the encrypted path the API key does.
+4. The picker drops a stored id when the catalogue it just read does not
+   contain it, so a key swapped for another provider's cannot leave a stale
+   model on every request. A catalogue that could not be read is left alone —
+   a provider outage should not discard the choice.
+
+An empty list is a valid answer and the frontend shows no picker for it; a
+provider that could not be reached answers 502 instead, because "no models to
+choose from" and "no answer" are different things.
+
 ### Backend layout
 
 The Django apps are grouped by AI use case, and every app's URLs are mounted
@@ -147,7 +179,7 @@ under `/api/v1/`:
 
 | App | Owns |
 | --- | --- |
-| `core` | API key session, history, open-ended prompting (`prompt`, `explainer`) |
+| `core` | API key session, history, the model catalogue, open-ended prompting (`prompt`, `explainer`) |
 | `grammar_function` | Text work: writer, rewriter, proofreader, summarizer, translator, sentiment, copywriting, email, social post |
 | `document_function` | Files and media: PDF/CSV extraction, Document AI (RAG), meeting summary, image generation |
 | `ai_service` | Provider clients (Gemini, OpenAI, OpenRouter) |

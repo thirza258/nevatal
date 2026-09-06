@@ -4,6 +4,7 @@ from .views import (
     ApiKeyClearView,
     ExplainerView,
     HistoryView,
+    ModelListView,
     PromptView,
     PublicKeyView,
 )
@@ -18,4 +19,5 @@ urlpatterns = [
     path("openrouter/api-key-check/", ApiKeyCheckView.as_view(provider="openrouter"), name="openrouter-api-key-check"),
     path("gemini/api-key-check/", ApiKeyCheckView.as_view(provider="gemini"), name="gemini-api-key-check"),
     path("history/", HistoryView.as_view(), name="history"),
+    path("models/", ModelListView.as_view(), name="models"),
 ]

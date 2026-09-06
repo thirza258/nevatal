@@ -91,6 +91,7 @@ CORS_ALLOW_HEADERS = [
     "dnt",
     "origin",
     "user-agent",
+    "x-ai-model",
     "x-csrftoken",
     "x-requested-with",
 ]
