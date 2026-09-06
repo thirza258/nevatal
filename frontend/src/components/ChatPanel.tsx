@@ -129,7 +129,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             Paste
           </button>
           <textarea
-            className="flex-grow border border-gray-300 rounded-md px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="flex-grow bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-md px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

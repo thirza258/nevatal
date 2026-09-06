@@ -2,10 +2,10 @@ import logging
 import os
 from typing import Optional
 
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from .ai_service import BaseAIService, PROVIDER_OPENAI
+from .langchain_messages import build_messages
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,8 @@ class OpenAIService(BaseAIService):
         system_instruction_string: str = "Answer this prompt make sure answer that",
         response_schema_param: Optional[list[str]] = None,
         response_mime_type_param: str = "application/json",
+        conversation: Optional[list[dict[str, str]]] = None,
+        output_format: str = "",
     ) -> str:
         try:
             key = self.resolve_api_key(api_key)
@@ -54,13 +56,10 @@ class OpenAIService(BaseAIService):
             instruction = self.build_response_instruction(
                 system_instruction_string,
                 response_schema_param,
+                output_format,
             )
-            response = llm.invoke(
-                [
-                    SystemMessage(content=instruction),
-                    HumanMessage(content=prompt),
-                ]
-            )
+            response = llm.invoke(build_messages(instruction, conversation, prompt))
+            self.remember_message_usage(response)
             response_text = self.coerce_text(response)
             return self.ensure_json_response(response_text, response_schema_param)
         except Exception as e:

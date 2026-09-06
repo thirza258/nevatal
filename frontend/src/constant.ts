@@ -15,6 +15,20 @@ export const MODEL_STORAGE_KEY = "activeModel";
 /** A model id is not a credential, so it travels as a plain header. */
 export const AI_MODEL_HEADER = "X-AI-Model";
 
+/**
+ * Marks one request as part of a batch run. Batch items count towards usage —
+ * they cost real tokens — but stay out of the history sidebar, which is there
+ * for finding a piece of work again.
+ */
+export const BATCH_HEADER = "X-Nevatal-Batch";
+
+/** Threads kept per tool, so reloading a page does not lose the context. */
+export const conversationStorageKey = (tool: string) => `conversation:${tool}`;
+
+/** Saved prompt templates, and the spend threshold that raises a warning. */
+export const TEMPLATE_STORAGE_KEY = "promptTemplates";
+export const SPEND_ALERT_STORAGE_KEY = "spendAlert";
+
 export const SITE_NAME = "Nevatal";
 
 /**

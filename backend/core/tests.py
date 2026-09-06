@@ -7,8 +7,10 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 
+from ai_service import empty_usage
 from core.crypto import get_private_key, get_public_key_payload
 from core.helper import API_KEY_COOKIE_NAME, decrypt_api_key, encrypt_api_key
+from core.models import ChatRecord
 
 
 class ApiKeyCookieTests(TestCase):
@@ -27,7 +29,10 @@ class ApiKeyCookieTests(TestCase):
         self.assertTrue(response.cookies[API_KEY_COOKIE_NAME]["httponly"])
         self.assertTrue(mock_test_api_key.called)
 
-    @patch("core.views.generate_response", return_value='{"response": "cookie auth works"}')
+    @patch(
+        "core.views.generate_response_with_usage",
+        return_value=('{"response": "cookie auth works"}', empty_usage("a-model")),
+    )
     @patch("core.views.test_api_key", return_value="valid")
     def test_cookie_auth_allows_prompt_requests(self, mock_test_api_key, mock_generate_response):
         self.client.cookies[API_KEY_COOKIE_NAME] = encrypt_api_key("raw-key")
@@ -245,3 +250,219 @@ class ModelSelectionTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 service = mock_get_ai_service.return_value
                 self.assertEqual(service.generate_response.call_args.kwargs["model"], "")
+
+
+class GenerationOptionsTests(TestCase):
+    """
+    The knobs a request carries: the thread, the output format, and whether it
+    is one item of a batch run.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.client.cookies[API_KEY_COOKIE_NAME] = encrypt_api_key("sk-or-v1-key")
+
+    def service(self, mock_get_ai_service, usage=None):
+        service = mock_get_ai_service.return_value
+        service.generate_response.return_value = '{"response": "answered"}'
+        service.describe_usage.return_value = usage or {
+            "model": "openai/gpt-4o-mini",
+            "tokens_in": 120,
+            "tokens_out": 45,
+            "cost": 0.000045,
+        }
+        return service
+
+    @patch("ai_service.ai_service.get_ai_service")
+    def test_a_thread_is_replayed_to_the_provider(self, mock_get_ai_service):
+        service = self.service(mock_get_ai_service)
+
+        response = self.client.post(
+            reverse("prompt"),
+            {
+                "prompt": "and the second?",
+                "conversation": [
+                    {"role": "user", "content": "name a colour"},
+                    {"role": "assistant", "content": "blue"},
+                ],
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        conversation = service.generate_response.call_args.kwargs["conversation"]
+        self.assertEqual(
+            conversation,
+            [
+                {"role": "user", "content": "name a colour"},
+                {"role": "assistant", "content": "blue"},
+            ],
+        )
+
+    @patch("ai_service.ai_service.get_ai_service")
+    def test_a_junk_thread_is_dropped_rather_than_forwarded(self, mock_get_ai_service):
+        service = self.service(mock_get_ai_service)
+
+        response = self.client.post(
+            reverse("prompt"),
+            {
+                "prompt": "hello",
+                "conversation": ["not a turn", {"role": "system", "content": "nope"}],
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(service.generate_response.call_args.kwargs["conversation"], [])
+
+    @patch("ai_service.ai_service.get_ai_service")
+    def test_the_requested_output_format_reaches_the_provider(self, mock_get_ai_service):
+        service = self.service(mock_get_ai_service)
+
+        response = self.client.post(
+            reverse("summarizer"),
+            {"prompt": "some text", "output_format": "CSV"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(service.generate_response.call_args.kwargs["output_format"], "csv")
+
+    @patch("ai_service.ai_service.get_ai_service")
+    def test_what_a_generation_consumed_is_recorded(self, mock_get_ai_service):
+        self.service(mock_get_ai_service)
+
+        self.client.post(reverse("prompt"), {"prompt": "Hello"})
+
+        record = ChatRecord.objects.latest("created_at")
+        self.assertEqual(record.model, "openai/gpt-4o-mini")
+        self.assertEqual(record.tokens_in, 120)
+        self.assertEqual(record.tokens_out, 45)
+        self.assertAlmostEqual(record.cost, 0.000045)
+        self.assertFalse(record.batch)
+
+    @patch("core.views.describe_account", return_value=None)
+    @patch("ai_service.ai_service.get_ai_service")
+    def test_batch_items_are_counted_but_stay_out_of_history(
+        self, mock_get_ai_service, mock_describe_account
+    ):
+        self.service(mock_get_ai_service)
+
+        self.client.post(reverse("prompt"), {"prompt": "one of fifty"}, HTTP_X_NEVATAL_BATCH="1")
+        self.client.post(reverse("prompt"), {"prompt": "a real question"})
+
+        self.assertEqual(ChatRecord.objects.filter(batch=True).count(), 1)
+
+        history = self.client.get(reverse("history")).data["data"]
+        self.assertEqual([row["prompt"] for row in history], ["a real question"])
+
+        # ...but the batch row still counts towards what the key has spent.
+        totals = self.client.get(reverse("usage")).data["data"]["totals"]
+        self.assertEqual(totals["requests"], 2)
+        self.assertEqual(totals["tokens_in"], 240)
+
+
+class KeySlotTests(TestCase):
+    """
+    Several keys in one session: one active, the rest spares to rotate onto.
+    """
+
+    def setUp(self):
+        self.client = Client()
+
+    @patch("core.views.test_api_key", return_value="valid")
+    def sign_in(self, api_key, mock_test_api_key):
+        return self.client.get(
+            reverse("openrouter-api-key-check"),
+            HTTP_AUTHORIZATION=f"Bearer {api_key}",
+        )
+
+    @patch("core.views.test_api_key", return_value="valid")
+    def add_key(self, api_key, mock_test_api_key, label=None):
+        return self.client.post(
+            reverse("keys"),
+            {"label": label} if label else {},
+            HTTP_AUTHORIZATION=f"Bearer {api_key}",
+        )
+
+    def test_signing_in_fills_the_first_slot(self):
+        self.sign_in("sk-or-v1-first-key-for-this-session")
+
+        slots = self.client.get(reverse("keys")).data["data"]["slots"]
+
+        self.assertEqual(len(slots), 1)
+        self.assertTrue(slots[0]["active"])
+        self.assertEqual(slots[0]["provider"], "openrouter")
+
+    def test_a_key_is_only_ever_shown_masked(self):
+        raw = "sk-or-v1-a-secret-value-nobody-should-see"
+        self.sign_in(raw)
+
+        slots = self.client.get(reverse("keys")).data["data"]["slots"]
+
+        self.assertNotIn(raw, str(slots))
+        self.assertNotIn("secret", slots[0]["masked"])
+        self.assertTrue(slots[0]["masked"].startswith("sk-or-v1-a"))
+
+    def test_a_spare_does_not_take_over_a_working_session(self):
+        self.sign_in("sk-or-v1-the-original-session-key")
+        self.add_key("sk-or-v1-a-spare-for-later", label="Spare")
+
+        data = self.client.get(reverse("keys")).data["data"]
+
+        self.assertEqual([slot["active"] for slot in data["slots"]], [True, False])
+        self.assertEqual(data["slots"][1]["label"], "Spare")
+
+    def test_rotating_moves_to_the_next_key_and_wraps(self):
+        self.sign_in("sk-or-v1-the-original-session-key")
+        self.add_key("sk-or-v1-a-spare-for-later")
+
+        first = self.client.post(reverse("key-rotate")).data["data"]
+        self.assertEqual(first["active_index"], 1)
+
+        second = self.client.post(reverse("key-rotate")).data["data"]
+        self.assertEqual(second["active_index"], 0)
+
+    def test_rotating_a_single_key_session_says_so(self):
+        self.sign_in("sk-or-v1-the-only-key-there-is")
+
+        response = self.client.post(reverse("key-rotate"))
+
+        self.assertEqual(response.status_code, 409)
+
+    def test_switching_picks_a_slot_directly(self):
+        self.sign_in("sk-or-v1-the-original-session-key")
+        self.add_key("sk-or-v1-a-spare-for-later")
+
+        response = self.client.post(reverse("key-switch"), {"index": 1})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["data"]["active_index"], 1)
+        self.assertEqual(self.client.post(reverse("key-switch"), {"index": 7}).status_code, 400)
+
+    def test_removing_the_last_key_ends_the_session(self):
+        self.sign_in("sk-or-v1-the-only-key-there-is")
+
+        response = self.client.delete(reverse("key", args=[0]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["data"]["slots"], [])
+        self.assertEqual(response.cookies[API_KEY_COOKIE_NAME]["max-age"], 0)
+
+    def test_clearing_the_key_takes_the_spares_with_it(self):
+        self.sign_in("sk-or-v1-the-original-session-key")
+        self.add_key("sk-or-v1-a-spare-for-later")
+
+        self.client.post(reverse("api-key-clear"))
+
+        self.assertEqual(self.client.get(reverse("keys")).data["data"]["slots"], [])
+
+    @patch("core.views.test_api_key", return_value=False)
+    def test_a_key_that_cannot_generate_is_not_kept(self, mock_test_api_key):
+        response = self.client.post(
+            reverse("keys"),
+            HTTP_AUTHORIZATION="Bearer sk-or-v1-a-key-that-does-not-work",
+        )
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(self.client.get(reverse("keys")).data["data"]["slots"], [])

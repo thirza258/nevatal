@@ -18,6 +18,19 @@ class ChatRecord(models.Model):
         ('email_generator', 'Email Generator'),
         ('rag_chat', 'RAG Chat'),
         ('email_generation', 'Email Generation'),
+        # Methods the views were already writing without being listed here,
+        # which left them out of any per-tool breakdown.
+        ('sentiment_analysis', 'Sentiment Analysis'),
+        ('image_generation', 'Image Generation'),
+        ('meeting_summary', 'Meeting Summary'),
+        ('social_media_post_generation', 'Social Media Post'),
+        ('direct_extraction', 'Direct Extraction'),
+        ('analyze_text', 'Analyze Text'),
+        ('code_generation', 'Code Generation'),
+        ('code_reviewer', 'Code Reviewer'),
+        ('idea_generation', 'Idea Generator'),
+        ('data_formatting', 'Data Formatter'),
+        ('data_analysis', 'Data Analysis'),
     ]
 
     method = models.CharField(max_length=255, choices=METHOD_CHOICES, default='prompt')
@@ -26,6 +39,18 @@ class ChatRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     api_key = models.TextField(default='')
     api_key_hash = models.CharField(max_length=64, db_index=True, default='')
+
+    # What the generation ran on and what it consumed. Token counts are the
+    # provider's own; `cost` is this app's estimate from published prices, and
+    # stays null for a provider that publishes none, because a guessed figure
+    # on a spend screen is worse than a blank one.
+    model = models.CharField(max_length=255, default='', blank=True)
+    tokens_in = models.PositiveIntegerField(null=True, blank=True)
+    tokens_out = models.PositiveIntegerField(null=True, blank=True)
+    cost = models.FloatField(null=True, blank=True)
+
+    # One item of a batch run: counted in usage, hidden from the sidebar.
+    batch = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return self.method

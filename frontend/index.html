@@ -21,7 +21,16 @@
     <meta name="color-scheme" content="light" />
 
     <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <!-- Installable on a phone: the manifest names the app, the icons and the
+         standalone display mode. The service worker is registered from
+         main.tsx, in production builds only. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Nevatal" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
 
     <!-- index.css pulls Inter from Google Fonts; warm the connections early. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

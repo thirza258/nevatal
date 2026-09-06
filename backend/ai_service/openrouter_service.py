@@ -4,10 +4,10 @@ import time
 from typing import Any, Optional
 
 import requests
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from .ai_service import BaseAIService, PROVIDER_OPENROUTER
+from .langchain_messages import build_messages
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +127,80 @@ class OpenRouterService(BaseAIService):
         _models_cache = (time.monotonic(), models)
         return models
 
+    def describe_account(self, api_key: Optional[str] = None) -> Optional[dict[str, Any]]:
+        """
+        Read the key's own credit and spend from `GET /key`.
+
+        Unlike the catalogue this does need the key, and it is the only figure
+        here that comes from the provider rather than from our own arithmetic —
+        which makes it the right thing for a spending alert to watch.
+        """
+        try:
+            key = self.resolve_api_key(api_key)
+            response = requests.get(
+                f"{self.base_url.rstrip('/')}/key",
+                headers={"Authorization": f"Bearer {key}"},
+                timeout=MODELS_REQUEST_TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except Exception as e:
+            logger.info(f"Could not read the OpenRouter key's account: {e}")
+            return None
+
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, dict):
+            return None
+
+        return {
+            "provider": self.provider_name,
+            "label": data.get("label") or "",
+            "spend": data.get("usage"),
+            "limit": data.get("limit"),
+            "remaining": data.get("limit_remaining"),
+            "is_free_tier": data.get("is_free_tier"),
+        }
+
+    def estimate_cost(
+        self,
+        model: str,
+        tokens_in: Optional[int],
+        tokens_out: Optional[int],
+    ) -> Optional[float]:
+        """
+        Price a call from the catalogue's own per-million figures.
+
+        The catalogue is normally already cached — the model picker fetches it
+        when the workspace loads — so this costs nothing in the usual case. A
+        cold cache fetches once; a failure means no price rather than a wrong
+        one, and never breaks the generation it is describing.
+        """
+        if tokens_in is None and tokens_out is None:
+            return None
+
+        try:
+            entry = next(
+                (model_entry for model_entry in self.list_models() if model_entry["id"] == model),
+                None,
+            )
+        except Exception as e:
+            logger.info(f"Could not price {model}, the catalogue is unavailable: {e}")
+            return None
+
+        if not entry:
+            return None
+
+        prompt_price = entry.get("prompt_price_per_million")
+        completion_price = entry.get("completion_price_per_million")
+        if prompt_price is None or completion_price is None:
+            return None
+
+        cost = (
+            (tokens_in or 0) / 1_000_000 * prompt_price
+            + (tokens_out or 0) / 1_000_000 * completion_price
+        )
+        return round(cost, 10)
+
     def _build_llm(self, api_key: str, model: Optional[str] = None):
         model_name = self.normalize_model(model)
 
@@ -176,6 +250,8 @@ class OpenRouterService(BaseAIService):
         system_instruction_string: str = "Answer this prompt make sure answer that",
         response_schema_param: Optional[list[str]] = None,
         response_mime_type_param: str = "application/json",
+        conversation: Optional[list[dict[str, str]]] = None,
+        output_format: str = "",
     ) -> str:
         try:
             key = self.resolve_api_key(api_key)
@@ -183,13 +259,10 @@ class OpenRouterService(BaseAIService):
             instruction = self.build_response_instruction(
                 system_instruction_string,
                 response_schema_param,
+                output_format,
             )
-            response = llm.invoke(
-                [
-                    SystemMessage(content=instruction),
-                    HumanMessage(content=prompt),
-                ]
-            )
+            response = llm.invoke(build_messages(instruction, conversation, prompt))
+            self.remember_message_usage(response)
             response_text = self.coerce_text(response)
             return self.ensure_json_response(response_text, response_schema_param)
         except Exception as e:

@@ -1,4 +1,6 @@
 import React from 'react';
+import type { OutputFormat } from '../interface';
+import { OUTPUT_FORMATS, describeFormat } from '../utils/formats';
 
 const baseControl =
   'w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 ' +
@@ -120,6 +122,77 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
       rows={rows}
     />
   </FieldWrapper>
+);
+
+interface NumberFieldProps {
+  id: string;
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  disabled?: boolean;
+  hint?: string;
+}
+
+export const NumberField: React.FC<NumberFieldProps> = ({
+  id,
+  label,
+  value,
+  onChange,
+  min = 0,
+  max = 100,
+  disabled,
+  hint,
+}) => (
+  <FieldWrapper label={label} htmlFor={id} hint={hint}>
+    <input
+      id={id}
+      type="number"
+      min={min}
+      max={max}
+      className={baseControl}
+      value={value}
+      onChange={(e) => {
+        const parsed = Number(e.target.value);
+        onChange(Number.isFinite(parsed) ? Math.min(Math.max(parsed, min), max) : min);
+      }}
+      disabled={disabled}
+    />
+  </FieldWrapper>
+);
+
+interface OutputFormatFieldProps {
+  value: OutputFormat;
+  onChange: (value: OutputFormat) => void;
+  disabled?: boolean;
+  id?: string;
+}
+
+/**
+ * Which shape the answer should come back in.
+ *
+ * Per tool rather than per session, because the choice belongs to the job: a
+ * data extractor wants JSON where a writer wants Markdown.
+ */
+export const OutputFormatField: React.FC<OutputFormatFieldProps> = ({
+  value,
+  onChange,
+  disabled,
+  id = 'output-format',
+}) => (
+  <SelectField
+    id={id}
+    label="Output format"
+    value={value}
+    options={OUTPUT_FORMATS.map((format) => ({
+      value: format.value,
+      label: format.label,
+    }))}
+    onChange={(next) => onChange(next as OutputFormat)}
+    hint={describeFormat(value).hint}
+    disabled={disabled}
+  />
 );
 
 interface CheckboxFieldProps {

@@ -17,7 +17,24 @@ interface Provider {
   invalidKeyMessage: string;
 }
 
+// OpenRouter first, because it is the default: one key reaches every model in
+// its catalogue, and the workspace then offers a model picker.
 const PROVIDERS: Provider[] = [
+  {
+    value: 'openrouter',
+    label: 'OpenRouter',
+    endpoint: '/openrouter/api-key-check/',
+    placeholder: 'sk-or-v1-...',
+    keyPattern: /^sk-or-v1-[A-Za-z0-9_-]{20,}$/,
+    invalidKeyMessage: 'OpenRouter keys usually start with "sk-or-v1-" and are longer than 20 characters.',
+    tutorialUrl: 'https://openrouter.ai/keys',
+    tutorialSteps: [
+      'Sign in or create an account.',
+      'Navigate to the "Keys" section in your dashboard or settings.',
+      'Click "Create Key", give it a name, and copy the generated key (it starts with "sk-or-v1-").',
+      'Note: Ensure you have added credits to your OpenRouter account to use paid models.',
+    ],
+  },
   {
     value: 'openai',
     label: 'OpenAI',
@@ -46,21 +63,6 @@ const PROVIDERS: Provider[] = [
       'Click on "Get API key" in the left navigation menu.',
       'Click "Create API key" and select a Google Cloud project (or create a new one).',
       'Copy the generated key (it starts with "AIza").',
-    ],
-  },
-  {
-    value: 'openrouter',
-    label: 'OpenRouter',
-    endpoint: '/openrouter/api-key-check/',
-    placeholder: 'sk-or-v1-...',
-    keyPattern: /^sk-or-v1-[A-Za-z0-9_-]{20,}$/,
-    invalidKeyMessage: 'OpenRouter keys usually start with "sk-or-v1-" and are longer than 20 characters.',
-    tutorialUrl: 'https://openrouter.ai/keys',
-    tutorialSteps: [
-      'Sign in or create an account.',
-      'Navigate to the "Keys" section in your dashboard or settings.',
-      'Click "Create Key", give it a name, and copy the generated key (it starts with "sk-or-v1-").',
-      'Note: Ensure you have added credits to your OpenRouter account to use paid models.',
     ],
   },
 ];
@@ -148,7 +150,7 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ onKeySubmit }) => {
             setError('');
             setFormatWarning('');
           }}
-          className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {PROVIDERS.map(p => (
             <option key={p.value} value={p.value}>{p.label}</option>
@@ -168,7 +170,7 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ onKeySubmit }) => {
             type={showPassword ? 'text' : 'password'}
             autoComplete="off"
             spellCheck={false}
-            className="w-full border border-gray-300 rounded-md px-4 py-2 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-md px-4 py-2 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder={currentProvider.placeholder}
             value={apiKey}
             onChange={(e) => {

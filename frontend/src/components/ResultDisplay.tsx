@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import type { OutputFormat } from '../interface';
+import { describeFormat } from '../utils/formats';
 
 interface ResultDisplayProps {
   resultText: string;
   isLoading: boolean;
   placeholderText?: string;
   title?: string;
-  /** Base name for the .md download; omit to hide the download button. */
+  /** Base name for the download; omit to hide the download button. */
   downloadName?: string;
   loadingLabel?: string;
+  /**
+   * What shape the answer is in. It decides the file extension a download
+   * gets and whether the text is rendered as Markdown or shown verbatim —
+   * JSON reflowed as prose would be unusable.
+   */
+  format?: OutputFormat;
 }
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({
@@ -18,7 +26,9 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
   title = 'Result',
   downloadName,
   loadingLabel = 'Generating...',
+  format = 'markdown',
 }) => {
+  const descriptor = describeFormat(format);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -38,11 +48,11 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
   };
 
   const handleDownload = () => {
-    const blob = new Blob([resultText], { type: 'text/markdown;charset=utf-8' });
+    const blob = new Blob([resultText], { type: descriptor.mime });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${downloadName || 'result'}.md`;
+    link.download = `${downloadName || 'result'}.${descriptor.extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -65,7 +75,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
               className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 disabled:opacity-50"
               disabled={!hasResult}
             >
-              Download
+              Download .{descriptor.extension}
             </button>
           )}
           <button
@@ -86,9 +96,15 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
             <p className="text-sm">{loadingLabel}</p>
           </div>
         ) : resultText ? (
-          <div className="prose prose-sm max-w-none">
-            <ReactMarkdown>{resultText}</ReactMarkdown>
-          </div>
+          descriptor.rendered ? (
+            <div className="prose prose-sm max-w-none">
+              <ReactMarkdown>{resultText}</ReactMarkdown>
+            </div>
+          ) : (
+            <pre className="text-xs text-gray-800 font-mono whitespace-pre-wrap break-words">
+              {resultText}
+            </pre>
+          )
         ) : (
           <p className="text-gray-400 text-sm">{placeholderText}</p>
         )}

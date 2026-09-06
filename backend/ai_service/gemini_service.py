@@ -6,7 +6,7 @@ from typing import Optional
 from google import genai
 from google.genai import types
 
-from .ai_service import BaseAIService, PROVIDER_GEMINI
+from .ai_service import BaseAIService, PROVIDER_GEMINI, apply_output_format
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +32,14 @@ class GeminiService(BaseAIService):
         system_instruction_string: str = "Answer this prompt make sure answer that",
         response_schema_param: Optional[list[str]] = None,
         response_mime_type_param: str = "application/json",
+        conversation: Optional[list[dict[str, str]]] = None,
+        output_format: str = "",
     ) -> str:
         try:
             key = self.resolve_api_key(api_key)
             model_name = self.normalize_model(model)
             schema_fields = response_schema_param or ["response"]
+            instruction = apply_output_format(system_instruction_string, output_format)
 
             response_schema_properties = {
                 param: genai.types.Schema(
@@ -48,12 +51,21 @@ class GeminiService(BaseAIService):
             client = genai.Client(api_key=key)
             contents = [
                 genai.types.Content(
+                    role="model" if turn.get("role") == "assistant" else "user",
+                    parts=[
+                        genai.types.Part.from_text(text=turn.get("content", "")),
+                    ],
+                )
+                for turn in conversation or []
+            ]
+            contents.append(
+                genai.types.Content(
                     role="user",
                     parts=[
                         genai.types.Part.from_text(text=prompt),
                     ],
-                ),
-            ]
+                )
+            )
 
             config_kwargs = {
                 "thinking_config": genai.types.ThinkingConfig(
@@ -61,7 +73,7 @@ class GeminiService(BaseAIService):
                 ),
                 "response_mime_type": response_mime_type_param,
                 "system_instruction": [
-                    genai.types.Part.from_text(text=system_instruction_string),
+                    genai.types.Part.from_text(text=instruction),
                 ],
             }
 
@@ -78,6 +90,12 @@ class GeminiService(BaseAIService):
                 model=model_name,
                 contents=contents,
                 config=generate_content_config,
+            )
+
+            usage = getattr(response, "usage_metadata", None)
+            self.remember_usage(
+                tokens_in=getattr(usage, "prompt_token_count", None),
+                tokens_out=getattr(usage, "candidates_token_count", None),
             )
 
             response_text = self.coerce_text(response)

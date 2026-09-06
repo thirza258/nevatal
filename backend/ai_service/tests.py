@@ -142,3 +142,131 @@ class OpenRouterCatalogueTests(SimpleTestCase):
         self.assertEqual(catalogue["models"], [])
         self.assertEqual(catalogue["default_model"], "gemini-2.5-flash-lite")
         mock_get.assert_not_called()
+
+
+class ConversationTests(SimpleTestCase):
+    """
+    A thread is replayed to the provider, but not without limit: the browser
+    resends it on every turn, so this is where the token bill is bounded.
+    """
+
+    def test_only_usable_turns_survive(self):
+        from ai_service import normalize_conversation
+
+        turns = normalize_conversation(
+            [
+                {"role": "user", "content": " hello "},
+                {"role": "system", "content": "not a turn this app sends"},
+                {"role": "assistant", "content": ""},
+                {"role": "assistant", "text": "an older client's key"},
+                "not a dict at all",
+                {"role": "user", "content": 42},
+            ]
+        )
+
+        self.assertEqual(
+            turns,
+            [
+                {"role": "user", "content": "hello"},
+                {"role": "assistant", "content": "an older client's key"},
+            ],
+        )
+
+    def test_a_long_thread_keeps_its_most_recent_turns(self):
+        from ai_service import normalize_conversation
+        from ai_service.ai_service import CONVERSATION_TURN_LIMIT
+
+        turns = normalize_conversation(
+            [{"role": "user", "content": f"turn {index}"} for index in range(60)]
+        )
+
+        self.assertEqual(len(turns), CONVERSATION_TURN_LIMIT)
+        self.assertEqual(turns[-1]["content"], "turn 59")
+
+    def test_a_thread_is_trimmed_to_a_character_budget(self):
+        from ai_service import normalize_conversation
+        from ai_service.ai_service import CONVERSATION_CHARACTER_LIMIT
+
+        turns = normalize_conversation(
+            [{"role": "user", "content": "x" * 20_000} for _ in range(5)]
+        )
+
+        self.assertEqual(len(turns), 1)
+        self.assertLessEqual(
+            sum(len(turn["content"]) for turn in turns),
+            CONVERSATION_CHARACTER_LIMIT,
+        )
+
+
+class OutputFormatTests(SimpleTestCase):
+    def test_a_known_format_adds_a_directive(self):
+        from ai_service.ai_service import apply_output_format
+
+        instruction = apply_output_format("Summarise this.", "csv")
+
+        self.assertIn("Summarise this.", instruction)
+        self.assertIn("CSV", instruction)
+
+    def test_an_unknown_format_changes_nothing(self):
+        from ai_service.ai_service import apply_output_format
+
+        self.assertEqual(apply_output_format("Summarise this.", "xml"), "Summarise this.")
+        self.assertEqual(apply_output_format("Summarise this.", ""), "Summarise this.")
+
+    def test_the_format_survives_the_json_envelope(self):
+        from ai_service.openrouter_service import OpenRouterService
+
+        instruction = OpenRouterService().build_response_instruction(
+            "Summarise this.", ["response"], "table"
+        )
+
+        self.assertIn("Markdown table", instruction)
+        self.assertIn("must contain these string keys: response", instruction)
+
+
+class UsageTests(SimpleTestCase):
+    def setUp(self):
+        clear_models_cache()
+        self.addCleanup(clear_models_cache)
+
+    @patch("ai_service.openrouter_service.requests.get")
+    def test_a_call_is_priced_from_the_catalogue(self, mock_get):
+        mock_get.return_value = catalogue_response()
+        service = OpenRouterService(api_key="sk-or-key")
+
+        # 1M in at $0.15/M and 1M out at $0.60/M.
+        cost = service.estimate_cost("openai/gpt-4o-mini", 1_000_000, 1_000_000)
+
+        self.assertAlmostEqual(cost, 0.75)
+
+    @patch("ai_service.openrouter_service.requests.get")
+    def test_an_unknown_model_is_not_priced_as_free(self, mock_get):
+        mock_get.return_value = catalogue_response()
+        service = OpenRouterService(api_key="sk-or-key")
+
+        self.assertIsNone(service.estimate_cost("someone/unlisted", 1000, 1000))
+
+    def test_a_provider_without_prices_reports_no_cost(self):
+        from ai_service.gemini_service import GeminiService
+
+        self.assertIsNone(GeminiService().estimate_cost("gemini-2.5-flash-lite", 10, 10))
+
+    def test_usage_adds_up_across_the_calls_of_one_request(self):
+        from ai_service import empty_usage, sum_usage
+
+        first = {"model": "m", "tokens_in": 100, "tokens_out": 20, "cost": 0.001}
+        second = {"model": "m", "tokens_in": 50, "tokens_out": 10, "cost": 0.0005}
+
+        total = sum_usage(sum_usage(empty_usage("m"), first), second)
+
+        self.assertEqual(total["tokens_in"], 150)
+        self.assertEqual(total["tokens_out"], 30)
+        self.assertAlmostEqual(total["cost"], 0.0015)
+
+    def test_nothing_reported_stays_nothing_rather_than_zero(self):
+        from ai_service import empty_usage, sum_usage
+
+        total = sum_usage(empty_usage("m"), empty_usage("m"))
+
+        self.assertIsNone(total["tokens_in"])
+        self.assertIsNone(total["cost"])

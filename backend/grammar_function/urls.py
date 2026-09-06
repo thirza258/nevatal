@@ -1,7 +1,9 @@
 from django.urls import path
 from .views import (
     CopyWritingView,
+    DataFormatterView,
     EmailGeneratorView,
+    IdeaGeneratorView,
     ProofreaderView,
     RewriterView,
     SentimentAnalyzerView,
@@ -21,4 +23,6 @@ urlpatterns = [
     path("copywriting/", CopyWritingView.as_view(), name="copywriting"),
     path("email/", EmailGeneratorView.as_view(), name="email"),
     path("social-media-post-generator/", SocialMediaPostGeneratorView.as_view(), name="social-media-post-generator"),
+    path("idea-generator/", IdeaGeneratorView.as_view(), name="idea-generator"),
+    path("data-formatter/", DataFormatterView.as_view(), name="data-formatter"),
 ]

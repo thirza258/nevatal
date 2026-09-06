@@ -1,13 +1,18 @@
 import axios from "axios";
-import { AI_MODEL_HEADER, API_URL, MODEL_STORAGE_KEY } from "../constant";
+import type { InternalAxiosRequestConfig } from "axios";
+import { AI_MODEL_HEADER, API_URL, BATCH_HEADER, MODEL_STORAGE_KEY } from "../constant";
 import type {
   ApiResponse,
+  ChatTurn,
+  DataAnalysis,
   GeneratedImage,
   HistoryEntry,
+  KeySlots,
   ModelCatalog,
   RagDocument,
   TransportKey,
   UploadResponse,
+  UsageReport,
 } from "../interface";
 
 /**
@@ -142,25 +147,58 @@ export const onHistoryChanged = (listener: () => void) => {
   return () => window.removeEventListener(HISTORY_CHANGED_EVENT, listener);
 };
 
+interface PostOptions {
+  /** One item of a batch run: tagged for the backend, and not a history event. */
+  batch?: boolean;
+  signal?: AbortSignal;
+}
+
 /** POST a text endpoint and return the clean, unwrapped answer. */
 const postText = async (
   path: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  options: PostOptions = {}
 ): Promise<string> => {
   try {
-    const response = await client.post<ApiResponse<string>>(path, body);
-    notifyHistoryChanged();
+    const response = await client.post<ApiResponse<string>>(path, body, {
+      headers: options.batch ? { [BATCH_HEADER]: "1" } : undefined,
+      signal: options.signal,
+    });
+    // A batch of fifty would otherwise refetch the sidebar fifty times, for
+    // rows the sidebar deliberately does not show.
+    if (!options.batch) notifyHistoryChanged();
     return unwrapText(response.data?.data);
   } catch (error) {
     throw toApiError(error);
   }
 };
 
-const postPrompt = (prompt: string) => postText("/prompt/", { prompt });
+/**
+ * Run one item of a batch through any text endpoint.
+ *
+ * Batch work is the same endpoints, one request per item, so the user's own
+ * key pays for exactly what it did and nothing new has to exist server-side.
+ */
+const runBatchItem = (
+  path: string,
+  body: Record<string, unknown>,
+  signal?: AbortSignal
+) => postText(path, body, { batch: true, signal });
+
+/**
+ * Ask a question in the context of the thread so far.
+ *
+ * The turns travel with the request because the backend keeps no conversation
+ * state — the session is a key in a cookie, not an account — so the thread
+ * lives in the browser and is replayed on each turn.
+ */
+const postPrompt = (prompt: string, conversation?: ChatTurn[]) =>
+  postText("/prompt/", { prompt, conversation });
 
 const postProofreader = (prompt: string) => postText("/proofreader/", { prompt });
 
-const postSummarizer = (prompt: string) => postText("/summarizer/", { prompt });
+const postSummarizer = (prompt: string, outputFormat?: string) =>
+  postText("/summarizer/", { prompt, output_format: outputFormat });
 
 const postTranslator = (
   prompt: string,
@@ -173,16 +211,84 @@ const postTranslator = (
     source_language: sourceLanguage,
   });
 
-const postWriter = (prompt: string) => postText("/writer/", { prompt });
+const postWriter = (prompt: string, outputFormat?: string) =>
+  postText("/writer/", { prompt, output_format: outputFormat });
 
-const postRewriter = (prompt: string) => postText("/rewriter/", { prompt });
+const postRewriter = (prompt: string, outputFormat?: string) =>
+  postText("/rewriter/", { prompt, output_format: outputFormat });
 
-const postCopywriting = (prompt: string) => postText("/copywriting/", { prompt });
+const postCopywriting = (prompt: string, outputFormat?: string) =>
+  postText("/copywriting/", { prompt, output_format: outputFormat });
 
-const postExplainer = (prompt: string) => postText("/explainer/", { prompt });
+const postExplainer = (
+  prompt: string,
+  conversation?: ChatTurn[],
+  outputFormat?: string
+) => postText("/explainer/", { prompt, conversation, output_format: outputFormat });
 
-const analyzeSentiment = (prompt: string) =>
-  postText("/sentiment-analyzer/", { prompt });
+const analyzeSentiment = (prompt: string, outputFormat?: string) =>
+  postText("/sentiment-analyzer/", { prompt, output_format: outputFormat });
+
+/** A caption or post shaped for one platform's conventions. */
+const createSocialPost = (payload: {
+  prompt: string;
+  platform: string;
+  tone: string;
+  audience?: string;
+  hashtagCount?: number;
+  includeEmojis?: boolean;
+  includeCta?: boolean;
+  postLength?: string;
+  brandName?: string;
+  brandKeywords?: string;
+  outputFormat?: string;
+}) =>
+  postText("/social-media-post-generator/", {
+    prompt: payload.prompt,
+    platform: payload.platform,
+    tone: payload.tone,
+    audience: payload.audience,
+    hashtag_count: payload.hashtagCount,
+    include_emojis: payload.includeEmojis,
+    include_cta: payload.includeCta,
+    post_length: payload.postLength,
+    brand_name: payload.brandName,
+    brand_keywords: payload.brandKeywords,
+    output_format: payload.outputFormat,
+  });
+
+/** Many short, distinct options rather than one polished answer. */
+const generateIdeas = (payload: {
+  prompt: string;
+  kind: string;
+  count: number;
+  constraints?: string;
+  outputFormat?: string;
+}) =>
+  postText("/idea-generator/", {
+    prompt: payload.prompt,
+    kind: payload.kind,
+    count: payload.count,
+    constraints: payload.constraints,
+    output_format: payload.outputFormat,
+  });
+
+/** Clean and convert pasted data, or report what is wrong with it. */
+const formatData = (payload: {
+  prompt: string;
+  target: string;
+  mode: "convert" | "validate";
+  instructions?: string;
+}) =>
+  postText("/data-formatter/", {
+    prompt: payload.prompt,
+    target: payload.target,
+    mode: payload.mode,
+    instructions: payload.instructions,
+    // The target format is the whole point here, so it is also the directive
+    // the provider is given.
+    output_format: payload.mode === "validate" ? "markdown" : payload.target,
+  });
 
 const createEmail = (
   context: string,
@@ -191,7 +297,8 @@ const createEmail = (
   prompt: string
 ) => postText("/email/", { context, recipients, sender, prompt });
 
-const chatWithRAG = (prompt: string) => postText("/rag-chat/", { prompt });
+const chatWithRAG = (prompt: string, conversation?: ChatTurn[]) =>
+  postText("/rag-chat/", { prompt, conversation });
 
 const generateImage = async (prompt: string): Promise<GeneratedImage> => {
   try {
@@ -204,6 +311,40 @@ const generateImage = async (prompt: string): Promise<GeneratedImage> => {
     }
     notifyHistoryChanged();
     return image;
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
+/**
+ * Analyse a CSV: insights from the model, charts computed from the whole file.
+ *
+ * The file goes to the backend rather than being profiled here because pandas
+ * is already there, and because a chart drawn from a fifteen-row sample would
+ * be a plausible-looking lie.
+ */
+const analyseData = async (payload: {
+  file?: File;
+  text?: string;
+  question?: string;
+}): Promise<DataAnalysis> => {
+  const body = new FormData();
+  if (payload.file) body.append("file", payload.file);
+  if (payload.text) body.append("text", payload.text);
+  if (payload.question) body.append("prompt", payload.question);
+
+  try {
+    const response = await client.post<ApiResponse<DataAnalysis>>(
+      "/data-analysis/",
+      body
+    );
+    notifyHistoryChanged();
+    const analysis = response.data?.data;
+    return {
+      profile: analysis?.profile ?? { rows: 0, column_count: 0, columns: [] },
+      insights: analysis?.insights ?? "",
+      charts: Array.isArray(analysis?.charts) ? analysis.charts : [],
+    };
   } catch (error) {
     throw toApiError(error);
   }
@@ -272,6 +413,77 @@ const listModels = async (): Promise<ModelCatalog> => {
       default_model: catalogue?.default_model ?? "",
       models: Array.isArray(catalogue?.models) ? catalogue.models : [],
     };
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
+/** What this session has spent, per model, per tool, per key. */
+const getUsage = async (): Promise<UsageReport | null> => {
+  try {
+    const response = await client.get<ApiResponse<UsageReport>>("/usage/");
+    return response.data?.data ?? null;
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
+const readSlots = (payload: ApiResponse<KeySlots> | undefined): KeySlots => ({
+  slots: Array.isArray(payload?.data?.slots) ? payload.data.slots : [],
+  active_index: payload?.data?.active_index ?? null,
+  limit: payload?.data?.limit ?? 1,
+});
+
+/** The keys this session holds, masked — the raw values never come back. */
+const listKeys = async (): Promise<KeySlots> => {
+  try {
+    const response = await client.get<ApiResponse<KeySlots>>("/keys/");
+    return readSlots(response.data);
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
+/**
+ * Add another key to the session, encrypted on the way out like the first one.
+ */
+const addKey = async (apiKey: string, label?: string): Promise<KeySlots> => {
+  try {
+    const response = await client.post<ApiResponse<KeySlots>>(
+      "/keys/",
+      { label },
+      { headers: { Authorization: await encryptApiKeyForTransport(apiKey) } }
+    );
+    return readSlots(response.data);
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
+const switchKey = async (index: number): Promise<KeySlots> => {
+  try {
+    const response = await client.post<ApiResponse<KeySlots>>("/keys/switch/", {
+      index,
+    });
+    return readSlots(response.data);
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
+const rotateKey = async (): Promise<KeySlots> => {
+  try {
+    const response = await client.post<ApiResponse<KeySlots>>("/keys/rotate/", {});
+    return readSlots(response.data);
+  } catch (error) {
+    throw toApiError(error);
+  }
+};
+
+const removeKey = async (index: number): Promise<KeySlots> => {
+  try {
+    const response = await client.delete<ApiResponse<KeySlots>>(`/keys/${index}/`);
+    return readSlots(response.data);
   } catch (error) {
     throw toApiError(error);
   }
@@ -366,6 +578,53 @@ const clearApiKeySession = async () => {
   }
 };
 
+/**
+ * Statuses that mean "this key cannot serve this request right now".
+ *
+ * 429 is a rate limit, 402 is out of credit. Both are the key's problem rather
+ * than the request's, which is exactly when a spare key is worth having.
+ */
+const ROTATABLE_STATUSES = new Set([402, 429]);
+
+/** Paths where rotating would hide the answer the caller asked for. */
+const isKeyManagementPath = (url?: string) =>
+  Boolean(url && (url.includes("/keys") || url.includes("api-key-check")));
+
+interface RetriableConfig extends InternalAxiosRequestConfig {
+  rotatedOnce?: boolean;
+}
+
+client.interceptors.response.use(undefined, async (error: unknown) => {
+  if (!axios.isAxiosError(error)) throw error;
+
+  const config = error.config as RetriableConfig | undefined;
+  const status = error.response?.status;
+
+  if (
+    !config ||
+    config.rotatedOnce ||
+    !status ||
+    !ROTATABLE_STATUSES.has(status) ||
+    // Rotating during key validation would report a bad key as accepted, on a
+    // session that had quietly moved to a different key.
+    isKeyManagementPath(config.url)
+  ) {
+    throw error;
+  }
+
+  try {
+    const { slots } = await listKeys();
+    if (slots.length < 2) throw error;
+    await rotateKey();
+  } catch {
+    throw error;
+  }
+
+  // The generation never happened, so replaying it on the next key is safe.
+  config.rotatedOnce = true;
+  return client.request(config);
+});
+
 const services = {
   postPrompt,
   postProofreader,
@@ -380,10 +639,21 @@ const services = {
   chatWithRAG,
   generateImage,
   insertFile,
+  analyseData,
   listRagDocuments,
   deleteRagDocument,
   getHistory,
   listModels,
+  runBatchItem,
+  createSocialPost,
+  generateIdeas,
+  formatData,
+  getUsage,
+  listKeys,
+  addKey,
+  switchKey,
+  rotateKey,
+  removeKey,
   checkApiKeySession,
   validateApiKey,
   clearApiKeySession,

@@ -1,13 +1,27 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import type { HistoryEntry } from '../interface';
-import { TOOL_GROUPS } from '../tools';
+import { SESSION_PAGES, TOOL_GROUPS } from '../tools';
 
 interface SidebarProps {
   history: HistoryEntry[];
   isHistoryLoading: boolean;
   onRefreshHistory: () => void;
+  /** Open on a phone, where the sidebar is a drawer rather than a column. */
+  isOpen?: boolean;
+  onClose?: () => void;
 }
+
+const linkClasses = ({ isActive }: { isActive: boolean }) =>
+  `block px-2 py-1.5 rounded-md text-sm transition-colors ${
+    isActive ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'
+  }`;
+
+const formatCost = (cost?: number | null) => {
+  if (cost == null) return '';
+  if (cost === 0) return '$0';
+  return cost < 0.01 ? `$${cost.toFixed(5)}` : `$${cost.toFixed(2)}`;
+};
 
 const prettifyMethod = (method: string) =>
   method
@@ -29,10 +43,33 @@ const Sidebar: React.FC<SidebarProps> = ({
   history,
   isHistoryLoading,
   onRefreshHistory,
+  isOpen = false,
+  onClose,
 }) => {
   return (
-    <aside className="w-72 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
-      <nav className="flex-shrink-0 max-h-[55%] overflow-y-auto p-4">
+    <>
+      {/* On a phone the sidebar slides over the content instead of taking a
+          third of the screen away from it. */}
+      {isOpen && (
+        <button
+          type="button"
+          aria-label="Close the menu"
+          onClick={onClose}
+          className="md:hidden fixed inset-0 top-16 z-30 bg-gray-900/40"
+        />
+      )}
+      <aside
+        className={`w-72 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col
+          fixed md:static top-16 bottom-0 left-0 z-40 md:z-auto
+          transition-transform md:transition-none
+          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+      >
+      {/* Following a link is what closes the drawer; using the history panel
+          is not. */}
+      <nav
+        className="flex-shrink-0 max-h-[55%] overflow-y-auto p-4"
+        onClick={() => onClose?.()}
+      >
         <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Tools
         </h2>
@@ -45,17 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <ul>
               {group.tools.map((tool) => (
                 <li key={tool.path}>
-                  <NavLink
-                    to={tool.path}
-                    title={tool.description}
-                    className={({ isActive }) =>
-                      `block px-2 py-1.5 rounded-md text-sm transition-colors ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-700 font-semibold'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`
-                    }
-                  >
+                  <NavLink to={tool.path} title={tool.description} className={linkClasses}>
                     {tool.name}
                   </NavLink>
                 </li>
@@ -63,6 +90,21 @@ const Sidebar: React.FC<SidebarProps> = ({
             </ul>
           </div>
         ))}
+
+        <div className="mb-2">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide px-2 mb-1">
+            Session
+          </p>
+          <ul>
+            {SESSION_PAGES.map((page) => (
+              <li key={page.path}>
+                <NavLink to={page.path} title={page.description} className={linkClasses}>
+                  {page.name}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
 
       <div className="flex-1 min-h-0 border-t border-gray-200 flex flex-col">
@@ -105,13 +147,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <p className="text-xs text-gray-600 mt-1 line-clamp-2 break-words">
                     {entry.prompt}
                   </p>
+                  {(entry.model || entry.cost != null) && (
+                    <p className="text-[11px] text-gray-400 mt-1 truncate">
+                      {entry.model}
+                      {entry.cost != null && ` · ${formatCost(entry.cost)}`}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
           )}
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 

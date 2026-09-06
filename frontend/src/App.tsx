@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import services, { onHistoryChanged } from './services/services';
-import { clearLegacyApiKey, getLegacyApiKey } from './services/auth';
+import { clearConversations, clearLegacyApiKey, getLegacyApiKey } from './services/auth';
 import type { HistoryEntry } from './interface';
 import { DEFAULT_TOOL_PATH, findToolByPath } from './tools';
 import { DEFAULT_PAGE_TITLE, MODEL_STORAGE_KEY, PROVIDER_STORAGE_KEY, SITE_NAME } from './constant';
 import NavBar from './components/NavBar';
 import Sidebar from './components/Sidebar';
+import SpendAlert from './components/SpendAlert';
 import AboutPage from './pages/about/AboutPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LandingPage from './pages/landing/LandingPage';
@@ -23,6 +24,12 @@ import SentimentPage from './pages/ai-service-page/SentimentPage';
 import DocumentAIPage from './pages/ai-service-page/DocumentAIPage';
 import ImaGenPage from './pages/ai-service-page/ImaGenPage';
 import EmailBuilderPage from './pages/ai-service-page/EmailBuilderPage';
+import PostGeneratorPage from './pages/ai-service-page/PostGenerator';
+import IdeaGeneratorPage from './pages/ai-service-page/IdeaGenerator';
+import DataFormatterPage from './pages/ai-service-page/DataFormatter';
+import DataAnalysisPage from './pages/ai-service-page/DataAnalysis';
+import BatchPage from './pages/ai-service-page/BatchPage';
+import UsagePage from './pages/ai-service-page/UsagePage';
 
 function App() {
   const { pathname } = useLocation();
@@ -35,6 +42,8 @@ function App() {
   );
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  // Below `md` the sidebar is a drawer, so it has to be opened deliberately.
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -96,6 +105,10 @@ function App() {
   // Everything else a crawler reads is static in index.html, because every
   // signed-out URL resolves to the landing page.
   useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     const tool = findToolByPath(pathname);
     if (tool) {
       document.title = `${tool.name} — ${SITE_NAME}`;
@@ -118,6 +131,7 @@ function App() {
       console.error('Failed to clear the API key session:', error);
     } finally {
       clearLegacyApiKey();
+      clearConversations();
       localStorage.removeItem(PROVIDER_STORAGE_KEY);
       // The next key may be for a provider — or a plan — where this model does
       // not exist, so the choice goes with the key it was made for.
@@ -159,16 +173,24 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      <NavBar provider={provider} onClearApiKey={handleClearKey} />
+      <NavBar
+        provider={provider}
+        onClearApiKey={handleClearKey}
+        onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
+      />
+
+      <SpendAlert />
 
       <div className="flex flex-grow overflow-hidden">
         <Sidebar
           history={history}
           isHistoryLoading={isHistoryLoading}
           onRefreshHistory={refreshHistory}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
 
-        <main className="flex-grow overflow-hidden p-6">
+        <main className="flex-grow overflow-hidden p-3 sm:p-6">
           <Routes>
             <Route path="/" element={<Navigate to={DEFAULT_TOOL_PATH} replace />} />
             <Route path="/prompt" element={<PromptPage />} />
@@ -179,6 +201,12 @@ function App() {
             <Route path="/summarizer" element={<SummarizerPage />} />
             <Route path="/copywriting" element={<CopyWritingPage />} />
             <Route path="/email-builder" element={<EmailBuilderPage />} />
+            <Route path="/social-caption" element={<PostGeneratorPage />} />
+            <Route path="/ideas" element={<IdeaGeneratorPage />} />
+            <Route path="/data-analysis" element={<DataAnalysisPage />} />
+            <Route path="/data-formatter" element={<DataFormatterPage />} />
+            <Route path="/batch" element={<BatchPage />} />
+            <Route path="/usage" element={<UsagePage />} />
             <Route path="/translator" element={<TranslatorPage />} />
             <Route path="/sentiment" element={<SentimentPage />} />
             <Route path="/document-ai" element={<DocumentAIPage />} />

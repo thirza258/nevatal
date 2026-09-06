@@ -2,6 +2,7 @@ import React from 'react';
 import services from '../../services/services';
 import ChatPanel from '../../components/ChatPanel';
 import { useChat } from '../../hooks/useChat';
+import { conversationStorageKey } from '../../constant';
 import type { RagDocument } from '../../interface';
 
 interface RAGPageProps {
@@ -18,7 +19,8 @@ const RAGPage: React.FC<RAGPageProps> = ({
   onRemoveDocument,
 }) => {
   const { messages, isLoading, sendMessage, clearMessages } = useChat(
-    services.chatWithRAG
+    services.chatWithRAG,
+    conversationStorageKey('/document-ai')
   );
 
   const documentCount = documents.length;

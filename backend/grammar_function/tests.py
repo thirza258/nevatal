@@ -118,7 +118,7 @@ class SummarizerIntegrationTests(TestCase):
         self.assertIn("error", response.data)
         self.assertEqual(response.data["error"], "A 'prompt' is required in the request body.")
 
-    @patch("grammar_function.views.generate_response", side_effect=Exception("Boom"))
+    @patch("grammar_function.views.generate_response_with_usage", side_effect=Exception("Boom"))
     def test_ai_error_returns_500(self, mock_generate_response):
         """If Gemini API raises exception, should return 500 with generic error."""
 
@@ -129,4 +129,8 @@ class SummarizerIntegrationTests(TestCase):
         self.assertEqual(
             response.data["error"],
             "An unexpected error occurred while processing your request."
+        )
+        self.assertTrue(
+            mock_generate_response.called,
+            "the patched call is the one the view makes, or this passes for free",
         )

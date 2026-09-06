@@ -67,6 +67,16 @@ export const TOOL_GROUPS: ToolGroup[] = [
         path: '/email-builder',
         description: 'Draft an email from its context.',
       },
+      {
+        name: 'Social Caption',
+        path: '/social-caption',
+        description: 'Captions shaped for TikTok, LinkedIn, X and the rest.',
+      },
+      {
+        name: 'Idea Generator',
+        path: '/ideas',
+        description: 'Brainstorm names, business ideas, angles and topics.',
+      },
     ],
   },
   {
@@ -99,6 +109,40 @@ export const TOOL_GROUPS: ToolGroup[] = [
       },
     ],
   },
+  {
+    name: 'Data & bulk',
+    tools: [
+      {
+        name: 'Data Analysis',
+        path: '/data-analysis',
+        description: 'Upload a CSV and get insights and charts back.',
+      },
+      {
+        name: 'Data Formatter',
+        path: '/data-formatter',
+        description: 'Clean, validate and convert pasted data.',
+      },
+      {
+        name: 'Batch Runner',
+        path: '/batch',
+        description: 'Run one tool over many inputs at once.',
+      },
+    ],
+  },
+];
+
+/**
+ * Workspace pages that are not AI tools.
+ *
+ * Kept out of TOOL_GROUPS because that list is also what the landing page
+ * advertises, and "Usage & keys" is not something the app can do for you.
+ */
+export const SESSION_PAGES: ToolDefinition[] = [
+  {
+    name: 'Usage & keys',
+    path: '/usage',
+    description: 'What this session has spent, and the keys it can spend on.',
+  },
 ];
 
 export const ALL_TOOLS: ToolDefinition[] = TOOL_GROUPS.flatMap(
@@ -108,4 +152,4 @@ export const ALL_TOOLS: ToolDefinition[] = TOOL_GROUPS.flatMap(
 export const DEFAULT_TOOL_PATH = '/prompt';
 
 export const findToolByPath = (pathname: string): ToolDefinition | undefined =>
-  ALL_TOOLS.find((tool) => tool.path === pathname);
+  [...ALL_TOOLS, ...SESSION_PAGES].find((tool) => tool.path === pathname);

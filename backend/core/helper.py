@@ -22,6 +22,21 @@ AI_MODEL_HEADER = "X-AI-Model"
 # cannot be used to push a wall of text into an outbound request.
 AI_MODEL_MAX_LENGTH = 200
 
+# A batch run makes one request per item, and those belong in the usage figures
+# but not in the sidebar, where fifty rows of "translate line 37" would bury
+# the work someone actually wants to find again.
+BATCH_HEADER = "X-Nevatal-Batch"
+
+# Which shape the answer should come back in. Validated in ai_service, which
+# owns the directives; an unknown value there simply adds no directive.
+OUTPUT_FORMAT_FIELD = "output_format"
+OUTPUT_FORMAT_MAX_LENGTH = 20
+
+# The thread the browser is carrying. The backend keeps no conversation state,
+# so context retention means the client resends the turns and ai_service caps
+# how many of them are replayed.
+CONVERSATION_FIELD = "conversation"
+
 def strip_authentication_header(header: str) -> str:
     try:
         if header.startswith("Bearer "):
@@ -54,6 +69,33 @@ def _get_fernet() -> Fernet:
     return Fernet(fernet_key)
 
 
+def encrypt_text(value: str) -> str:
+    """
+    Encrypt any server-side value into an opaque `enc:` token.
+
+    Used for the provider key and for the key slot list, which is a JSON
+    document rather than a single key but deserves the same treatment.
+    """
+    if not value:
+        return ""
+
+    token = _get_fernet().encrypt(value.encode("utf-8")).decode("utf-8")
+    return f"enc:{token}"
+
+
+def decrypt_text(token: Optional[str]) -> str:
+    """
+    Read back a value written by `encrypt_text`, or "" if it cannot be read.
+    """
+    if not token or not token.startswith("enc:"):
+        return ""
+
+    try:
+        return _get_fernet().decrypt(token[4:].encode("utf-8")).decode("utf-8")
+    except InvalidToken:
+        return ""
+
+
 def encrypt_api_key(api_key: str) -> str:
     """
     Encrypt a raw provider key into an opaque token.
@@ -65,8 +107,7 @@ def encrypt_api_key(api_key: str) -> str:
     if not normalized:
         return ""
 
-    token = _get_fernet().encrypt(normalized.encode("utf-8")).decode("utf-8")
-    return f"enc:{token}"
+    return encrypt_text(normalized)
 
 
 def decrypt_api_key(api_key: Optional[str]) -> str:
@@ -161,6 +202,54 @@ def resolve_model_from_request(request) -> str:
         return ""
 
     return model
+
+
+def _request_field(request, field: str):
+    """Read one field from a request body, whatever the parser produced."""
+    try:
+        return request.data.get(field)
+    except (AttributeError, TypeError):
+        return None
+
+
+def resolve_output_format_from_request(request) -> str:
+    """
+    Resolve the output format this request asked for.
+
+    Unlike the model, this belongs to the request rather than the session: JSON
+    from a data extractor and Markdown from a writer, in the same sitting.
+    """
+    value = (_request_field(request, OUTPUT_FORMAT_FIELD) or "")
+    if not isinstance(value, str):
+        return ""
+
+    value = value.strip().lower()
+    return value if len(value) <= OUTPUT_FORMAT_MAX_LENGTH else ""
+
+
+def resolve_conversation_from_request(request) -> list:
+    """
+    Resolve the thread this request should be answered in the context of.
+
+    Returned as-is: `ai_service.normalize_conversation` is what decides which
+    turns are usable and how many of them fit the budget.
+    """
+    value = _request_field(request, CONVERSATION_FIELD)
+    return value if isinstance(value, list) else []
+
+
+def resolve_batch_from_request(request) -> bool:
+    """
+    Whether this request is one item of a batch run.
+
+    Batch rows still count towards usage and spend — they cost real tokens —
+    but they stay out of the history sidebar.
+    """
+    return (request.headers.get(BATCH_HEADER) or "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
 
 
 def set_api_key_cookie(response, api_key_token: str):

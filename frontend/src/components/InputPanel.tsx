@@ -1,5 +1,6 @@
 import React from 'react';
 import { countWords } from '../utils/text';
+import TemplateLibrary from './TemplateLibrary';
 
 interface InputPanelProps {
   value: string;
@@ -40,14 +41,18 @@ const InputPanel: React.FC<InputPanelProps> = ({
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
           {title}
         </h2>
-        <button
-          type="button"
-          onClick={handlePaste}
-          className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700"
-          disabled={disabled}
-        >
-          Paste
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Scoped to the current route, so each tool has its own prompts. */}
+          <TemplateLibrary value={value} onApply={onChange} disabled={disabled} />
+          <button
+            type="button"
+            onClick={handlePaste}
+            className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700"
+            disabled={disabled}
+          >
+            Paste
+          </button>
+        </div>
       </div>
 
       {controls && (

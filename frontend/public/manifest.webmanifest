@@ -1,0 +1,23 @@
+{
+  "name": "Nevatal — AI Tools Hub",
+  "short_name": "Nevatal",
+  "description": "AI tools for writing, translation, data analysis and document Q&A, running on your own OpenRouter, OpenAI or Gemini key.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f4f6",
+  "theme_color": "#111827",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Prompt", "url": "/prompt" },
+    { "name": "Data Analysis", "url": "/data-analysis" },
+    { "name": "Batch Runner", "url": "/batch" }
+  ]
+}

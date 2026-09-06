@@ -3,6 +3,7 @@ import services from '../../services/services';
 import ChatPanel from '../../components/ChatPanel';
 import { useChat } from '../../hooks/useChat';
 import { SelectField, type Option } from '../../components/FormControls';
+import { conversationStorageKey } from '../../constant';
 
 const LEVELS: Option[] = [
   { value: 'a curious ten-year-old', label: 'Explain to a 10-year-old' },
@@ -22,16 +23,20 @@ const ExplainerPage: React.FC = () => {
   const [level, setLevel] = useState(LEVELS[1].value);
   const [style, setStyle] = useState(STYLES[0].value);
 
-  const { messages, isLoading, sendMessage, clearMessages } = useChat((text) =>
-    services.postExplainer(
-      [
-        `Explain the following for ${level}.`,
-        `Give ${style}.`,
-        'End with a one-sentence summary.',
-        '',
-        `Topic: ${text}`,
-      ].join('\n')
-    )
+  const { messages, isLoading, sendMessage, clearMessages } = useChat(
+    (text, conversation) =>
+      services.postExplainer(
+        [
+          `Explain the following for ${level}.`,
+          `Give ${style}.`,
+          'End with a one-sentence summary.',
+          '',
+          `Topic: ${text}`,
+        ].join('\n'),
+        // Follow-ups are the point of this page, so the thread goes with them.
+        conversation
+      ),
+    conversationStorageKey('/explainer')
   );
 
   return (

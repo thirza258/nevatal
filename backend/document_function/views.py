@@ -12,14 +12,27 @@ from rest_framework import status
 from core.helper import (
     extract_text_from_pdf,
     resolve_api_key_header as strip_authentication_header,
+    resolve_batch_from_request,
+    resolve_conversation_from_request,
     resolve_model_from_request,
+    resolve_output_format_from_request,
 )
 from ai_service.gemini_service import  process_text_with_function_calling_vertex
 from core.models import ChatRecord
 from rag_service.rag_service import RAGIndex
 from io import StringIO
+import json
+import logging
 import pandas as pd
-from ai_service import generate_response, generate_image
+from ai_service import (
+    empty_usage,
+    generate_image,
+    generate_response_with_usage,
+    sum_usage,
+)
+
+logger = logging.getLogger(__name__)
+
 
 class DirectExtractionView(APIView):
     """
@@ -35,6 +48,8 @@ class DirectExtractionView(APIView):
         prompt = request.data.get("prompt")
         api_key = self._extract_api_key(request)
         model = resolve_model_from_request(request)
+        output_format = resolve_output_format_from_request(request)
+        batch = resolve_batch_from_request(request)
 
         validation_error = self._validate_request(uploaded_file, prompt)
         if validation_error:
@@ -49,10 +64,20 @@ class DirectExtractionView(APIView):
                     status=status.HTTP_422_UNPROCESSABLE_ENTITY
                 )
 
-            combined_response = self._process_chunks(text_content, prompt, api_key, model)
-            
-            adjusted_response = self._adjust_response(combined_response, api_key, model)
-            self._save_chat_record(prompt, adjusted_response, api_key)
+            combined_response, chunk_usage = self._process_chunks(
+                text_content, prompt, api_key, model, output_format
+            )
+
+            adjusted_response, adjust_usage = self._adjust_response(
+                combined_response, api_key, model
+            )
+            self._save_chat_record(
+                prompt,
+                adjusted_response,
+                api_key,
+                usage=sum_usage(chunk_usage, adjust_usage),
+                batch=batch,
+            )
             return Response({
                 "status": 200,
                 "message": "success",
@@ -66,7 +91,7 @@ class DirectExtractionView(APIView):
             )
 
     def _adjust_response(self, response, api_key, model=""):
-        """Adjust the response to the user's request."""
+        """Adjust the response to the user's request, and report what it cost."""
         prompt = f"""
         You are helpful assistant that will adjust the response to the user's request.
         This is the result of the extraction: {response}
@@ -74,8 +99,7 @@ class DirectExtractionView(APIView):
         Return the adjusted response only.
         """
 
-        answer = generate_response(prompt=prompt, api_key=api_key, model=model)
-        return answer
+        return generate_response_with_usage(prompt=prompt, api_key=api_key, model=model)
 
     def _extract_api_key(self, request):
         """Extract and clean API key from request headers."""
@@ -145,20 +169,27 @@ class DirectExtractionView(APIView):
         
         return buffer.getvalue()
 
-    def _process_chunks(self, text_content, prompt, api_key, model=""):
-        """Process text content in chunks and combine responses."""
+    def _process_chunks(self, text_content, prompt, api_key, model="", output_format=""):
+        """
+        Process text content in chunks and combine responses.
+
+        One document is several calls, so the usage of each is added up: the
+        record for this request should say what the whole request consumed.
+        """
         chunks = self._create_chunks(text_content)
         combined_response = ""
-        
+        total_usage = empty_usage(model)
+
         for idx, chunk in enumerate(chunks):
-            chunk_response = self._process_single_chunk(
-                chunk, idx, len(chunks), prompt, api_key, model
+            chunk_response, chunk_usage = self._process_single_chunk(
+                chunk, idx, len(chunks), prompt, api_key, model, output_format
             )
+            total_usage = sum_usage(total_usage, chunk_usage)
             combined_response = self._combine_responses(
                 combined_response, chunk_response, idx
             )
-        
-        return combined_response
+
+        return combined_response, total_usage
 
     def _create_chunks(self, text_content):
         """Split text content into chunks."""
@@ -167,8 +198,10 @@ class DirectExtractionView(APIView):
             for i in range(0, len(text_content), self.CHUNK_SIZE)
         ]
 
-    def _process_single_chunk(self, chunk, chunk_index, total_chunks, prompt, api_key, model=""):
-        """Process a single chunk and return the response."""
+    def _process_single_chunk(
+        self, chunk, chunk_index, total_chunks, prompt, api_key, model="", output_format=""
+    ):
+        """Process a single chunk, returning its response and its usage."""
         chunk_prompt = self._build_chunk_prompt(
             chunk, chunk_index, total_chunks, prompt
         )
@@ -178,15 +211,13 @@ class DirectExtractionView(APIView):
             "in a structured format based on user prompt."
         )
         
-        answer = generate_response(
+        return generate_response_with_usage(
             prompt=chunk_prompt,
             api_key=api_key,
             model=model,
-            system_instruction_string=system_instruction
+            output_format=output_format,
+            system_instruction_string=system_instruction,
         )
-        
-        
-        return answer
 
     def _build_chunk_prompt(self, chunk, chunk_index, total_chunks, user_prompt):
         """Build the prompt for a specific chunk."""
@@ -207,14 +238,338 @@ class DirectExtractionView(APIView):
         combined_response += f"Chunk {chunk_index + 1}:\n{new_response}"
         return combined_response
 
-    def _save_chat_record(self, prompt, response, api_key):
+    def _save_chat_record(self, prompt, response, api_key, usage=None, batch=False):
         """Save chat record to database."""
         ChatRecord.objects.create(
             method='direct_extraction',
             prompt=prompt,
             response=response,
-            api_key=api_key
+            api_key=api_key,
+            batch=batch,
+            **(usage or empty_usage()),
         )
+
+class DataAnalysisView(APIView):
+    """
+    Upload a CSV, get insights and charts back.
+
+    The division of labour matters here: the model reads a profile of the data
+    and decides what is worth plotting, and pandas then computes those plots
+    over the whole file. A model that has seen fifteen sample rows must never be
+    the source of the numbers on a chart — it would produce plausible ones.
+    """
+
+    SAMPLE_ROWS = 15
+    MAX_PROFILE_COLUMNS = 40
+    MAX_CHARTS = 4
+    MAX_CHART_POINTS = 30
+    DEFAULT_CHART_POINTS = 12
+
+    CHART_TYPES = {"bar", "line"}
+    AGGREGATIONS = {"sum", "mean", "median", "count", "max", "min"}
+
+    def post(self, request, *args, **kwargs):
+        uploaded_file = request.FILES.get("file")
+        pasted = request.data.get("text")
+        question = (request.data.get("prompt") or "").strip()
+
+        api_key = strip_authentication_header(request.headers.get("Authorization"))
+        model = resolve_model_from_request(request)
+        batch = resolve_batch_from_request(request)
+
+        if not uploaded_file and not pasted:
+            return Response(
+                {"error": "A 'file' or 'text' containing CSV data is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not api_key:
+            return Response(
+                {"error": "Authorization header is required."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        try:
+            frame = self._read_frame(uploaded_file, pasted)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        profile = self._profile(frame)
+
+        try:
+            raw, usage = generate_response_with_usage(
+                prompt=self._build_prompt(frame, profile, question),
+                api_key=api_key,
+                model=model,
+                system_instruction_string=self._instruction(),
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred during analysis: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        payload = self._parse_payload(raw)
+        charts = self._build_charts(frame, payload.get("charts"))
+
+        ChatRecord.objects.create(
+            method="data_analysis",
+            prompt=question or f"Analyse {profile['rows']} rows",
+            response=payload.get("insights") or "",
+            api_key=api_key,
+            batch=batch,
+            **usage,
+        )
+
+        return Response(
+            {
+                "status": 200,
+                "message": "success",
+                "data": {
+                    "profile": profile,
+                    "insights": payload.get("insights") or "",
+                    "charts": charts,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def _read_frame(self, uploaded_file, pasted):
+        """Parse the upload into a frame, or say why it could not be."""
+        try:
+            if uploaded_file:
+                uploaded_file.seek(0)
+                frame = pd.read_csv(uploaded_file)
+            else:
+                frame = pd.read_csv(StringIO(str(pasted)))
+        except Exception as e:
+            raise ValueError(f"That does not parse as CSV: {e}")
+
+        frame = frame.dropna(how="all", axis=0).dropna(how="all", axis=1)
+        if frame.empty:
+            raise ValueError("The file parsed, but it has no rows.")
+
+        frame.columns = [str(column).strip() for column in frame.columns]
+        return frame
+
+    def _profile(self, frame):
+        """
+        A description of the data, computed rather than described by a model.
+
+        This is both what the model reads and what the page shows, so the two
+        can never disagree.
+        """
+        columns = []
+        for name in list(frame.columns)[: self.MAX_PROFILE_COLUMNS]:
+            column = frame[name]
+            numeric = pd.to_numeric(column, errors="coerce")
+            # Treat a column as numeric only if most of it actually is; one
+            # stray number in a text column should not make it a measure.
+            is_numeric = numeric.notna().sum() >= max(1, len(column) * 0.6)
+
+            entry = {
+                "name": str(name),
+                "kind": "number" if is_numeric else "text",
+                "nulls": int(column.isna().sum()),
+                "unique": int(column.nunique(dropna=True)),
+            }
+
+            if is_numeric:
+                entry.update(
+                    {
+                        "min": self._number(numeric.min()),
+                        "max": self._number(numeric.max()),
+                        "mean": self._number(numeric.mean()),
+                        "median": self._number(numeric.median()),
+                    }
+                )
+            else:
+                entry["top"] = [
+                    str(value)
+                    for value in column.dropna().astype(str).value_counts().head(3).index
+                ]
+
+            columns.append(entry)
+
+        return {"rows": int(len(frame)), "column_count": int(len(frame.columns)), "columns": columns}
+
+    @staticmethod
+    def _number(value):
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return None
+        if number != number or number in (float("inf"), float("-inf")):
+            return None
+        return round(number, 6)
+
+    def _instruction(self):
+        return """
+        You are a data analyst. You are given a profile of a dataset and a
+        sample of its rows, and you answer with a single JSON object and
+        nothing else:
+
+        {
+          "insights": "<Markdown. What the data shows: distributions, notable
+                       outliers, relationships, data-quality problems. Cite
+                       column names. Be specific and brief — five short
+                       paragraphs or bullets at most.>",
+          "charts": [
+            {"type": "bar"|"line", "title": "...", "x": "<column>",
+             "y": "<column or null>", "agg": "sum"|"mean"|"median"|"count"|"max"|"min",
+             "limit": 12}
+          ]
+        }
+
+        Rules for charts: name only columns that exist in the profile; use "x"
+        for the category or time axis and "y" for the measure; use agg "count"
+        with y null to plot how often each value of x occurs; use "line" only
+        when x is a date, time or otherwise ordered column. Propose at most
+        four charts, each answering a different question.
+
+        Never put numbers you have calculated yourself into a chart — you are
+        specifying what to plot, and the plotting is done from the full dataset.
+        """
+
+    def _build_prompt(self, frame, profile, question):
+        lines = [
+            f"Dataset: {profile['rows']} rows, {profile['column_count']} columns.",
+            "",
+            "Columns:",
+        ]
+
+        for column in profile["columns"]:
+            detail = (
+                f"min {column['min']}, max {column['max']}, mean {column['mean']}"
+                if column["kind"] == "number"
+                else f"examples: {', '.join(column.get('top') or []) or 'none'}"
+            )
+            lines.append(
+                f"- {column['name']} ({column['kind']}, {column['unique']} unique, "
+                f"{column['nulls']} missing) — {detail}"
+            )
+
+        lines += [
+            "",
+            f"First {self.SAMPLE_ROWS} rows as CSV:",
+            frame.head(self.SAMPLE_ROWS).to_csv(index=False),
+        ]
+
+        if question:
+            lines += ["", f"The question to answer: {question}"]
+
+        return "\n".join(lines)
+
+    def _parse_payload(self, raw):
+        """
+        Pull `{insights, charts}` out of whatever the model actually returned.
+
+        Providers wrap answers differently and some fence their JSON, so this
+        tries the shapes in turn and falls back to treating the whole reply as
+        the insights — a readable analysis with no charts beats an error.
+        """
+        text = (raw or "").strip()
+
+        for candidate in self._json_candidates(text):
+            if isinstance(candidate, dict) and (
+                "insights" in candidate or "charts" in candidate
+            ):
+                return candidate
+
+        return {"insights": text, "charts": []}
+
+    def _json_candidates(self, text):
+        def strip_fence(value):
+            stripped = value.strip()
+            if stripped.startswith("```"):
+                stripped = stripped.split("\n", 1)[-1]
+                stripped = stripped.rsplit("```", 1)[0]
+            return stripped.strip()
+
+        try:
+            outer = json.loads(strip_fence(text))
+        except ValueError:
+            return
+
+        yield outer
+
+        if isinstance(outer, dict):
+            inner = outer.get("response")
+            if isinstance(inner, str):
+                try:
+                    yield json.loads(strip_fence(inner))
+                except ValueError:
+                    return
+
+    def _build_charts(self, frame, specs):
+        """Compute each proposed chart over the whole frame."""
+        if not isinstance(specs, list):
+            return []
+
+        charts = []
+        for spec in specs[: self.MAX_CHARTS]:
+            chart = self._build_chart(frame, spec)
+            if chart:
+                charts.append(chart)
+        return charts
+
+    def _build_chart(self, frame, spec):
+        if not isinstance(spec, dict):
+            return None
+
+        x = spec.get("x")
+        if x not in frame.columns:
+            return None
+
+        chart_type = spec.get("type") if spec.get("type") in self.CHART_TYPES else "bar"
+        aggregation = spec.get("agg") if spec.get("agg") in self.AGGREGATIONS else "count"
+        y = spec.get("y") if spec.get("y") in frame.columns else None
+
+        try:
+            limit = int(spec.get("limit") or self.DEFAULT_CHART_POINTS)
+        except (TypeError, ValueError):
+            limit = self.DEFAULT_CHART_POINTS
+        limit = max(2, min(limit, self.MAX_CHART_POINTS))
+
+        try:
+            if aggregation == "count" or y is None:
+                grouped = frame.groupby(frame[x].astype(str)).size()
+                measure = f"count of {x}"
+            else:
+                numeric = pd.to_numeric(frame[y], errors="coerce")
+                grouped = numeric.groupby(frame[x].astype(str)).agg(aggregation)
+                measure = f"{aggregation} of {y}"
+        except Exception as e:
+            logger.info(f"Could not compute a chart of {x}: {e}")
+            return None
+
+        grouped = grouped.dropna()
+        if grouped.empty:
+            return None
+
+        # A line reads along its x axis, so it stays in x order; a bar chart is
+        # a ranking, so the biggest goes first.
+        grouped = (
+            grouped.sort_index() if chart_type == "line" else grouped.sort_values(ascending=False)
+        )
+        grouped = grouped.head(limit)
+
+        points = [
+            {"x": str(label), "y": self._number(value)}
+            for label, value in grouped.items()
+            if self._number(value) is not None
+        ]
+        if not points:
+            return None
+
+        return {
+            "type": chart_type,
+            "title": str(spec.get("title") or f"{measure} by {x}")[:120],
+            "x_label": str(x),
+            "y_label": measure,
+            "series": [{"name": measure, "points": points}],
+            "truncated": bool(len(grouped) < int(frame[x].nunique(dropna=True))),
+        }
+
 
 class AnalyzeTextView(APIView):
     """
@@ -329,6 +684,9 @@ class RAGChatView(APIView):
         api_key = request.headers.get('Authorization')
         api_key = strip_authentication_header(api_key)
         model = resolve_model_from_request(request)
+        output_format = resolve_output_format_from_request(request)
+        batch = resolve_batch_from_request(request)
+        conversation = resolve_conversation_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -356,9 +714,12 @@ class RAGChatView(APIView):
             system_instruction_string = f"""
             You are a helpful assistant. Your task is to answer the user's question based on the given context.
             """
-            response_data = generate_response(prompt=augmented_prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
+            response_data, usage = generate_response_with_usage(prompt=augmented_prompt, api_key=api_key, model=model,
+                                                               output_format=output_format,
+                                                               conversation=conversation,
+                                                               system_instruction_string=system_instruction_string)
             # Record the question, not the context blob built around it.
-            ChatRecord.objects.create(method='rag_chat', prompt=prompt, response=response_data, api_key=api_key)
+            ChatRecord.objects.create(method='rag_chat', prompt=prompt, response=response_data, api_key=api_key, batch=batch, **usage)
             return Response({
                 "status": 200,
                 "message": "success",
@@ -459,6 +820,8 @@ class MeetingSummaryView(APIView):
         api_key = request.headers.get("Authorization")
         api_key = strip_authentication_header(api_key)
         model = resolve_model_from_request(request)
+        output_format = resolve_output_format_from_request(request)
+        batch = resolve_batch_from_request(request)
         if not prompt:
             return Response(
                 {"error": "A 'prompt' is required in the request body."},
@@ -475,8 +838,10 @@ class MeetingSummaryView(APIView):
             The meeting should be summarized based on the following prompt:
             {prompt}
             """
-            response_data = generate_response(prompt=prompt, api_key=api_key, model=model, system_instruction_string=system_instruction_string)
-            ChatRecord.objects.create(method='meeting_summary', prompt=prompt, response=response_data, api_key=api_key)
+            response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
+                                                               output_format=output_format,
+                                                               system_instruction_string=system_instruction_string)
+            ChatRecord.objects.create(method='meeting_summary', prompt=prompt, response=response_data, api_key=api_key, batch=batch, **usage)
             return Response({
                 "status": 200,
                 "message": "success",

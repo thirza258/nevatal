@@ -4,9 +4,13 @@ from .views import (
     ApiKeyClearView,
     ExplainerView,
     HistoryView,
+    KeyRotateView,
+    KeySwitchView,
+    KeysView,
     ModelListView,
     PromptView,
     PublicKeyView,
+    UsageView,
 )
 
 urlpatterns = [
@@ -20,4 +24,9 @@ urlpatterns = [
     path("gemini/api-key-check/", ApiKeyCheckView.as_view(provider="gemini"), name="gemini-api-key-check"),
     path("history/", HistoryView.as_view(), name="history"),
     path("models/", ModelListView.as_view(), name="models"),
+    path("usage/", UsageView.as_view(), name="usage"),
+    path("keys/", KeysView.as_view(), name="keys"),
+    path("keys/switch/", KeySwitchView.as_view(), name="key-switch"),
+    path("keys/rotate/", KeyRotateView.as_view(), name="key-rotate"),
+    path("keys/<int:index>/", KeysView.as_view(), name="key"),
 ]
