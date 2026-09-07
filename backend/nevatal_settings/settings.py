@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 import dj_database_url
 import sys
@@ -22,11 +23,37 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "SecretKey")
+# DEBUG is read first because the rest of this file decides how strict to be
+# from it. It defaults to False: a missing or misspelled environment variable
+# should leave the app locked down, not wide open.
+DEBUG = os.getenv("DEBUG", "False") == "True"
+
+# SECRET_KEY does more here than sign sessions. `core.helper` derives the
+# symmetric cipher for the provider-API-key cookies from it, so a guessable
+# value means anyone holding a captured cookie can read a live provider key
+# out of it — and can mint one the backend will accept. There is deliberately
+# no production default: failing to boot is the correct response to an unset
+# secret, because the alternative is booting with a secret an attacker knows.
+SECRET_KEY = os.getenv("SECRET_KEY", "")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "SECRET_KEY is not set. Generate one with:\n"
+            "    python -c 'import secrets; print(secrets.token_urlsafe(64))'\n"
+            "and put it in the environment before starting the app."
+        )
+    # Development only, and never a value that could be mistaken for a real
+    # one. Django's own deploy check flags the prefix.
+    SECRET_KEY = "django-insecure-development-only-do-not-deploy-this"
+
+# The fingerprint that scopes chat history and Document AI folders to a key is
+# salted with this. It defaults to SECRET_KEY, but is settable on its own so
+# SECRET_KEY can be rotated — which it must be, if it was ever the old default
+# — without orphaning every user's history and documents. To rotate safely,
+# pin this to the previous SECRET_KEY before changing SECRET_KEY itself.
+API_KEY_FINGERPRINT_SALT = os.getenv("API_KEY_FINGERPRINT_SALT", "") or SECRET_KEY
 
 # PEM (or base64-encoded PEM) of the RSA key the browser wraps provider API
 # keys with. Left unset, one is generated on first use and kept in
@@ -38,10 +65,11 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True") == "True"
-
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "True") == "True"
 
@@ -72,7 +100,20 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    if origin.strip()
+]
+
+# The API-key cookie rides on credentialed cross-origin requests, so a
+# wildcard origin here would let any site on the internet spend a visitor's
+# key. The browser refuses "*" alongside credentials anyway; this makes the
+# mistake fail at boot rather than at runtime.
+if not DEBUG and any(origin == "*" for origin in CORS_ALLOWED_ORIGINS):
+    raise ImproperlyConfigured(
+        "CORS_ALLOWED_ORIGINS cannot be '*' while CORS_ALLOW_CREDENTIALS is on."
+    )
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
@@ -100,7 +141,39 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+    # Every endpoint here is unauthenticated by design and most of them spend
+    # the caller's provider credit or run embeddings, so an open loop against
+    # one is both a denial of service and a bill. Rates are per client and
+    # tunable, because the Batch page deliberately fans out many requests at
+    # once and a too-tight limit would break it.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.getenv("ANON_THROTTLE_RATE", "180/min"),
+    },
+    # How many proxies sit in front of Django, so the throttle counts the real
+    # client and not the reverse proxy. Behind Cloudflare plus nginx this is 2.
+    # Left unset, DRF keys on the whole X-Forwarded-For chain, which a caller
+    # can pad to sidestep the limit.
+    'NUM_PROXIES': int(os.getenv("NUM_PROXIES")) if os.getenv("NUM_PROXIES") else None,
 }
+
+# Request body ceilings. These bound the non-file parts of a request; uploaded
+# files are checked separately in `core.helper.validate_upload`, because
+# Django exempts them from DATA_UPLOAD_MAX_MEMORY_SIZE.
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", 5 * 1024 * 1024))
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("FILE_UPLOAD_MAX_MEMORY_SIZE", 2 * 1024 * 1024))
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 200
+
+# The throttle counts requests in a process-wide cache, so a test suite of a
+# few hundred requests would start tripping the limit on itself and fail for
+# reasons that have nothing to do with what is being tested. A rate of None
+# leaves the throttle installed but unlimited; `core.test_security` turns a
+# real rate back on for the test that checks throttling works.
+if "test" in sys.argv:
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {"anon": None}
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -145,10 +218,13 @@ if DEVELOPMENT_MODE is True:
             "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
         }
     }
-else :
-        DATABASES = {
-            "default": dj_database_url.parse(os.environ.get("DATABASE_URL")),
-    }
+else:
+    database_url = os.getenv("DATABASE_URL", "")
+    if not database_url:
+        raise ImproperlyConfigured(
+            "DEVELOPMENT_MODE is off, so DATABASE_URL must be set."
+        )
+    DATABASES = {"default": dj_database_url.parse(database_url)}
 
 
 
@@ -187,8 +263,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+# Only if it exists: an entry that does not warns on every boot, and this
+# project keeps its frontend assets in the frontend image.
 STATICFILES_DIRS = [
-     os.path.join(BASE_DIR, "static"),
+    path for path in [os.path.join(BASE_DIR, "static")] if os.path.isdir(path)
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
@@ -199,3 +277,52 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+# --- Transport and cookie security ------------------------------------------
+#
+# Nginx terminates the connection inside the compose network on plain HTTP,
+# with TLS ending at the tunnel in front of it, so Django cannot tell a secure
+# request from an insecure one without being told. This is what tells it.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Whether cookies are marked Secure. Kept as its own switch rather than being
+# read off DEBUG: the two questions are different, and tying them meant a
+# stray DEBUG=True silently shipped the provider-key cookie over plain HTTP.
+SECURE_COOKIES = os.getenv("SECURE_COOKIES", "False" if DEBUG else "True") == "True"
+
+SESSION_COOKIE_SECURE = SECURE_COOKIES
+CSRF_COOKIE_SECURE = SECURE_COOKIES
+SESSION_COOKIE_HTTPONLY = True
+
+# Strict, not Lax. Django REST Framework exempts its views from CSRF checks,
+# so for every state-changing endpoint the SameSite policy on the API-key
+# cookie is the only thing stopping another site from POSTing as the visitor
+# and spending their provider credit. Lax happens to block cross-site POSTs
+# today; Strict does not depend on that detail. Relaxing either of these
+# reopens CSRF across the whole API — see core.helper.set_api_key_cookie.
+SESSION_COOKIE_SAMESITE = "Strict"
+CSRF_COOKIE_SAMESITE = "Strict"
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
+
+# Both of these are opt-in rather than on by default, and neither is a
+# judgement that they do not matter:
+#
+#   SECURE_SSL_REDIRECT loops forever if the proxy in front does not pass
+#   X-Forwarded-Proto, so it is the deployment's call, not this file's.
+#
+#   HSTS is remembered by browsers for its full duration and cannot be taken
+#   back early, so it should be turned on deliberately and ramped up.
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "False") == "True"
+SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False") == "True"

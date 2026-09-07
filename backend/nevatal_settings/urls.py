@@ -14,6 +14,9 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import os
+
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import (
@@ -31,8 +34,16 @@ urlpatterns = [
     path("api/v1/", include("core.urls")),
     path("api/v1/", include("grammar_function.urls")),
     path("api/v1/", include("document_function.urls")),
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
-    path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]
+
+# The schema and its two browsers enumerate every endpoint and every field the
+# API accepts, which is a map of the attack surface handed to anyone who asks.
+# They are a development convenience, so they are only mounted in development.
+# Set SCHEMA_PUBLIC=True to serve them anyway.
+if settings.DEBUG or os.getenv("SCHEMA_PUBLIC", "False") == "True":
+    urlpatterns += [
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+        path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    ]
 

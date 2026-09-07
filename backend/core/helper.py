@@ -1,14 +1,17 @@
 import base64
 import hashlib
 import io
+import logging
 from functools import lru_cache
 from typing import Optional
 import os
 import PyPDF2
-from nevatal_settings import settings
+from django.conf import settings
 from cryptography.fernet import Fernet, InvalidToken
 
 from core.crypto import decrypt_transport_value, is_transport_encrypted
+
+logger = logging.getLogger(__name__)
 
 API_KEY_COOKIE_NAME = "nevatal_api_key"
 API_KEY_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
@@ -143,8 +146,14 @@ def fingerprint_api_key(api_key: Optional[str]) -> str:
     if not normalized:
         return ""
 
+    # Salted with API_KEY_FINGERPRINT_SALT rather than SECRET_KEY directly, so
+    # that rotating a compromised SECRET_KEY does not change every fingerprint
+    # and cut users off from their own history and documents. The salt defaults
+    # to SECRET_KEY, so nothing changes until it is set deliberately.
+    salt = getattr(settings, "API_KEY_FINGERPRINT_SALT", "") or settings.SECRET_KEY
+
     return hashlib.sha256(
-        f"{settings.SECRET_KEY}:{normalized}".encode("utf-8")
+        f"{salt}:{normalized}".encode("utf-8")
     ).hexdigest()
 
 
@@ -153,17 +162,6 @@ def resolve_api_key_header(api_key: Optional[str]) -> str:
     Resolve an Authorization header to the raw provider key.
     """
     return decrypt_api_key(api_key)
-
-
-def build_api_key_payload(api_key: Optional[str]) -> dict[str, str]:
-    """
-    Build encrypted storage values for a raw provider key.
-    """
-    normalized = _normalize_api_key_value(api_key)
-    return {
-        "api_key": encrypt_api_key(normalized),
-        "api_key_hash": fingerprint_api_key(normalized),
-    }
 
 
 def resolve_api_key_from_request(request) -> str:
@@ -261,8 +259,17 @@ def set_api_key_cookie(response, api_key_token: str):
         api_key_token,
         max_age=API_KEY_COOKIE_MAX_AGE,
         httponly=True,
-        secure=not settings.DEBUG,
-        samesite="Lax",
+        secure=getattr(settings, "SECURE_COOKIES", not settings.DEBUG),
+        # Strict because DRF exempts these endpoints from CSRF checks: this
+        # attribute is what stops another site POSTing as the visitor and
+        # spending their provider credit. Do not relax it.
+        #
+        # Strict does not break arriving from a link elsewhere, which is the
+        # usual reason people downgrade it to Lax. That navigation fetches
+        # index.html, a static file needing no cookie; the session is then
+        # decided by an XHR the loaded page makes to its own origin, which is
+        # same-site whatever the user clicked to get here.
+        samesite="Strict",
         path="/",
     )
     return response
@@ -308,6 +315,107 @@ def extract_text_from_pdf(pdf_file) -> Optional[str]:
         print(f"❌ Error extracting text from PDF: {e}")
         return None
 
+# What an upload is allowed to be, and how big. Nothing here streams: a PDF is
+# read into memory by PyPDF2 and a CSV by pandas, so an unbounded upload is an
+# unbounded allocation.
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
+UPLOAD_KINDS = {
+    "pdf": {"application/pdf", "application/x-pdf", "application/octet-stream", ""},
+    "csv": {
+        "text/csv",
+        "application/csv",
+        "text/plain",
+        "application/vnd.ms-excel",
+        "application/octet-stream",
+        "",
+    },
+}
+
+# Characters allowed in a stored filename. Anything else becomes an underscore,
+# which keeps shell metacharacters, newlines and unicode direction marks out of
+# paths and out of log lines.
+_SAFE_FILENAME_CHARS = set(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._- "
+)
+
+# The RAG store keeps its own files beside the upload it was built from. An
+# upload is never allowed to be named like one of them.
+RESERVED_UPLOAD_NAMES = {"index.pkl", "meta.json"}
+
+
+def upload_extension(filename: Optional[str]) -> str:
+    """The lowercase extension of an upload, without the dot."""
+    name = os.path.basename(filename or "")
+    _, _, extension = name.rpartition(".")
+    return extension.lower() if extension and extension != name else ""
+
+
+def validate_upload(file, kinds, max_bytes: int = MAX_UPLOAD_BYTES) -> Optional[str]:
+    """
+    Check an upload before anything parses it. Returns an error message, or
+    None when the file is acceptable.
+
+    Both halves matter. The size check is what stops a single request from
+    exhausting memory, since PyPDF2 and pandas both load the whole file. The
+    extension check is what stops the parsers being handed something they were
+    not written for. The declared content type is advisory — a browser gets it
+    from the OS and a script can claim anything — so it is checked loosely and
+    never on its own.
+    """
+    if file is None:
+        return "A file is required."
+
+    kinds = [kinds] if isinstance(kinds, str) else list(kinds)
+
+    size = getattr(file, "size", None)
+    if size is None:
+        return "The upload has no readable size."
+    if size <= 0:
+        return "The uploaded file is empty."
+    if size > max_bytes:
+        limit_mb = max_bytes / (1024 * 1024)
+        return f"The file is larger than the {limit_mb:.0f} MB limit."
+
+    extension = upload_extension(getattr(file, "name", ""))
+    if extension not in kinds:
+        return f"Only {' or '.join(sorted(kinds)).upper()} files are supported."
+
+    allowed_types = UPLOAD_KINDS.get(extension, set())
+    declared = (getattr(file, "content_type", "") or "").split(";")[0].strip().lower()
+    if allowed_types and declared not in allowed_types:
+        return f"The file does not look like a {extension.upper()} file."
+
+    return None
+
+
+def safe_upload_name(filename: Optional[str], fallback: str = "upload") -> str:
+    """
+    Reduce an uploaded filename to something safe to write to disk.
+
+    `os.path.basename` alone is not enough. It stops a path escaping the
+    directory, but it happily returns "index.pkl" — and the RAG store unpickles
+    a file by that name from the very folder uploads are written to, so a name
+    collision there would mean loading attacker-supplied bytes through
+    `pickle.load`. Reserved names get a prefix, and so does anything that would
+    otherwise start with a dot.
+    """
+    name = os.path.basename(filename or "").strip()
+    name = "".join(character if character in _SAFE_FILENAME_CHARS else "_" for character in name)
+    name = name.strip(". ") or fallback
+
+    # Keep well inside the 255-byte limit most filesystems impose, leaving room
+    # for the prefix below.
+    if len(name) > 120:
+        stem, _, extension = name.rpartition(".")
+        name = f"{stem[:100]}.{extension}" if stem and len(extension) <= 12 else name[:120]
+
+    if name.lower() in RESERVED_UPLOAD_NAMES:
+        name = f"source_{name}"
+
+    return name
+
+
 def save_file(file, directory=None) -> Optional[str]:
     """
     Save a file to the media directory, or to `directory` when one is given.
@@ -320,13 +428,22 @@ def save_file(file, directory=None) -> Optional[str]:
         os.makedirs(target_dir, exist_ok=True)
 
         # Never join a caller-supplied path: "../../etc/passwd" would escape
-        # MEDIA_ROOT entirely.
-        safe_name = os.path.basename(file.name or "").strip() or "upload"
+        # MEDIA_ROOT entirely, and "index.pkl" would land on top of a file the
+        # store later unpickles.
+        safe_name = safe_upload_name(getattr(file, "name", ""))
         file_path = os.path.join(target_dir, safe_name)
+
+        # The resolved path must still be inside the directory we meant to
+        # write to; a belt-and-braces check against a future change to the
+        # sanitiser above.
+        resolved = os.path.realpath(file_path)
+        if os.path.commonpath([resolved, os.path.realpath(target_dir)]) != os.path.realpath(target_dir):
+            raise ValueError("Refusing to write outside the upload directory.")
+
         with open(file_path, "wb") as f:
             for chunk in file.chunks() if hasattr(file, "chunks") else [file.read()]:
                 f.write(chunk)
         return file_path
     except Exception as e:
-        print(f"Error saving file: {str(e)}")
+        logger.warning(f"Error saving file: {e}")
         return None

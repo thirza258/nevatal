@@ -42,6 +42,35 @@ if [ -z "$DOCKER_USERNAME" ]; then
   exit 1
 fi
 
+# The backend derives the cipher for the provider-API-key cookies from
+# SECRET_KEY, so a missing or well-known value means anyone holding a captured
+# cookie can read a live provider key out of it. The app refuses to boot
+# without one; catch it here, where the message can be useful.
+SECRET_KEY_VALUE="${SECRET_KEY:-$(read_env SECRET_KEY)}"
+SECRET_KEY_VALUE="${SECRET_KEY_VALUE%\"}"
+SECRET_KEY_VALUE="${SECRET_KEY_VALUE#\"}"
+
+if [ -z "$SECRET_KEY_VALUE" ]; then
+  echo "SECRET_KEY is not set in $ENV_FILE. Generate one with:" >&2
+  echo "    python3 -c 'import secrets; print(secrets.token_urlsafe(64))'" >&2
+  exit 1
+fi
+
+case "$SECRET_KEY_VALUE" in
+  SecretKey|django-insecure-*|changeme|secret)
+    echo "SECRET_KEY is still a placeholder value. Replace it before deploying:" >&2
+    echo "    python3 -c 'import secrets; print(secrets.token_urlsafe(64))'" >&2
+    echo "Rotating it signs everyone out, so set API_KEY_FINGERPRINT_SALT to the" >&2
+    echo "old value first if you want existing history and documents to survive." >&2
+    exit 1
+    ;;
+esac
+
+if [ "${#SECRET_KEY_VALUE}" -lt 50 ]; then
+  echo "SECRET_KEY is shorter than 50 characters; generate a longer one." >&2
+  exit 1
+fi
+
 echo "=== DEPLOYING ${DOCKER_USERNAME}/nevatal-*:${IMAGE_TAG} ==="
 docker --version
 docker compose version
@@ -70,6 +99,22 @@ services:
       DEVELOPMENT_MODE: \${DEVELOPMENT_MODE}
       ALLOWED_HOSTS: \${ALLOWED_HOSTS}
       CORS_ALLOWED_ORIGINS: \${CORS_ALLOWED_ORIGINS}
+      # Required. The app will not start without it, by design: the
+      # alternative is starting with a secret an attacker already knows.
+      SECRET_KEY: \${SECRET_KEY}
+      # Defaults to off here as well as in the settings module, so that a
+      # missing value cannot turn tracebacks on in production.
+      DEBUG: \${DEBUG:-False}
+      # Set this to the previous SECRET_KEY when rotating, so existing chat
+      # history and Document AI folders stay attached to their owners.
+      API_KEY_FINGERPRINT_SALT: \${API_KEY_FINGERPRINT_SALT:-}
+      CSRF_TRUSTED_ORIGINS: \${CSRF_TRUSTED_ORIGINS:-}
+      # Requests per client per minute across the API. The Batch page fans out
+      # deliberately, so raise this rather than lowering it if batches stall.
+      ANON_THROTTLE_RATE: \${ANON_THROTTLE_RATE:-180/min}
+      # Proxies in front of Django, so throttling counts the real client.
+      # Cloudflare plus nginx is 2.
+      NUM_PROXIES: \${NUM_PROXIES:-2}
       # Optional. Unset, the backend generates its own transport key and keeps
       # it in the media volume below.
       API_KEY_PRIVATE_KEY: \${API_KEY_PRIVATE_KEY:-}

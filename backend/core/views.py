@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import logging
 from datetime import timedelta
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from core.helper import (
@@ -410,8 +410,12 @@ class HistoryView(APIView):
 
             # Batch rows are real work and count towards usage, but fifty
             # of them would bury the handful someone wants to find again.
+            # Scoped by fingerprint only. There used to be an
+            # `Q(api_key=api_key)` fallback for rows written before hashing;
+            # those rows no longer hold a key to match, and the branch was one
+            # empty-string away from matching every scrubbed row in the table.
             history = ChatRecord.objects.filter(
-                Q(api_key_hash=fingerprint_api_key(api_key)) | Q(api_key=api_key)
+                api_key_hash=fingerprint_api_key(api_key)
             ).exclude(batch=True).order_by('-created_at')
 
             history_list = [

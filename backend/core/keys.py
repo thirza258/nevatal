@@ -23,7 +23,7 @@ from core.helper import (
     encrypt_text,
     set_api_key_cookie,
 )
-from nevatal_settings import settings
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +124,17 @@ def store_slots(response, slots: list[dict[str, str]], active_index: int):
         encrypt_text(payload),
         max_age=API_KEY_COOKIE_MAX_AGE,
         httponly=True,
-        secure=not settings.DEBUG,
-        samesite="Lax",
+        secure=getattr(settings, "SECURE_COOKIES", not settings.DEBUG),
+        # Strict because DRF exempts these endpoints from CSRF checks: this
+        # attribute is what stops another site POSTing as the visitor and
+        # spending their provider credit. Do not relax it.
+        #
+        # Strict does not break arriving from a link elsewhere, which is the
+        # usual reason people downgrade it to Lax. That navigation fetches
+        # index.html, a static file needing no cookie; the session is then
+        # decided by an XHR the loaded page makes to its own origin, which is
+        # same-site whatever the user clicked to get here.
+        samesite="Strict",
         path="/",
     )
 

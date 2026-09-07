@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from core.helper import (
     extract_text_from_pdf,
+    validate_upload,
     resolve_api_key_header as strip_authentication_header,
     resolve_batch_from_request,
     resolve_conversation_from_request,
@@ -22,6 +23,7 @@ from core.models import ChatRecord
 from rag_service.rag_service import RAGIndex
 from io import StringIO
 import json
+import os
 import logging
 import pandas as pd
 from ai_service import (
@@ -54,6 +56,12 @@ class DirectExtractionView(APIView):
         validation_error = self._validate_request(uploaded_file, prompt)
         if validation_error:
             return validation_error
+
+        upload_error = validate_upload(uploaded_file, self.SUPPORTED_FILE_TYPES)
+        if upload_error:
+            return Response(
+                {"error": upload_error}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             text_content = self._extract_file_content(uploaded_file)
@@ -282,6 +290,12 @@ class DataAnalysisView(APIView):
                 {"error": "A 'file' or 'text' containing CSV data is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if uploaded_file:
+            upload_error = validate_upload(uploaded_file, "csv")
+            if upload_error:
+                return Response(
+                    {"error": upload_error}, status=status.HTTP_400_BAD_REQUEST
+                )
         if not api_key:
             return Response(
                 {"error": "Authorization header is required."},
@@ -629,6 +643,12 @@ class PDFUploadRAGView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        upload_error = validate_upload(pdf_file, "pdf")
+        if upload_error:
+            return Response(
+                {"error": upload_error}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         api_key = strip_authentication_header(request.headers.get('Authorization'))
         if not api_key:
             return Response(
@@ -660,7 +680,9 @@ class PDFUploadRAGView(APIView):
 
         return Response({
             "message": "PDF processed successfully",
-            "file_path": document.get("file_path"),
+            # Only the name: the absolute server path is not the browser's
+            # business, and publishing it maps out the filesystem for a caller.
+            "file_path": os.path.basename(document.get("file_path") or "") or None,
             "document_name": pdf_file.name,
             "document_id": document.get("document_id"),
             "chunk_count": document.get("chunk_count"),

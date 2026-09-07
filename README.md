@@ -153,6 +153,77 @@ it does not protect against a compromised frontend, which necessarily sees the
 key before encrypting it. Unencrypted keys are still accepted, so a page served
 without a secure context (where WebCrypto is unavailable) can still sign in.
 
+The key is **never written to the database**. Chat records carry only a one-way
+fingerprint (`api_key_hash`), which is what scopes history, usage and Document
+AI folders to whoever owns them. A `ChatRecord.api_key` column used to hold the
+key re-encrypted with a cipher derived from `SECRET_KEY`; it was removed in
+migration `0007`, because a database dump plus that secret was enough to
+recover live provider keys.
+
+### Security
+
+The settings module fails closed rather than falling back to something
+guessable:
+
+| Setting | Behaviour |
+| --- | --- |
+| `SECRET_KEY` | No production default. The app refuses to start without one. |
+| `DEBUG` | Defaults to `False`. |
+| `DATABASE_URL` | Required whenever `DEVELOPMENT_MODE` is off. |
+| `CORS_ALLOWED_ORIGINS` | `*` is rejected at boot, since credentials ride these requests. |
+
+`SECRET_KEY` is not only Django's signing key here — `core.helper` derives the
+cipher for the API-key cookies from it. A guessable value means a captured
+cookie can be decrypted into a live provider key, and a forged one accepted.
+**If it was ever left at the old `"SecretKey"` default, treat every key ever
+entered as exposed and rotate it:**
+
+```bash
+python3 -c 'import secrets; print(secrets.token_urlsafe(64))'
+```
+
+Rotating it invalidates every existing cookie, so users re-enter their key
+once. It also changes the fingerprint that history and documents are filed
+under — set `API_KEY_FINGERPRINT_SALT` to the **previous** `SECRET_KEY` to keep
+that data attached to its owners.
+
+Other defences, and what each is for:
+
+- **Cookies** are `httpOnly`, `Secure` (via `SECURE_COOKIES`, which is its own
+  switch rather than being read off `DEBUG`) and `SameSite=Strict`. Strict is
+  load-bearing: DRF exempts its views from CSRF checks, so for every
+  state-changing endpoint this attribute is the only thing stopping another
+  site from posting as the visitor and spending their credit. Do not relax it.
+- **Throttling** — `ANON_THROTTLE_RATE` (default `180/min`) applies to every
+  endpoint, all of which are unauthenticated and most of which spend the
+  caller's provider credit. Set `NUM_PROXIES` (2 behind Cloudflare plus nginx)
+  so the limit counts the real caller. The Batch page fans out deliberately, so
+  raise this rather than lowering it if batch runs stall.
+- **Uploads** are checked for size, extension and declared type before any
+  parser sees them (`core.helper.validate_upload`); neither PyPDF2 nor pandas
+  streams, so an unbounded upload is an unbounded allocation. Stored filenames
+  are sanitised, and an upload can never be named `index.pkl` — that file is
+  unpickled on read, in the same folder uploads are written to.
+- **Response headers** — CSP, `X-Frame-Options`, `nosniff`, `Referrer-Policy`,
+  `Permissions-Policy` and COOP, from `frontend/security-headers.conf`. It is a
+  separate file because nginx does not inherit `add_header` into a location
+  that sets one of its own, so it is included once per level.
+- **The schema browsers** (`/api/schema/`, `swagger-ui`, `redoc`) enumerate the
+  whole API and are mounted only when `DEBUG` is on, or `SCHEMA_PUBLIC=True`.
+- **The container** runs as an unprivileged user, and neither Postgres nor
+  Django publishes a port to the host — the frontend reaches the API over the
+  compose network.
+- **The service worker** never caches `/api/`, so no generated answer or
+  session value is left in a shared browser's cache.
+
+Two Django deploy-check warnings are left standing on purpose, both opt-in
+because getting them wrong is worse than not having them yet:
+`SECURE_SSL_REDIRECT` loops forever if the proxy in front does not pass
+`X-Forwarded-Proto`, and `SECURE_HSTS_SECONDS` is remembered by browsers for
+its full duration and cannot be withdrawn early. Turn them on once HTTPS is
+confirmed, ramping HSTS up rather than starting at a year. With both set,
+`manage.py check --deploy` reports no security warnings.
+
 ### Conversation memory
 
 The three chat tools — Prompt, Explainer and Document AI — send the thread with
