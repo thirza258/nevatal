@@ -134,6 +134,29 @@ all four:
 responses, caches the fingerprinted `/assets/` for a year, and marks
 `index.html` `no-cache` so a deploy is picked up immediately.
 
+How fast that one indexable page renders is itself a ranking signal, so two
+things are arranged for its benefit:
+
+- **The tool pages are lazy chunks** (`lazy()` in `App.tsx`). They are only
+  reachable after signing in, so bundling them with the landing page made the
+  page a crawler actually reads carry the whole app with it. Splitting them out
+  took the entry bundle from 536 kB to 330 kB — 167 kB to 108 kB gzipped.
+  `LandingPage` stays eagerly imported, because it must paint with no extra
+  round trip.
+- **Inter is requested from `index.html`, not with an `@import` in
+  `index.css`.** An `@import` cannot start until the stylesheet holding it has
+  downloaded and parsed, which put HTML → CSS → font CSS → font files in
+  series ahead of the first paint. Note that the usual next step — loading it
+  asynchronously with `media="print" onload="this.media='all'"` — is not
+  available here: the Content-Security-Policy has no `unsafe-inline` for
+  scripts, which is deliberate, and that pattern needs an inline handler.
+
+An unknown URL cannot answer with a real 404, because nginx serves
+`index.html` for anything it does not recognise. A signed-out visitor is
+redirected to `/`, where the canonical tag consolidates the URL; a signed-in
+one gets `NotFoundPage`, which adds `<meta name="robots" content="noindex">`
+while it is mounted so the address is not filed as a thin page.
+
 ### API key handling
 
 The provider API key never travels in clear text:

@@ -9,7 +9,11 @@
  * Bump VERSION to retire an old cache.
  */
 
-const VERSION = 'nevatal-shell-v1';
+// Bumped when the asset graph changes shape, not on every deploy: fingerprinted
+// URLs already make a new build a cache miss, so this is about evicting the old
+// build's files rather than about correctness. v2 retires the single pre-split
+// bundle, which code-splitting replaced with an entry chunk plus per-tool ones.
+const VERSION = 'nevatal-shell-v2';
 const SHELL_URL = '/index.html';
 
 self.addEventListener('install', (event) => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import services, { onHistoryChanged } from './services/services';
 import { clearConversations, clearLegacyApiKey, getLegacyApiKey } from './services/auth';
@@ -8,28 +8,44 @@ import { DEFAULT_PAGE_TITLE, MODEL_STORAGE_KEY, PROVIDER_STORAGE_KEY, SITE_NAME 
 import NavBar from './components/NavBar';
 import Sidebar from './components/Sidebar';
 import SpendAlert from './components/SpendAlert';
-import AboutPage from './pages/about/AboutPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LandingPage from './pages/landing/LandingPage';
 
-import PromptPage from './pages/ai-service-page/PromptPage';
-import ProofreaderPage from './pages/ai-service-page/ProofreaderPage';
-import RewriterPage from './pages/ai-service-page/RewriterPage';
-import SummarizerPage from './pages/ai-service-page/SummarizerPage';
-import TranslatorPage from './pages/ai-service-page/TranslatorPage';
-import WriterPage from './pages/ai-service-page/WriterPage';
-import CopyWritingPage from './pages/ai-service-page/CopyWritingPage';
-import ExplainerPage from './pages/ai-service-page/ExplainerPage';
-import SentimentPage from './pages/ai-service-page/SentimentPage';
-import DocumentAIPage from './pages/ai-service-page/DocumentAIPage';
-import ImaGenPage from './pages/ai-service-page/ImaGenPage';
-import EmailBuilderPage from './pages/ai-service-page/EmailBuilderPage';
-import PostGeneratorPage from './pages/ai-service-page/PostGenerator';
-import IdeaGeneratorPage from './pages/ai-service-page/IdeaGenerator';
-import DataFormatterPage from './pages/ai-service-page/DataFormatter';
-import DataAnalysisPage from './pages/ai-service-page/DataAnalysis';
-import BatchPage from './pages/ai-service-page/BatchPage';
-import UsagePage from './pages/ai-service-page/UsagePage';
+// The tool pages load on demand. They are only reachable once someone has
+// signed in, so bundling them with the landing page made the one page a
+// crawler and a first-time visitor actually see carry the whole app with
+// it — and how fast that page renders is a ranking signal. LandingPage and
+// NotFoundPage stay eager: the first must paint with no extra round trip,
+// and the second is a few lines.
+const AboutPage = lazy(() => import('./pages/about/AboutPage'));
+const PromptPage = lazy(() => import('./pages/ai-service-page/PromptPage'));
+const ProofreaderPage = lazy(() => import('./pages/ai-service-page/ProofreaderPage'));
+const RewriterPage = lazy(() => import('./pages/ai-service-page/RewriterPage'));
+const SummarizerPage = lazy(() => import('./pages/ai-service-page/SummarizerPage'));
+const TranslatorPage = lazy(() => import('./pages/ai-service-page/TranslatorPage'));
+const WriterPage = lazy(() => import('./pages/ai-service-page/WriterPage'));
+const CopyWritingPage = lazy(() => import('./pages/ai-service-page/CopyWritingPage'));
+const ExplainerPage = lazy(() => import('./pages/ai-service-page/ExplainerPage'));
+const SentimentPage = lazy(() => import('./pages/ai-service-page/SentimentPage'));
+const DocumentAIPage = lazy(() => import('./pages/ai-service-page/DocumentAIPage'));
+const ImaGenPage = lazy(() => import('./pages/ai-service-page/ImaGenPage'));
+const EmailBuilderPage = lazy(() => import('./pages/ai-service-page/EmailBuilderPage'));
+const PostGeneratorPage = lazy(() => import('./pages/ai-service-page/PostGenerator'));
+const IdeaGeneratorPage = lazy(() => import('./pages/ai-service-page/IdeaGenerator'));
+const DataFormatterPage = lazy(() => import('./pages/ai-service-page/DataFormatter'));
+const DataAnalysisPage = lazy(() => import('./pages/ai-service-page/DataAnalysis'));
+const BatchPage = lazy(() => import('./pages/ai-service-page/BatchPage'));
+const UsagePage = lazy(() => import('./pages/ai-service-page/UsagePage'));
+/** Shown while a tool's chunk is on its way. */
+const ToolLoading = () => (
+  <div className="h-full flex items-center justify-center">
+    <span
+      role="status"
+      aria-label="Loading"
+      className="h-7 w-7 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin"
+    />
+  </div>
+);
 
 function App() {
   const { pathname } = useLocation();
@@ -191,6 +207,7 @@ function App() {
         />
 
         <main className="flex-grow overflow-hidden p-3 sm:p-6">
+          <Suspense fallback={<ToolLoading />}>
           <Routes>
             <Route path="/" element={<Navigate to={DEFAULT_TOOL_PATH} replace />} />
             <Route path="/prompt" element={<PromptPage />} />
@@ -214,6 +231,7 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </Suspense>
         </main>
       </div>
     </div>

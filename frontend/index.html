@@ -32,9 +32,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
 
-    <!-- index.css pulls Inter from Google Fonts; warm the connections early. -->
+    <!--
+      Inter, requested from the document rather than with an @import inside
+      index.css. An @import cannot start until the stylesheet that contains it
+      has downloaded and parsed, which put three round trips in front of the
+      first paint — HTML, then CSS, then the font CSS, then the font files.
+      From here the font CSS is fetched in parallel with our own.
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -44,7 +54,7 @@
     <meta property="og:title" content="Nevatal — AI Tools Hub for Your Own OpenAI, Gemini or OpenRouter Key" />
     <meta
       property="og:description"
-      content="Twelve focused AI tools behind one interface. Bring your own provider key: it is encrypted before it leaves the browser and never stored in browser storage."
+      content="Seventeen focused AI tools behind one interface. Bring your own provider key: it is encrypted before it leaves the browser and never stored in browser storage."
     />
     <meta property="og:image" content="https://chat.nevatal.tech/og-image.png" />
     <meta property="og:image:width" content="1200" />
@@ -56,7 +66,7 @@
     <meta name="twitter:title" content="Nevatal — AI Tools Hub for Your Own API Key" />
     <meta
       name="twitter:description"
-      content="Twelve focused AI tools behind one interface, running on your own OpenAI, Gemini or OpenRouter key. Open source and self-hostable."
+      content="Seventeen focused AI tools behind one interface, running on your own OpenAI, Gemini or OpenRouter key. Open source and self-hostable."
     />
     <meta name="twitter:image" content="https://chat.nevatal.tech/og-image.png" />
 
@@ -86,7 +96,7 @@
             "applicationSubCategory": "AI writing and document tools",
             "operatingSystem": "Any (web browser)",
             "browserRequirements": "Requires JavaScript and a provider API key",
-            "description": "Nevatal puts twelve focused AI tools behind one interface: prompting, explaining, writing, rewriting, proofreading, summarising, copywriting, email drafting, translation, sentiment analysis, document Q&A and image generation. Requests are made with the user's own OpenAI, Google Gemini or OpenRouter API key.",
+            "description": "Nevatal puts seventeen focused AI tools behind one interface: prompting, explaining, writing, rewriting, proofreading, summarising, copywriting, email drafting, social captions, idea generation, translation, sentiment analysis, document Q&A, image generation, CSV data analysis, data formatting and batch runs. Requests are made with the user's own OpenAI, Google Gemini or OpenRouter API key.",
             "featureList": [
               "Prompt",
               "Explainer",
@@ -96,10 +106,15 @@
               "Summarizer",
               "Copywriting",
               "Email Builder",
+              "Social Caption",
+              "Idea Generator",
               "Translator",
               "Sentiment Analysis",
               "Document AI",
-              "Image Generation"
+              "Image Generation",
+              "Data Analysis",
+              "Data Formatter",
+              "Batch Runner"
             ],
             "license": "https://opensource.org/licenses/MIT",
             "isAccessibleForFree": true,
@@ -123,15 +138,16 @@
     <noscript>
       <h1>Nevatal — AI tools that run on your own API key</h1>
       <p>
-        Nevatal is an open source workspace that puts twelve focused AI tools
-        behind one interface. You bring an API key from OpenAI, Google Gemini or
+        Nevatal is an open source workspace that puts seventeen focused AI
+        tools behind one interface. You bring an API key from OpenAI, Google Gemini or
         OpenRouter, and every request is made with that key: there is no
         subscription and no account to create.
       </p>
       <p>
         The tools are Prompt, Explainer, Writer, Rewriter, Proofreader,
-        Summarizer, Copywriting, Email Builder, Translator, Sentiment Analysis,
-        Document AI and Image Generation.
+        Summarizer, Copywriting, Email Builder, Social Caption, Idea Generator,
+        Translator, Sentiment Analysis, Document AI, Image Generation, Data
+        Analysis, Data Formatter and Batch Runner.
       </p>
       <p>
         Nevatal needs JavaScript to run. The source is available at
