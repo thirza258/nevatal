@@ -74,6 +74,27 @@ jobs:
           mv ~/deploy.sh ~/nevatal_app/deploy.sh
           chmod +x ~/nevatal_app/deploy.sh
 
+          # Preserve existing valid SECRET_KEY and API_KEY_FINGERPRINT_SALT
+          # from the server so redeploys do not invalidate sessions or disconnect
+          # chat history if they were not set as GitHub Secrets.
+          EXISTING_SECRET_KEY=""
+          EXISTING_SALT=""
+          if [ -f ~/nevatal_app/.env ]; then
+            RAW_EXISTING=$(sed -n "s/^SECRET_KEY=//p" ~/nevatal_app/.env | tail -n 1)
+            RAW_EXISTING="${RAW_EXISTING%\"}"
+            RAW_EXISTING="${RAW_EXISTING#\"}"
+            case "$RAW_EXISTING" in
+              SecretKey|django-insecure-*|changeme|secret|"")
+                ;;
+              *)
+                if [ "${#RAW_EXISTING}" -ge 50 ]; then
+                  EXISTING_SECRET_KEY="$RAW_EXISTING"
+                fi
+                ;;
+            esac
+            EXISTING_SALT=$(sed -n "s/^API_KEY_FINGERPRINT_SALT=//p" ~/nevatal_app/.env | tail -n 1)
+          fi
+
           # Config for both Compose and deploy.sh. Quoted heredoc: a secret
           # containing $ reaches the file intact.
           cat > ~/nevatal_app/.env <<'EOF'
@@ -86,7 +107,42 @@ jobs:
           CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           IMAGE_TAG=${{ github.sha }}
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          API_KEY_FINGERPRINT_SALT=${{ secrets.API_KEY_FINGERPRINT_SALT }}
+          CSRF_TRUSTED_ORIGINS=${{ secrets.CSRF_TRUSTED_ORIGINS }}
           EOF
+
+          # Ensure SECRET_KEY is set and meets security requirements (>= 50 chars,
+          # not placeholder): GitHub secret > existing server key > auto-generated.
+          CURRENT_SECRET_KEY=$(sed -n "s/^SECRET_KEY=//p" ~/nevatal_app/.env | tail -n 1)
+          CURRENT_SECRET_KEY="${CURRENT_SECRET_KEY%\"}"
+          CURRENT_SECRET_KEY="${CURRENT_SECRET_KEY#\"}"
+          case "$CURRENT_SECRET_KEY" in
+            SecretKey|django-insecure-*|changeme|secret|"")
+              CURRENT_SECRET_KEY=""
+              ;;
+            *)
+              if [ "${#CURRENT_SECRET_KEY}" -lt 50 ]; then
+                CURRENT_SECRET_KEY=""
+              fi
+              ;;
+          esac
+
+          if [ -z "$CURRENT_SECRET_KEY" ]; then
+            if [ -n "$EXISTING_SECRET_KEY" ]; then
+              FINAL_KEY="$EXISTING_SECRET_KEY"
+            else
+              FINAL_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(64))' 2>/dev/null || openssl rand -base64 48 | tr -dc 'a-zA-Z0-9_-')
+            fi
+            sed -i '/^SECRET_KEY=/d' ~/nevatal_app/.env
+            printf 'SECRET_KEY=%s\n' "$FINAL_KEY" >> ~/nevatal_app/.env
+          fi
+
+          CURRENT_SALT=$(sed -n "s/^API_KEY_FINGERPRINT_SALT=//p" ~/nevatal_app/.env | tail -n 1)
+          if [ -z "$CURRENT_SALT" ] && [ -n "$EXISTING_SALT" ]; then
+            sed -i '/^API_KEY_FINGERPRINT_SALT=/d' ~/nevatal_app/.env
+            printf 'API_KEY_FINGERPRINT_SALT=%s\n' "$EXISTING_SALT" >> ~/nevatal_app/.env
+          fi
 
           # Never print .env — it holds the database password.
           echo "=== ENV CREATED ($(wc -l < ~/nevatal_app/.env) keys) ==="
