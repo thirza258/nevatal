@@ -21,6 +21,7 @@ services:
     command: /app/entrypoint.sh
     volumes:
       - ./backend:/app
+      - media_data:/app/media
     # Also not published: reaching Django directly would bypass nginx, and with
     # it the request size limit and the security headers. The frontend proxies
     # /api/ to `backend:8000` over the compose network. Uncomment for local
@@ -49,3 +50,4 @@ services:
 
 volumes:
   postgres_data:
+  media_data:

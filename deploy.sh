@@ -157,6 +157,14 @@ for attempt in $(seq 1 "$PULL_ATTEMPTS"); do
   sleep 15
 done
 
+echo "=== PREPARING VOLUMES ==="
+# Existing volumes from older root-running deploys are owned by root (uid 0).
+# Hand over ownership to nevatal (uid 10001) so /app/media is writable.
+COMPOSE_PROJECT="${COMPOSE_PROJECT_NAME:-$(basename "$APP_DIR")}"
+VOLUME_NAME="${COMPOSE_PROJECT}_media_data"
+docker volume create "$VOLUME_NAME" >/dev/null 2>&1 || true
+docker run --rm -v "${VOLUME_NAME}:/m" alpine chown -R 10001:10001 /m || true
+
 echo "=== STARTING STACK ==="
 docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
 
