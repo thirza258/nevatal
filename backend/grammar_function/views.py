@@ -18,6 +18,7 @@ from core.helper import (
 from core.mixins import AIServiceMixin
 from core.models import ChatRecord
 from ai_service import generate_response_with_usage
+from ai_service.tool_context import tool_instruction
 
 
 # ----------------------------------------------------------------------
@@ -52,7 +53,12 @@ class WriterView(APIView):
             )
 
         try:
-            system_instruction_string = f"""You are an expert writer. Your goal is to create original, engaging, and high-quality text based on the user's prompt."""
+            system_instruction_string = tool_instruction(
+                "Writer",
+                "Write the requested draft from the supplied brief and key points. "
+                "Creative invention is appropriate for fiction, but do not present "
+                "invented statistics, sources or product claims as facts in nonfiction.",
+            )
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
                                                                system_instruction_string=system_instruction_string)
@@ -98,7 +104,14 @@ class RewriterView(APIView):
             )
 
         try:
-            system_instruction_string = f"""You are a skilled rewriter. Your task is to rewrite the given text in a way that is more engaging and persuasive."""
+            system_instruction_string = tool_instruction(
+                "Rewriter",
+                "Rewrite the supplied text according to the selected rewrite goal. "
+                "Preserve its meaning and factual details. Keep the original tone unless "
+                "a different tone is requested; make it persuasive only when requested. "
+                "Expansion must not add unsupported facts. Return only the rewritten text "
+                "unless the current request asks for commentary.",
+            )
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
                                                                system_instruction_string=system_instruction_string)
@@ -135,11 +148,13 @@ class ProofreaderView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
         try:
-            system_instruction_string = f"""You are a proofreader.
-                     Your task is to proofread the given text and
-                     make sure it is grammatically correct and semantically correct.
-                     And make sure to proofread eventough the text is already perfect
-                     """
+            system_instruction_string = tool_instruction(
+                "Proofreader",
+                "Correct only the errors covered by the selected proofreading mode and "
+                "language variant. Preserve the author's voice, meaning and facts. "
+                "Leave correct text unchanged; never invent errors or force a rewrite. "
+                "Include a list of changes only when requested, and list only actual corrections.",
+            )
 
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
@@ -162,9 +177,11 @@ class SummarizerView(AIServiceMixin, APIView):
     This view now leverages the robust error handling and response structure
     from the PromptView class.
     """
-    default_system_instruction_string = (
-        "You are a highly skilled summarizer. Your task is to distill complex "
-        "information into clear and concise insights."
+    default_system_instruction_string = tool_instruction(
+        "Summarizer",
+        "Summarize only the supplied source, keeping its meaning, uncertainty and key facts. "
+        "Follow the requested length, focus and structure. Do not add outside information "
+        "or summarize the task instructions themselves.",
     )
 
     def post(self, request, *args, **kwargs):
@@ -192,7 +209,7 @@ class SummarizerView(AIServiceMixin, APIView):
             )
 
         try:
-            system_instruction_string = f"""You are a highly skilled summarizer. Your task is to distill complex information into clear and concise insights."""
+            system_instruction_string = self.default_system_instruction_string
 
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
@@ -240,7 +257,13 @@ class TranslatorView(APIView):
 
         try:
 
-            system_instruction_string = f"""You are a professional translator. Translate the given text into {target_language} from {source_language}."""
+            system_instruction_string = tool_instruction(
+                "Translator",
+                f"Translate the supplied source text into {target_language} from {source_language}. "
+                "Honor the selected register while preserving meaning, names, numbers and "
+                "uncertainty. Translate only the source text, not surrounding task instructions. "
+                "Return the translation without commentary unless requested.",
+            )
             translation_text, usage = generate_response_with_usage(api_key=api_key, prompt=prompt, model=model,
                                                                   output_format=output_format,
                                                                   system_instruction_string=system_instruction_string)
@@ -283,11 +306,13 @@ class SentimentAnalyzerView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
         try:
-            system_instruction_string = f"""
-            You are a skilled sentiment analyzer. Your task is to analyze the sentiment of a text prompt.
-            The sentiment should be analyzed based on the following prompt:
-            {prompt}
-            """
+            system_instruction_string = tool_instruction(
+                "Sentiment Analysis",
+                "Analyze only the supplied source text at the selected level: overall, "
+                "per topic or per entry. Support judgments with evidence from that text. "
+                "Do not score the surrounding task instructions as part of the source, "
+                "and do not infer opinions or motives that the source does not support.",
+            )
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
                                                                system_instruction_string=system_instruction_string)
@@ -335,9 +360,12 @@ class CopyWritingView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
         try:
-            system_instruction_string = f"""
-            You are a skilled copywriter. Your task is to create engaging and persuasive copywriting based on the user's prompt.
-            """
+            system_instruction_string = tool_instruction(
+                "Copywriting",
+                "Create copy for the requested channel, audience, tone and structure using "
+                "the supplied offer and selling points. Do not invent prices, discounts, "
+                "testimonials, guarantees or performance claims.",
+            )
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
                                                                system_instruction_string=system_instruction_string)
@@ -399,9 +427,12 @@ class EmailGeneratorView(APIView):
             {prompt}
         """
 
-        system_instruction_string = f"""
-        You are a skilled email generator. Your task is to generate an email from a text prompt.
-        """
+        system_instruction_string = tool_instruction(
+            "Email Builder",
+            "Draft an email using the supplied context, recipient, sender and requirements. "
+            "Do not invent commitments, dates, attachments or contact information. "
+            "Use clear placeholders for necessary details that were not provided.",
+        )
         try:
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
@@ -470,9 +501,13 @@ class SocialMediaPostGeneratorView(APIView):
             Brand Keywords: {brand_keywords}
             """
 
-            system_instruction_string = f"""
-            You are a skilled social media post generator. Your task is to generate a social media post from a platform, tone, audience, hashtag count, include emojis, include cta, post length, brand name, and brand keywords.
-            """
+            system_instruction_string = tool_instruction(
+                "Social Caption",
+                "Generate a post for the selected platform using the supplied topic and brand "
+                "details. Honor the requested tone, audience, length, hashtag count, emoji and "
+                "call-to-action choices, including choices set to false or zero. "
+                "Do not invent offers, results or brand claims.",
+            )
 
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
@@ -542,8 +577,9 @@ class IdeaGeneratorView(APIView):
 
         system_instruction_string = f"""
         You are a fast, practical brainstorming partner. Produce exactly {count}
-        {kind or "ideas"}, numbered, each on its own line: the idea in bold, then
-        one short sentence on why it could work.
+        {kind or "ideas"}, each with one short sentence on why it could work.
+        Unless another output format is selected, use a numbered list with each
+        idea in bold on its own line.
         Make them genuinely different from each other rather than variations of
         one idea, and concrete rather than generic.
         {f"Respect these constraints: {constraints}" if constraints else ""}
@@ -552,7 +588,7 @@ class IdeaGeneratorView(APIView):
         try:
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
-                                                               system_instruction_string=system_instruction_string)
+                                                               system_instruction_string=tool_instruction("Idea Generator", system_instruction_string))
             ChatRecord.objects.create(method='idea_generation', prompt=prompt, response=response_data, api_key=api_key, batch=batch, **usage)
             return Response({
                 "status": 200,
@@ -624,8 +660,9 @@ class DataFormatterView(APIView):
             into {target or "JSON"}.
             Clean it as you go: trim whitespace, normalise obvious type and
             date inconsistencies, and drop rows that are entirely empty. Never
-            invent, summarise or reorder values, and keep every field you were
-            given.
+            invent or summarise values. Preserve their order and keep every
+            field unless the user explicitly requests a different order or
+            asks to remove specific fields.
             Return the converted data only — no prose, no explanation, no code
             fence.
             """
@@ -636,7 +673,7 @@ class DataFormatterView(APIView):
         try:
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
-                                                               system_instruction_string=system_instruction_string)
+                                                               system_instruction_string=tool_instruction("Data Formatter", system_instruction_string))
             ChatRecord.objects.create(method='data_formatting', prompt=prompt, response=response_data, api_key=api_key, batch=batch, **usage)
             return Response({
                 "status": 200,

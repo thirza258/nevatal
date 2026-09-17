@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import services, { toApiError } from '../../services/services';
+import services from '../../services/services';
+import { useAsyncTask } from '../../hooks/useAiTask';
 import PageLayout from '../../components/PageLayout';
 import DataChart from '../../components/DataChart';
 import { SubmitButton, TextField } from '../../components/FormControls';
@@ -37,9 +38,7 @@ const DataAnalysisPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [pasted, setPasted] = useState('');
   const [question, setQuestion] = useState('');
-  const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { result: analysis, isLoading, error, run, reset } = useAsyncTask<DataAnalysis | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const canRun = Boolean(file || pasted.trim());
@@ -48,29 +47,17 @@ const DataAnalysisPage: React.FC = () => {
     setFile(null);
     setPasted('');
     setQuestion('');
-    setAnalysis(null);
-    setError('');
+    reset();
   };
 
   const handleRun = async () => {
     if (!canRun || isLoading) return;
 
-    setIsLoading(true);
-    setError('');
-    try {
-      setAnalysis(
-        await services.analyseData({
-          file: file ?? undefined,
-          text: file ? undefined : pasted.trim(),
-          question: question.trim(),
-        })
-      );
-    } catch (failure) {
-      setError(toApiError(failure).message);
-      setAnalysis(null);
-    } finally {
-      setIsLoading(false);
-    }
+    await run(() => services.analyseData({
+      file: file ?? undefined,
+      text: file ? undefined : pasted.trim(),
+      question: question.trim(),
+    }));
   };
 
   const handleDownload = () => {

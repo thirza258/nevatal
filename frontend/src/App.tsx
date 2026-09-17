@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import services, { onHistoryChanged } from './services/services';
 import { clearConversations, clearLegacyApiKey, getLegacyApiKey } from './services/auth';
@@ -36,6 +36,8 @@ const DataFormatterPage = lazy(() => import('./pages/ai-service-page/DataFormatt
 const DataAnalysisPage = lazy(() => import('./pages/ai-service-page/DataAnalysis'));
 const BatchPage = lazy(() => import('./pages/ai-service-page/BatchPage'));
 const UsagePage = lazy(() => import('./pages/ai-service-page/UsagePage'));
+const HistoryPage = lazy(() => import('./pages/HistoryPage'));
+const MemoryPage = lazy(() => import('./pages/MemoryPage'));
 /** Shown while a tool's chunk is on its way. */
 const ToolLoading = () => (
   <div className="h-full flex items-center justify-center">
@@ -58,6 +60,8 @@ function App() {
   );
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
+  const historyRequest = useRef(0);
   // Below `md` the sidebar is a drawer, so it has to be opened deliberately.
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -97,13 +101,16 @@ function App() {
   }, []);
 
   const refreshHistory = useCallback(async () => {
+    const request = ++historyRequest.current;
     setIsHistoryLoading(true);
+    setHistoryError('');
     try {
-      setHistory(await services.getHistory());
-    } catch (error) {
-      console.error('Failed to fetch history:', error);
+      const entries = await services.getHistory();
+      if (request === historyRequest.current) setHistory(entries);
+    } catch {
+      if (request === historyRequest.current) setHistoryError('Could not load saved history.');
     } finally {
-      setIsHistoryLoading(false);
+      if (request === historyRequest.current) setIsHistoryLoading(false);
     }
   }, []);
 
@@ -112,9 +119,10 @@ function App() {
     void refreshHistory();
     // Each completed generation writes a row server-side; refetch so the
     // sidebar reflects what the user just did.
-    return onHistoryChanged(() => {
+    const unsubscribe = onHistoryChanged(() => {
       void refreshHistory();
     });
+    return () => { unsubscribe(); historyRequest.current += 1; };
   }, [hasApiKey, refreshHistory]);
 
   // The document title is the one piece of metadata that changes per route.
@@ -153,7 +161,10 @@ function App() {
       // not exist, so the choice goes with the key it was made for.
       localStorage.removeItem(MODEL_STORAGE_KEY);
       setProvider('');
+      historyRequest.current += 1;
       setHistory([]);
+      setHistoryError('');
+      setIsHistoryLoading(false);
       setHasApiKey(false);
     }
   };
@@ -201,12 +212,13 @@ function App() {
         <Sidebar
           history={history}
           isHistoryLoading={isHistoryLoading}
+          historyError={historyError}
           onRefreshHistory={refreshHistory}
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
         />
 
-        <main className="flex-grow overflow-hidden p-3 sm:p-6">
+        <main className="min-w-0 flex-grow overflow-hidden p-3 sm:p-6">
           <Suspense fallback={<ToolLoading />}>
           <Routes>
             <Route path="/" element={<Navigate to={DEFAULT_TOOL_PATH} replace />} />
@@ -224,6 +236,8 @@ function App() {
             <Route path="/data-formatter" element={<DataFormatterPage />} />
             <Route path="/batch" element={<BatchPage />} />
             <Route path="/usage" element={<UsagePage />} />
+            <Route path="/history/:id" element={<HistoryPage />} />
+            <Route path="/memory" element={<MemoryPage />} />
             <Route path="/translator" element={<TranslatorPage />} />
             <Route path="/sentiment" element={<SentimentPage />} />
             <Route path="/document-ai" element={<DocumentAIPage />} />

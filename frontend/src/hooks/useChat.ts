@@ -1,39 +1,23 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { v4 as uuid } from "uuid";
 import type { ChatMessage } from "../components/ChatPanel";
 import type { ChatTurn } from "../interface";
 import { toApiError } from "../services/services";
+import { readMessages } from '../services/memory';
 
-/** A send gets the thread so far, which is what makes a reply follow on. */
+/** A send gets only the selected reply context and remembered messages. */
 type Sender = (text: string, conversation: ChatTurn[]) => Promise<string>;
 
 /**
- * How much of a thread is kept in this browser. The backend caps how many
- * turns it will replay; keeping a little more here means scrolling back
- * further than the model remembers, which is the right way round.
+ * Recent messages kept in this browser, in addition to remembered exchanges.
+ * The backend separately caps the context actually sent to the model.
  */
 const STORED_MESSAGE_LIMIT = 60;
 
 const readThread = (storageKey?: string): ChatMessage[] => {
   if (!storageKey) return [];
 
-  try {
-    const stored = localStorage.getItem(storageKey);
-    if (!stored) return [];
-
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed.filter(
-      (message): message is ChatMessage =>
-        Boolean(message) &&
-        typeof message.id === "string" &&
-        typeof message.text === "string" &&
-        (message.role === "user" || message.role === "assistant")
-    );
-  } catch {
-    // A thread we cannot read is not worth failing a page load over.
-    return [];
-  }
+  return readMessages(storageKey);
 };
 
 const writeThread = (storageKey: string | undefined, messages: ChatMessage[]) => {
@@ -44,9 +28,13 @@ const writeThread = (storageKey: string | undefined, messages: ChatMessage[]) =>
       localStorage.removeItem(storageKey);
       return;
     }
+    const remembered = new Set(selectedContextMessages(messages));
+    let recentStart = Math.max(0, messages.length - STORED_MESSAGE_LIMIT);
+    if (messages[recentStart]?.role === 'assistant' && messages[recentStart - 1]?.role === 'user') recentStart -= 1;
     localStorage.setItem(
       storageKey,
-      JSON.stringify(messages.slice(-STORED_MESSAGE_LIMIT))
+      JSON.stringify(messages.filter((message, index) => index >= recentStart
+        || remembered.has(message)))
     );
   } catch {
     // Storage can be full or blocked; the thread still works in memory.
@@ -59,13 +47,33 @@ export const toConversation = (messages: ChatMessage[]): ChatTurn[] =>
     .filter((message) => !message.isError && message.text.trim())
     .map((message) => ({ role: message.role, content: message.text }));
 
+/** Only the chosen reply branch and explicitly remembered exchanges are context. */
+function selectedContextMessages(messages: ChatMessage[], replyToId?: string | null): ChatMessage[] {
+  const selected = new Set<number>();
+  const include = (index: number) => {
+    if (index < 0 || selected.has(index) || messages[index].isError) return;
+    selected.add(index);
+    const message = messages[index];
+    if (message.role === 'assistant' && messages[index - 1]?.role === 'user') include(index - 1);
+    if (message.replyTo) include(messages.findIndex((entry) => entry.id === message.replyTo));
+  };
+  messages.forEach((message, index) => {
+    if (message.remembered || message.id === replyToId) include(index);
+  });
+  return messages.filter((_, index) => selected.has(index));
+}
+
+export const conversationForReply = (messages: ChatMessage[], replyToId?: string | null): ChatTurn[] =>
+  toConversation(selectedContextMessages(messages, replyToId));
+
 /**
  * Conversation state for the chat-style pages, with its memory.
  *
- * Every send replays the turns so far, so a follow-up like "and the second
- * one?" means something. With a `storageKey` the thread is kept in this
- * browser, so a reload continues the conversation instead of starting again —
- * and "Clear chat" is the way to deliberately forget it.
+ * Reply selects the exchange to follow up on; remembered messages are included
+ * in new questions too. Other displayed messages are not automatically sent.
+ * With a `storageKey` the thread is kept in this
+ * browser, so a reload restores messages and remembered selections.
+ * "Clear chat" removes the browser copy; saved history is managed separately.
  *
  * The thread is held in a ref as well as in state, and every change goes
  * through `commit`. That is not redundancy: a `setState` updater does not run
@@ -75,75 +83,148 @@ export const toConversation = (messages: ChatMessage[]): ChatTurn[] =>
  * A failed request becomes an error bubble in the thread instead of a silent
  * console log, and is left out of what the model is sent.
  */
-export function useChat(sender: Sender, storageKey?: string) {
-  const restored = useRef<ChatMessage[] | null>(null);
-  if (restored.current === null) restored.current = readThread(storageKey);
-
-  const [messages, setMessages] = useState<ChatMessage[]>(restored.current);
+export function useChat(sender: Sender, storageKey?: string, initialMessages: ChatMessage[] = []) {
+  const restore = () => {
+    const stored = readThread(storageKey);
+    return stored.length > 0 ? stored : initialMessages;
+  };
+  const [thread, setThread] = useState(() => ({ storageKey, messages: restore() }));
   const [isLoading, setIsLoading] = useState(false);
+  const [replyToId, setReplyToId] = useState<string | null>(null);
+  const replyToRef = useRef<string | null>(null);
+  const threadRef = useRef(thread);
+  const requestId = useRef(0);
+  const isSending = useRef(false);
 
-  const threadRef = useRef<ChatMessage[]>(restored.current);
-  // Restored ids must not collide with the ids of new messages.
-  const counter = useRef(restored.current.length);
+  // A different page or set of documents is a different conversation. Reset
+  // before its children render, so they cannot send the previous context.
+  if (thread.storageKey !== storageKey) {
+    const next = { storageKey, messages: restore() };
+    threadRef.current = next;
+    requestId.current += 1;
+    isSending.current = false;
+    setThread(next);
+    setIsLoading(false);
+    replyToRef.current = null;
+    setReplyToId(null);
+  }
+
+  useEffect(() => () => {
+    // A reply arriving after navigation/sign-out must not write the old thread
+    // back into storage or overwrite a thread opened in a new mount.
+    requestId.current += 1;
+    isSending.current = false;
+  }, []);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    const syncMemory = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== storageKey) return;
+      if (event.storageArea && event.storageArea !== localStorage) return;
+      // Another tab may have forgotten or deleted this chat. Replace our
+      // snapshot and invalidate pending work so it cannot restore old memory.
+      const next = { storageKey, messages: readThread(storageKey) };
+      threadRef.current = next;
+      requestId.current += 1;
+      isSending.current = false;
+      replyToRef.current = null;
+      setThread(next);
+      setReplyToId(null);
+      setIsLoading(false);
+    };
+    window.addEventListener('storage', syncMemory);
+    return () => window.removeEventListener('storage', syncMemory);
+  }, [storageKey]);
 
   // Keep the latest sender without re-creating `sendMessage` on every render.
   const senderRef = useRef(sender);
   senderRef.current = sender;
 
-  const storageKeyRef = useRef(storageKey);
-  storageKeyRef.current = storageKey;
-
-  const commit = useCallback((next: ChatMessage[]) => {
+  const commit = useCallback((messages: ChatMessage[]) => {
+    const next = { storageKey: threadRef.current.storageKey, messages };
     threadRef.current = next;
-    setMessages(next);
-    writeThread(storageKeyRef.current, next);
+    setThread(next);
+    writeThread(next.storageKey, messages);
   }, []);
 
-  const nextId = () => {
-    counter.current += 1;
-    return `m${counter.current}`;
-  };
+  const selectReply = useCallback((id: string) => {
+    if (isSending.current || !threadRef.current.messages.some((message) => message.id === id && !message.isError)) return;
+    replyToRef.current = id;
+    setReplyToId(id);
+  }, []);
+
+  const cancelReply = useCallback(() => {
+    replyToRef.current = null;
+    setReplyToId(null);
+  }, []);
+
+  const toggleMemory = useCallback((id: string) => {
+    commit(threadRef.current.messages.map((message) => message.id === id
+      ? { ...message, remembered: !message.remembered } : message));
+  }, [commit]);
+
+  const clearMemory = useCallback(() => {
+    commit(threadRef.current.messages.map((message) => ({ ...message, remembered: false })));
+  }, [commit]);
 
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed) return;
+      if (!trimmed || isSending.current) return;
+      isSending.current = true;
+      const id = ++requestId.current;
 
-      // The thread as it stands before this message: the context that makes
-      // the answer a continuation rather than a fresh start.
-      const history = toConversation(threadRef.current);
+      const replyTo = replyToRef.current;
+      const history = conversationForReply(threadRef.current.messages, replyTo);
 
-      commit([...threadRef.current, { id: nextId(), role: "user", text: trimmed }]);
+      commit([...threadRef.current.messages, { id: uuid(), role: "user", text: trimmed, ...(replyTo ? { replyTo } : {}) }]);
+      cancelReply();
       setIsLoading(true);
 
       try {
         const reply = await senderRef.current(trimmed, history);
+        if (requestId.current !== id) return;
         commit([
-          ...threadRef.current,
+          ...threadRef.current.messages,
           {
-            id: nextId(),
+            id: uuid(),
             role: "assistant",
             text: reply || "The service returned an empty response.",
           },
         ]);
       } catch (error) {
+        if (requestId.current !== id) return;
         commit([
-          ...threadRef.current,
+          ...threadRef.current.messages,
           {
-            id: nextId(),
+            id: uuid(),
             role: "assistant",
             text: toApiError(error).message,
             isError: true,
           },
         ]);
       } finally {
-        setIsLoading(false);
+        if (requestId.current === id) {
+          isSending.current = false;
+          setIsLoading(false);
+        }
       }
     },
-    [commit]
+    [commit, cancelReply]
   );
 
-  const clearMessages = useCallback(() => commit([]), [commit]);
+  const clearMessages = useCallback(() => {
+    requestId.current += 1;
+    isSending.current = false;
+    setIsLoading(false);
+    cancelReply();
+    commit([]);
+  }, [commit, cancelReply]);
 
-  return { messages, isLoading, sendMessage, clearMessages };
+  return {
+    messages: thread.messages, isLoading, sendMessage, clearMessages,
+    selectReply, toggleMemory, clearMemory,
+    contextCount: conversationForReply(thread.messages, replyToId).length,
+    controls: { replyToId, onReply: selectReply, onCancelReply: cancelReply, onToggleMemory: toggleMemory, onClearMemory: clearMemory },
+  };
 }

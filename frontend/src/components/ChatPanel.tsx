@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownContent from './MarkdownContent';
 
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   text: string;
   isError?: boolean;
+  replyTo?: string;
+  remembered?: boolean;
 }
 
 interface ChatPanelProps {
@@ -20,6 +22,12 @@ interface ChatPanelProps {
   composerHeader?: React.ReactNode;
   disabled?: boolean;
   disabledReason?: string;
+  replyToId?: string | null;
+  onReply?: (id: string) => void;
+  onCancelReply?: () => void;
+  onToggleMemory?: (id: string) => void;
+  onClearMemory?: () => void;
+  requireReply?: boolean;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -32,16 +40,27 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   composerHeader,
   disabled = false,
   disabledReason,
+  replyToId,
+  onReply,
+  onCancelReply,
+  onToggleMemory,
+  onClearMemory,
+  requireReply = false,
 }) => {
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const replyTarget = messages.find((message) => message.id === replyToId);
+  const rememberedCount = messages.filter((message) => message.remembered && !message.isError).length;
+
+  useEffect(() => { if (replyToId) inputRef.current?.focus(); }, [replyToId]);
 
   // Follow the conversation as it grows, including the "Thinking..." bubble.
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isLoading]);
 
-  const canSend = !disabled && !isLoading && input.trim().length > 0;
+  const canSend = !disabled && !isLoading && input.trim().length > 0 && (!requireReply || Boolean(replyTarget));
 
   const handleSend = () => {
     if (!canSend) return;
@@ -80,7 +99,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-md lg:max-w-2xl rounded-lg px-4 py-2.5 shadow-sm ${
+                  className={`min-w-0 max-w-full sm:max-w-[85%] lg:max-w-2xl rounded-lg px-4 py-2.5 shadow-sm ${
                     message.role === 'user'
                       ? 'bg-blue-600 text-white'
                       : message.isError
@@ -88,12 +107,36 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         : 'bg-gray-50 text-gray-900 border border-gray-200'
                   }`}
                 >
+                  <div className={`flex items-center justify-between gap-4 mb-1.5 text-xs ${message.role === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
+                    <span className="font-semibold">{message.role === 'user' ? 'You' : 'AI'}</span>
+                    {!message.isError && (
+                      <div className="flex gap-3">
+                        {onToggleMemory && (
+                          <button type="button" onClick={() => onToggleMemory(message.id)} disabled={isLoading}
+                            aria-pressed={Boolean(message.remembered)}
+                            aria-label={`${message.remembered ? 'Forget' : 'Remember'} message`}
+                            className="underline-offset-2 hover:underline disabled:opacity-50">
+                            {message.remembered ? 'Remembered' : 'Remember'}
+                          </button>
+                        )}
+                        {message.role === 'assistant' && onReply && (
+                          <button type="button" onClick={() => onReply(message.id)} disabled={isLoading}
+                            aria-label="Reply to message" className="font-medium underline-offset-2 hover:underline disabled:opacity-50">
+                            Reply
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {message.replyTo && (
+                    <p className="mb-2 border-l-2 border-blue-200 pl-2 text-xs text-blue-100 line-clamp-2 break-words">
+                      Replying to: {messages.find((entry) => entry.id === message.replyTo)?.text ?? 'an earlier message'}
+                    </p>
+                  )}
                   {message.role === 'user' ? (
-                    <p className="whitespace-pre-wrap text-sm">{message.text}</p>
+                    <p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
                   ) : (
-                    <div className="prose prose-sm max-w-none">
-                      <ReactMarkdown>{message.text}</ReactMarkdown>
-                    </div>
+                    <MarkdownContent text={message.text} />
                   )}
                 </div>
               </div>
@@ -113,6 +156,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       </div>
 
       <div className="flex-shrink-0 border-t border-gray-200 bg-white p-3">
+        {onToggleMemory && (
+          <div className="mb-2 flex items-center justify-between gap-3 text-xs text-gray-500">
+            <span>{rememberedCount} remembered message{rememberedCount === 1 ? '' : 's'} · Replies use the selected exchange.</span>
+            {rememberedCount > 0 && <button type="button" onClick={onClearMemory} disabled={isLoading} className="text-blue-600 hover:underline">Forget all</button>}
+          </div>
+        )}
+        {replyTarget && (
+          <div className="mb-3 flex items-start gap-3 rounded-md border-l-4 border-blue-500 bg-blue-50 p-2.5">
+            <div className="min-w-0 flex-1 text-xs text-gray-700">
+              <p className="font-semibold text-blue-700 mb-1">Replying to AI</p>
+              <p className="line-clamp-2 break-words">{replyTarget.text}</p>
+            </div>
+            <button type="button" onClick={onCancelReply} className="text-xs text-blue-700 hover:underline">Cancel reply</button>
+          </div>
+        )}
         {composerHeader && <div className="mb-2">{composerHeader}</div>}
 
         {disabled && disabledReason && (
@@ -129,11 +187,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             Paste
           </button>
           <textarea
-            className="flex-grow bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-md px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            ref={inputRef}
+            className="min-w-0 flex-grow bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-md px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={requireReply && !replyTarget ? 'Choose Reply on an answer to respond...' : replyTarget ? 'Write your reply...' : placeholder}
             disabled={disabled || isLoading}
             rows={2}
           />
@@ -143,11 +202,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             onClick={handleSend}
             disabled={!canSend}
           >
-            {isLoading ? '...' : sendLabel}
+            {isLoading ? '...' : replyTarget ? 'Send reply' : sendLabel}
           </button>
         </div>
         <p className="mt-1.5 text-xs text-gray-400">
-          Enter to send, Shift+Enter for a new line.
+          Enter to send, Shift+Enter for a new line. New messages use only remembered context.
         </p>
       </div>
     </div>

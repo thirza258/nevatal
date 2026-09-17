@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownContent from './MarkdownContent';
 import type { OutputFormat } from '../interface';
 import { describeFormat } from '../utils/formats';
 
@@ -97,9 +97,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
           </div>
         ) : resultText ? (
           descriptor.rendered ? (
-            <div className="prose prose-sm max-w-none">
-              <ReactMarkdown>{resultText}</ReactMarkdown>
-            </div>
+            <MarkdownContent text={resultText} />
           ) : (
             <pre className="text-xs text-gray-800 font-mono whitespace-pre-wrap break-words">
               {resultText}

@@ -249,16 +249,55 @@ confirmed, ramping HSTS up rather than starting at a year. With both set,
 
 ### Conversation memory
 
-The three chat tools — Prompt, Explainer and Document AI — send the thread with
-every message, because the backend keeps no conversation state: a session is a
-key in a cookie, not an account. The thread lives in `localStorage` per tool, so
-a reload continues the conversation rather than starting again, and "Clear chat"
-is how you deliberately forget it. Signing out clears every stored thread.
+Prompt, Explainer and Document AI start each new message with only the context
+you explicitly choose. **Reply** targets an answer and its earlier reply chain;
+**Remember** includes a selected message in future questions in that chat.
+Remembering an answer also includes its question and reply context. Unselected,
+unrelated exchanges are not sent automatically.
+
+Messages and remembered selections live in `localStorage` per chat. Reloading
+restores them, and **Clear chat** removes the browser copy. The browser keeps the
+latest 60 messages plus remembered exchanges and their context. Document AI also
+scopes memory to the listed documents and upload timestamps: replacing or
+removing a document cannot replay answers from another source set. Requests
+search only the IDs currently listed on the page. Signing out clears browser chats.
+
+**Memory & history** (`/memory`) lets you review messages, change remembered
+selections, forget context, or clear browser chats. It also provides **Delete all
+saved history**, which scrubs this API key's saved prompt, response and context
+text, including batch results, and clears chats in the current browser. Usage
+counts, token totals and cost records remain intact. Remembered selections are
+local to this browser and chat; they are not global instructions for other tools.
+
+Sidebar history entries open `/history/:id`, with full saved prompts and formatted
+replies, including Markdown tables, code and JSON. Each entry has **Reply** and
+**Delete saved chat** actions. Replies are saved as new exchanges, with a bounded
+snapshot of the context actually used. Replies from history use saved text; use
+Document AI to search current uploaded documents. The history API scopes list,
+detail, reply and deletion requests to the active API key's fingerprint.
+
+Apply the new history fields with `cd backend && python manage.py migrate` when
+updating an existing installation.
+
+Clearing a task, changing its conversation context, or leaving the page invalidates
+pending results. A late response cannot restore a cleared thread or replace the
+result of a newer task.
 
 `ai_service.normalize_conversation` decides what is replayed: `user` and
 `assistant` turns only, the most recent 20 of them, trimmed from the oldest end
 to a 24,000-character budget. Without that cap a thread left open all afternoon
 would multiply the token bill on every turn.
+
+### Tool context
+
+Each text endpoint identifies its tool in the system instruction through
+`ai_service.tool_context.tool_instruction`. Current form choices and source
+content take precedence over earlier turns. Rewriting follows the selected goal,
+proofreading leaves correct text unchanged, and Document AI is instructed to
+answer only from the current passages, cite their actual document IDs, and say
+when the passages do not provide enough information. Source text stays in user
+messages rather than being copied into a system instruction. Batch items use the
+same tool instructions as individual requests.
 
 ### Output formats
 

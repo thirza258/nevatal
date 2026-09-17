@@ -5,14 +5,12 @@ import { useChat } from '../../hooks/useChat';
 import { conversationStorageKey } from '../../constant';
 
 const PromptPage: React.FC = () => {
-  // The thread is the context — every send replays it — and it is kept in this
-  // browser, so a reload continues the conversation rather than starting over.
-  const { messages, isLoading, sendMessage, clearMessages } = useChat(
+  const { messages, isLoading, sendMessage, clearMessages, controls, contextCount } = useChat(
     services.postPrompt,
     conversationStorageKey('/prompt')
   );
 
-  const turns = messages.filter((message) => !message.isError).length;
+  const turns = contextCount;
 
   return (
     <div className="h-full flex flex-col gap-3">
@@ -27,7 +25,7 @@ const PromptPage: React.FC = () => {
           {turns > 0 && (
             <span
               className="hidden sm:inline text-xs text-gray-500"
-              title="Earlier turns are sent with each message, so follow-ups make sense"
+              title="Only the selected reply and remembered messages are included"
             >
               {turns} turn{turns === 1 ? '' : 's'} of context
             </span>
@@ -45,6 +43,7 @@ const PromptPage: React.FC = () => {
 
       <div className="flex-1 min-h-0">
         <ChatPanel
+          {...controls}
           messages={messages}
           isLoading={isLoading}
           onSend={sendMessage}

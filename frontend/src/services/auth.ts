@@ -1,3 +1,5 @@
+import { conversationKeys } from './memory';
+
 export const LEGACY_API_KEY_STORAGE_KEY = "apiKey";
 
 export const getLegacyApiKey = (): string | null => {
@@ -22,9 +24,7 @@ export const cookieRequestConfig = {
  */
 export const clearConversations = () => {
   try {
-    const keys = Object.keys(localStorage).filter((key) =>
-      key.startsWith("conversation:")
-    );
+    const keys = conversationKeys();
     keys.forEach((key) => localStorage.removeItem(key));
   } catch {
     // Nothing stored, or storage is blocked: nothing to clear either way.

@@ -23,7 +23,7 @@ const ExplainerPage: React.FC = () => {
   const [level, setLevel] = useState(LEVELS[1].value);
   const [style, setStyle] = useState(STYLES[0].value);
 
-  const { messages, isLoading, sendMessage, clearMessages } = useChat(
+  const { messages, isLoading, sendMessage, clearMessages, controls } = useChat(
     (text, conversation) =>
       services.postExplainer(
         [
@@ -61,6 +61,7 @@ const ExplainerPage: React.FC = () => {
 
       <div className="flex-1 min-h-0">
         <ChatPanel
+          {...controls}
           messages={messages}
           isLoading={isLoading}
           onSend={sendMessage}

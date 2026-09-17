@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import services, { toApiError } from '../../services/services';
+import { useAsyncTask } from '../../hooks/useAiTask';
 import type { GeneratedImage } from '../../interface';
 import PageLayout from '../../components/PageLayout';
 import { SelectField, SubmitButton, type Option } from '../../components/FormControls';
@@ -25,39 +26,32 @@ const ImaGenPage: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('');
   const [aspect, setAspect] = useState('');
-  const [image, setImage] = useState<GeneratedImage | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { result: image, isLoading, error, run, reset } = useAsyncTask<GeneratedImage | null>(null);
 
   const handleClear = () => {
     setPrompt('');
-    setImage(null);
-    setError('');
+    reset();
   };
 
   const handleGenerate = async () => {
     if (!prompt.trim() || isLoading) return;
 
-    setIsLoading(true);
-    setError('');
-    setImage(null);
-
     const description = [prompt.trim(), style && `Render it as ${style}.`, aspect && `Use ${aspect}.`]
       .filter(Boolean)
       .join(' ');
 
-    try {
-      setImage(await services.generateImage(description));
-    } catch (err) {
-      const apiError = toApiError(err);
-      setError(
-        apiError.message.toLowerCase().includes('not supported')
-          ? `${apiError.message} Image generation runs on Google's image model, so it needs a Gemini API key.`
-          : apiError.message
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    await run(async () => {
+      try {
+        return await services.generateImage(description);
+      } catch (err) {
+        const apiError = toApiError(err);
+        throw new Error(
+          apiError.message.toLowerCase().includes('not supported')
+            ? `${apiError.message} Image generation runs on Google's image model, so it needs a Gemini API key.`
+            : apiError.message
+        );
+      }
+    });
   };
 
   // The backend returns raw base64, not a URL — build the data URI here.

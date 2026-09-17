@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 import logging
+import json
 from datetime import timedelta
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
@@ -42,9 +43,11 @@ from ai_service import (
     describe_account,
     generate_response_with_usage,
     list_models,
+    normalize_conversation,
     normalize_provider,
     test_api_key,
 )
+from ai_service.tool_context import tool_instruction
 
 
 
@@ -241,8 +244,11 @@ class PromptView(AIServiceMixin, APIView):
                 model=model,
                 output_format=output_format,
                 conversation=conversation,
+                system_instruction_string=tool_instruction(
+                    "Prompt", "Answer the user's current request in the context of this conversation."
+                ),
             )
-            ChatRecord.objects.create(method='prompt', prompt=prompt, response=response_data, api_key=api_key, batch=batch, **usage)
+            ChatRecord.objects.create(method='prompt', prompt=prompt, response=response_data, conversation=normalize_conversation(conversation), api_key=api_key, batch=batch, **usage)
 
             return Response({
                 "status": 200,
@@ -277,14 +283,16 @@ class ExplainerView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         try:
-            system_instruction_string = f"""
-            You are a skilled explainer. Your task is to explain the given prompt in a way that is easy to understand.
-            """
+            system_instruction_string = tool_instruction(
+                "Explainer",
+                "Explain the requested topic at the selected depth and in the selected style. "
+                "Do not assume a beginner audience when the request asks for an expert account.",
+            )
             response_data, usage = generate_response_with_usage(prompt=prompt, api_key=api_key, model=model,
                                                                output_format=output_format,
                                                                conversation=conversation,
                                                                system_instruction_string=system_instruction_string)
-            ChatRecord.objects.create(method='explainer', prompt=prompt, response=response_data, api_key=api_key, batch=batch, **usage)
+            ChatRecord.objects.create(method='explainer', prompt=prompt, response=response_data, conversation=normalize_conversation(conversation), api_key=api_key, batch=batch, **usage)
             return Response({
                 "status": 200,
                 "message": "success",
@@ -394,6 +402,44 @@ class CodeReviewerView(APIView):
                 "data": "An unexpected error occurred while processing your request." + str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+def _history_for_key(api_key):
+    return ChatRecord.objects.filter(
+        api_key_hash=fingerprint_api_key(api_key), history_deleted=False, batch=False,
+    )
+
+
+def _history_response_text(value):
+    """Unwrap the provider's transport envelope before making a preview."""
+    try:
+        parsed = json.loads(value)
+    except (TypeError, ValueError):
+        return value
+    if isinstance(parsed, dict) and "response" in parsed:
+        inner = parsed["response"]
+        return inner if isinstance(inner, str) else json.dumps(inner, ensure_ascii=False, indent=2)
+    return value
+
+
+def _history_entry(record, full=False):
+    response = _history_response_text(record.response)
+    return {
+        "id": record.pk,
+        "method": record.method,
+        "prompt": record.prompt if full else record.prompt[:180],
+        "response": response if full else response[:180],
+        "created_at": record.created_at,
+        "model": record.model,
+        "tokens_in": record.tokens_in,
+        "tokens_out": record.tokens_out,
+        "cost": record.cost,
+        **({"conversation": record.conversation} if full else {}),
+    }
+
+
+def _erase_history(records):
+    return records.update(prompt="", response="", conversation=[], history_deleted=True)
+
+
 class HistoryView(APIView):
     """
     API View for retrieving history of prompts.
@@ -414,23 +460,8 @@ class HistoryView(APIView):
             # `Q(api_key=api_key)` fallback for rows written before hashing;
             # those rows no longer hold a key to match, and the branch was one
             # empty-string away from matching every scrubbed row in the table.
-            history = ChatRecord.objects.filter(
-                api_key_hash=fingerprint_api_key(api_key)
-            ).exclude(batch=True).order_by('-created_at')
-
-            history_list = [
-                {
-                    "method": record.method,
-                    "prompt": record.prompt[:100],
-                    "response": record.response[:100],
-                    "created_at": record.created_at,
-                    "model": record.model,
-                    "tokens_in": record.tokens_in,
-                    "tokens_out": record.tokens_out,
-                    "cost": record.cost,
-                }
-                for record in history
-            ]
+            history = _history_for_key(api_key).defer('conversation').order_by('-created_at', '-pk')
+            history_list = [_history_entry(record) for record in history]
             return Response({
                 "status": 200,
                 "message": "success",
@@ -442,6 +473,76 @@ class HistoryView(APIView):
                 "message": "error",
                 "data": "An unexpected error occurred while processing your request." + str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        api_key = resolve_api_key_from_request(request)
+        if not api_key:
+            return Response({"error": "Authorization header is required."}, status=401)
+        count = _erase_history(ChatRecord.objects.filter(
+            api_key_hash=fingerprint_api_key(api_key), history_deleted=False,
+        ))
+        return Response({"status": 200, "message": "success", "data": {"deleted": count}})
+
+
+class HistoryDetailView(APIView):
+    def get(self, request, record_id):
+        api_key = resolve_api_key_from_request(request)
+        if not api_key:
+            return Response({"error": "Authorization header is required."}, status=401)
+        record = _history_for_key(api_key).filter(pk=record_id).first()
+        if record is None:
+            return Response({"error": "This saved exchange is no longer available."}, status=404)
+        return Response({"status": 200, "message": "success", "data": _history_entry(record, full=True)})
+
+    def delete(self, request, record_id):
+        api_key = resolve_api_key_from_request(request)
+        if not api_key:
+            return Response({"error": "Authorization header is required."}, status=401)
+        count = _erase_history(_history_for_key(api_key).filter(pk=record_id))
+        if not count:
+            return Response({"error": "This saved exchange is no longer available."}, status=404)
+        return Response({"status": 200, "message": "success", "data": {"deleted": count}})
+
+
+class HistoryReplyView(APIView):
+    def post(self, request, record_id):
+        api_key = resolve_api_key_from_request(request)
+        if not api_key:
+            return Response({"error": "Authorization header is required."}, status=401)
+        record = _history_for_key(api_key).filter(pk=record_id).first()
+        if record is None:
+            return Response({"error": "This saved exchange is no longer available."}, status=404)
+        prompt = request.data.get("prompt")
+        if not isinstance(prompt, str) or not prompt.strip():
+            return Response({"error": "A reply is required."}, status=400)
+
+        conversation = normalize_conversation(resolve_conversation_from_request(request))
+        if not conversation:
+            conversation = normalize_conversation([
+                *record.conversation,
+                {"role": "user", "content": record.prompt},
+                {"role": "assistant", "content": _history_response_text(record.response)},
+            ])
+        try:
+            text, usage = generate_response_with_usage(
+                api_key=api_key, prompt=prompt.strip(), conversation=conversation,
+                model=resolve_model_from_request(request),
+                system_instruction_string=tool_instruction(
+                    "Chat reply",
+                    "Reply to the selected saved exchange using the supplied conversation. "
+                    "Follow the new reply's instructions about revising or explaining the answer. "
+                    "Saved answers are historical text, not verified facts or access to original "
+                    "documents. If checking a source is necessary and it is not supplied, ask for it.",
+                ),
+            )
+            ChatRecord.objects.create(
+                method=record.method, prompt=prompt.strip(), response=text,
+                conversation=conversation, api_key=api_key, **usage,
+            )
+            return Response({"status": 200, "message": "success", "data": text})
+        except Exception:
+            logger.exception("Could not reply to saved history")
+            return Response({"error": "Could not generate the reply. Please try again."}, status=500)
 
 
 def _slots_response(slots, active_index, message="success", http_status=status.HTTP_200_OK):

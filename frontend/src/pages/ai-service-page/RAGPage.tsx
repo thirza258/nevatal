@@ -18,9 +18,18 @@ const RAGPage: React.FC<RAGPageProps> = ({
   onAddDocument,
   onRemoveDocument,
 }) => {
-  const { messages, isLoading, sendMessage, clearMessages } = useChat(
-    services.chatWithRAG,
-    conversationStorageKey('/document-ai')
+  // Folder numbers can be reused after deletion; the upload timestamp keeps a
+  // replacement file from inheriting answers about the previous document.
+  const documentContext = JSON.stringify(
+    [...documents]
+      .sort((a, b) => a.document_id - b.document_id)
+      .map(({ document_id, source, created_at }) => [document_id, source, created_at])
+  );
+  const { messages, isLoading, sendMessage, clearMessages, controls } = useChat(
+    (text, conversation) => services.chatWithRAG(
+      text, conversation, documents.map((document) => document.document_id)
+    ),
+    conversationStorageKey(`/document-ai:${documentContext}`)
   );
 
   const documentCount = documents.length;
@@ -91,6 +100,7 @@ const RAGPage: React.FC<RAGPageProps> = ({
 
       <div className="flex-1 min-h-0">
         <ChatPanel
+          {...controls}
           messages={messages}
           isLoading={isLoading}
           onSend={sendMessage}

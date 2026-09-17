@@ -139,6 +139,11 @@ export const TOOL_GROUPS: ToolGroup[] = [
  */
 export const SESSION_PAGES: ToolDefinition[] = [
   {
+    name: 'Memory & history',
+    path: '/memory',
+    description: 'Choose remembered messages and manage saved chats.',
+  },
+  {
     name: 'Usage & keys',
     path: '/usage',
     description: 'What this session has spent, and the keys it can spend on.',
@@ -152,4 +157,6 @@ export const ALL_TOOLS: ToolDefinition[] = TOOL_GROUPS.flatMap(
 export const DEFAULT_TOOL_PATH = '/prompt';
 
 export const findToolByPath = (pathname: string): ToolDefinition | undefined =>
-  [...ALL_TOOLS, ...SESSION_PAGES].find((tool) => tool.path === pathname);
+  pathname.startsWith('/history/')
+    ? { name: 'Saved chat', path: pathname, description: 'Read and reply to a saved exchange.' }
+    : [...ALL_TOOLS, ...SESSION_PAGES].find((tool) => tool.path === pathname);

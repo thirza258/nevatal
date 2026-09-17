@@ -57,7 +57,7 @@ class SummarizerViewTests(TestCase):
             ),
             system_instruction=[
                 types.Part.from_text(
-                    text="You are a highly skilled summarizer. Your task is to distill complex information into clear and concise insights."
+                    text=SummarizerView.default_system_instruction_string
                 ),
             ],
         )

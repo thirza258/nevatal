@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toApiError } from "../services/services";
 
 /**
@@ -8,22 +8,24 @@ import { toApiError } from "../services/services";
  * Responses from superseded requests are dropped, so a slow first call can
  * never overwrite the result of a later one.
  */
-export function useAiTask() {
-  const [result, setResult] = useState("");
+export function useAsyncTask<T>(emptyResult: T) {
+  const [result, setResult] = useState<T>(emptyResult);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const requestId = useRef(0);
 
-  const run = useCallback(async (task: () => Promise<string>) => {
+  useEffect(() => () => { requestId.current += 1; }, []);
+
+  const run = useCallback(async (task: () => Promise<T>) => {
     const id = ++requestId.current;
     setIsLoading(true);
     setError("");
-    setResult("");
+    setResult(emptyResult);
 
     try {
       const value = await task();
       if (requestId.current !== id) return;
-      setResult(value || "The service returned an empty response.");
+      setResult(value);
     } catch (err) {
       if (requestId.current !== id) return;
       setError(toApiError(err).message);
@@ -32,14 +34,26 @@ export function useAiTask() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [emptyResult]);
 
   const reset = useCallback(() => {
     requestId.current += 1;
-    setResult("");
+    setResult(emptyResult);
     setError("");
     setIsLoading(false);
-  }, []);
+  }, [emptyResult]);
 
   return { result, error, isLoading, run, reset };
+}
+
+/** Text tools also explain an empty response instead of showing a blank result. */
+export function useAiTask() {
+  const { run, ...state } = useAsyncTask("");
+  const runText = useCallback(
+    (task: () => Promise<string>) => run(async () => (
+      await task() || "The service returned an empty response."
+    )),
+    [run]
+  );
+  return { ...state, run: runText };
 }

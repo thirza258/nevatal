@@ -2,11 +2,13 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import type { HistoryEntry } from '../interface';
 import { SESSION_PAGES, TOOL_GROUPS } from '../tools';
+import { historyDateGroup, historyPreview, historyToolName } from '../services/history';
 
 interface SidebarProps {
   history: HistoryEntry[];
   isHistoryLoading: boolean;
   onRefreshHistory: () => void;
+  historyError?: string;
   /** Open on a phone, where the sidebar is a drawer rather than a column. */
   isOpen?: boolean;
   onClose?: () => void;
@@ -23,26 +25,18 @@ const formatCost = (cost?: number | null) => {
   return cost < 0.01 ? `$${cost.toFixed(5)}` : `$${cost.toFixed(2)}`;
 };
 
-const prettifyMethod = (method: string) =>
-  method
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (character) => character.toUpperCase());
-
 const formatTimestamp = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
 
-  const minutesAgo = Math.round((Date.now() - date.getTime()) / 60000);
-  if (minutesAgo < 1) return 'just now';
-  if (minutesAgo < 60) return `${minutesAgo}m ago`;
-  if (minutesAgo < 1440) return `${Math.round(minutesAgo / 60)}h ago`;
-  return date.toLocaleDateString();
+  return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 };
 
 const Sidebar: React.FC<SidebarProps> = ({
   history,
   isHistoryLoading,
   onRefreshHistory,
+  historyError,
   isOpen = false,
   onClose,
 }) => {
@@ -64,8 +58,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           transition-transform md:transition-none
           ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
-      {/* Following a link is what closes the drawer; using the history panel
-          is not. */}
       <nav
         className="flex-shrink-0 max-h-[55%] overflow-y-auto p-4"
         onClick={() => onClose?.()}
@@ -110,8 +102,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1 min-h-0 border-t border-gray-200 flex flex-col">
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3">
           <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Recent activity
+            Chat history
           </h2>
+          <div className="flex items-center gap-1">
+          <NavLink to="/memory" onClick={onClose} aria-label="Manage memory and history"
+            className="rounded-md px-2 py-1 text-xs text-blue-600 hover:bg-blue-50">Memory</NavLink>
           <button
             type="button"
             onClick={onRefreshHistory}
@@ -120,9 +115,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           >
             {isHistoryLoading ? 'Loading' : 'Refresh'}
           </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
+          {historyError && <p role="alert" className="mb-3 text-xs text-red-700">{historyError} Use Refresh to try again.</p>}
           {history.length === 0 ? (
             <p className="text-sm text-gray-400">
               {isHistoryLoading
@@ -132,27 +129,32 @@ const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <ul className="space-y-2">
               {history.map((entry, index) => (
-                <li
-                  key={`${entry.created_at}-${index}`}
-                  className="rounded-md border border-gray-200 p-3"
-                >
+                <li key={entry.id}>
+                  {(index === 0 || historyDateGroup(history[index - 1].created_at) !== historyDateGroup(entry.created_at)) && (
+                    <p className="pb-2 pt-3 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{historyDateGroup(entry.created_at)}</p>
+                  )}
+                  <NavLink to={`/history/${entry.id}`} onClick={onClose}
+                    aria-label={`Open saved ${historyToolName(entry.method)} chat: ${historyPreview(entry.prompt)}`}
+                    className={({ isActive }) => `block rounded-md border p-3 transition-colors ${isActive ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:border-blue-200 hover:bg-gray-50'}`}>
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="text-xs font-semibold text-gray-700">
-                      {prettifyMethod(entry.method)}
+                      {historyToolName(entry.method)}
                     </span>
-                    <span className="text-[11px] text-gray-400 flex-shrink-0">
+                    <time dateTime={entry.created_at} title={new Date(entry.created_at).toLocaleString()} className="text-[11px] text-gray-400 flex-shrink-0">
                       {formatTimestamp(entry.created_at)}
-                    </span>
+                    </time>
                   </div>
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-2 break-words">
-                    {entry.prompt}
+                  <p className="text-xs font-medium text-gray-700 mt-1 line-clamp-2 break-words">
+                    {historyPreview(entry.prompt) || 'Untitled chat'}
                   </p>
+                  {entry.response && <p className="mt-1 line-clamp-2 break-words text-xs text-gray-500">{historyPreview(entry.response)}</p>}
                   {(entry.model || entry.cost != null) && (
                     <p className="text-[11px] text-gray-400 mt-1 truncate">
                       {entry.model}
                       {entry.cost != null && ` · ${formatCost(entry.cost)}`}
                     </p>
                   )}
+                  </NavLink>
                 </li>
               ))}
             </ul>

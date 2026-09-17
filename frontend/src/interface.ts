@@ -22,6 +22,7 @@ export interface GeneratedImage {
 export type ImageResponse = ApiResponse<GeneratedImage>;
 
 export interface HistoryEntry {
+  id: number;
   method: string;
   prompt: string;
   response: string;
@@ -30,6 +31,10 @@ export interface HistoryEntry {
   tokens_in?: number | null;
   tokens_out?: number | null;
   cost?: number | null;
+}
+
+export interface SavedExchange extends HistoryEntry {
+  conversation: ChatTurn[];
 }
 
 export type HistoryResponse = ApiResponse<HistoryEntry[]>;

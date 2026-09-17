@@ -36,6 +36,8 @@ class ChatRecord(models.Model):
     method = models.CharField(max_length=255, choices=METHOD_CHOICES, default='prompt')
     prompt = models.TextField()
     response = models.TextField()
+    # Context actually used for this answer, bounded by normalize_conversation.
+    conversation = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     # There is deliberately no column for the provider key — only the
     # one-way fingerprint below. `api_key` still exists as a write-only
@@ -53,6 +55,8 @@ class ChatRecord(models.Model):
 
     # One item of a batch run: counted in usage, hidden from the sidebar.
     batch = models.BooleanField(default=False, db_index=True)
+    # Deleting history scrubs its text while keeping usage accounting intact.
+    history_deleted = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return self.method

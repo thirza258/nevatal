@@ -10,10 +10,12 @@ import type {
   KeySlots,
   ModelCatalog,
   RagDocument,
+  SavedExchange,
   TransportKey,
   UploadResponse,
   UsageReport,
 } from "../interface";
+import { forgetHistoryMemory } from './memory';
 
 /**
  * Single client for the whole app. `withCredentials` is required because the
@@ -297,8 +299,8 @@ const createEmail = (
   prompt: string
 ) => postText("/email/", { context, recipients, sender, prompt });
 
-const chatWithRAG = (prompt: string, conversation?: ChatTurn[]) =>
-  postText("/rag-chat/", { prompt, conversation });
+const chatWithRAG = (prompt: string, conversation?: ChatTurn[], documentIds?: number[]) =>
+  postText("/rag-chat/", { prompt, conversation, document_ids: documentIds });
 
 const generateImage = async (prompt: string): Promise<GeneratedImage> => {
   try {
@@ -396,6 +398,25 @@ const getHistory = async (): Promise<HistoryEntry[]> => {
     throw toApiError(error);
   }
 };
+
+const getHistoryEntry = async (id: number): Promise<SavedExchange> => {
+  try {
+    const response = await client.get<ApiResponse<SavedExchange>>(`/history/${id}/`);
+    const entry = response.data.data;
+    return { ...entry, response: unwrapText(entry.response), conversation: entry.conversation ?? [] };
+  } catch (error) { throw toApiError(error); }
+};
+
+const deleteHistory = async (id?: number): Promise<void> => {
+  try {
+    await client.delete(id === undefined ? '/history/' : `/history/${id}/`);
+    forgetHistoryMemory(id);
+    notifyHistoryChanged();
+  } catch (error) { throw toApiError(error); }
+};
+
+const replyToHistory = (id: number, prompt: string, conversation: ChatTurn[]) =>
+  postText(`/history/${id}/reply/`, { prompt, conversation });
 
 /**
  * The models the session's key can be pointed at.
@@ -643,6 +664,9 @@ const services = {
   listRagDocuments,
   deleteRagDocument,
   getHistory,
+  getHistoryEntry,
+  deleteHistory,
+  replyToHistory,
   listModels,
   runBatchItem,
   createSocialPost,
