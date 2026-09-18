@@ -83,6 +83,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         ))}
 
+        <div className="mb-4">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide px-2 mb-1">Learn</p>
+          <NavLink to="/courses" className={linkClasses}>Courses</NavLink>
+        </div>
+
         <div className="mb-2">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide px-2 mb-1">
             Session

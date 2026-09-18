@@ -3,8 +3,9 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import services, { onHistoryChanged } from './services/services';
 import { clearConversations, clearLegacyApiKey, getLegacyApiKey } from './services/auth';
 import type { HistoryEntry } from './interface';
-import { DEFAULT_TOOL_PATH, findToolByPath } from './tools';
-import { DEFAULT_PAGE_TITLE, MODEL_STORAGE_KEY, PROVIDER_STORAGE_KEY, SITE_NAME } from './constant';
+import { ALL_TOOLS, DEFAULT_TOOL_PATH } from './tools';
+import { MODEL_STORAGE_KEY, PROVIDER_STORAGE_KEY } from './constant';
+import { applyPageMetadata, isPublicContentPath } from './seo';
 import NavBar from './components/NavBar';
 import Sidebar from './components/Sidebar';
 import SpendAlert from './components/SpendAlert';
@@ -12,12 +13,9 @@ import NotFoundPage from './pages/NotFoundPage';
 import LandingPage from './pages/landing/LandingPage';
 
 // The tool pages load on demand. They are only reachable once someone has
-// signed in, so bundling them with the landing page made the one page a
-// crawler and a first-time visitor actually see carry the whole app with
-// it — and how fast that page renders is a ranking signal. LandingPage and
-// NotFoundPage stay eager: the first must paint with no extra round trip,
-// and the second is a few lines.
-const AboutPage = lazy(() => import('./pages/about/AboutPage'));
+// signed in. The public course pages have their own chunk, with static HTML
+// generated at build time so their content can also be read without JavaScript.
+const PublicPages = lazy(() => import('./pages/public/PublicPages'));
 const PromptPage = lazy(() => import('./pages/ai-service-page/PromptPage'));
 const ProofreaderPage = lazy(() => import('./pages/ai-service-page/ProofreaderPage'));
 const RewriterPage = lazy(() => import('./pages/ai-service-page/RewriterPage'));
@@ -50,7 +48,7 @@ const ToolLoading = () => (
 );
 
 function App() {
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
   const [hasApiKey, setHasApiKey] = useState(false);
   // The session check is a round trip; without this the API key form flashes
   // on every reload before we know the user is already signed in.
@@ -125,22 +123,12 @@ function App() {
     return () => { unsubscribe(); historyRequest.current += 1; };
   }, [hasApiKey, refreshHistory]);
 
-  // The document title is the one piece of metadata that changes per route.
-  // Everything else a crawler reads is static in index.html, because every
-  // signed-out URL resolves to the landing page.
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    const tool = findToolByPath(pathname);
-    if (tool) {
-      document.title = `${tool.name} — ${SITE_NAME}`;
-    } else if (pathname === '/about') {
-      document.title = `About — ${SITE_NAME}`;
-    } else {
-      document.title = DEFAULT_PAGE_TITLE;
-    }
+    applyPageMetadata(pathname);
   }, [pathname]);
 
   const handleKeySubmission = (selectedProvider: string) => {
@@ -179,6 +167,12 @@ function App() {
   // with no round trip in front of it.
   const isReturningVisitor = isBootstrapping && Boolean(provider);
 
+  // Public lessons must stay readable for signed-in visitors, signed-out
+  // visitors and returning visitors while the session request is still pending.
+  if (isPublicContentPath(pathname)) {
+    return <Suspense fallback={<ToolLoading />}><PublicPages /></Suspense>;
+  }
+
   if (pathname === '/' && !hasApiKey && !isReturningVisitor) {
     return <LandingPage onKeySubmit={handleKeySubmission} />;
   }
@@ -195,8 +189,12 @@ function App() {
   // Every tool lives behind an API key; without one there is nothing to show
   // on those URLs but the landing page.
   if (!hasApiKey) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" state={{ returnTo: pathname }} replace />;
   }
+
+  // A course exercise can lead through the key form. Only allow known local
+  // tools as the destination, and never send a generation automatically.
+  const returnTo = ALL_TOOLS.find((tool) => tool.path === state?.returnTo)?.path ?? DEFAULT_TOOL_PATH;
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
@@ -221,7 +219,7 @@ function App() {
         <main className="min-w-0 flex-grow overflow-hidden p-3 sm:p-6">
           <Suspense fallback={<ToolLoading />}>
           <Routes>
-            <Route path="/" element={<Navigate to={DEFAULT_TOOL_PATH} replace />} />
+            <Route path="/" element={<Navigate to={returnTo} replace />} />
             <Route path="/prompt" element={<PromptPage />} />
             <Route path="/explainer" element={<ExplainerPage />} />
             <Route path="/writer" element={<WriterPage />} />
@@ -242,7 +240,6 @@ function App() {
             <Route path="/sentiment" element={<SentimentPage />} />
             <Route path="/document-ai" element={<DocumentAIPage />} />
             <Route path="/image-generation" element={<ImaGenPage />} />
-            <Route path="/about" element={<AboutPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </Suspense>

@@ -29,6 +29,10 @@ Document AI and Image Generation require a Google Gemini key; the rest work
 with any of the three providers. An OpenRouter key can also pick which model
 the tools run on, from OpenRouter's whole catalogue.
 
+The public **Courses** section has six free, self-paced courses covering these
+tools, with eighteen lessons, worked examples, exercises and result checklists.
+Reading needs no API key; practicing in a tool uses the learner's own provider key.
+
 ## Getting Started
 
 ### Prerequisites
@@ -80,7 +84,7 @@ For local development without Docker:
 
 ```bash
 cd backend && python manage.py test     # Django: views, providers, key slots, usage
-cd frontend && npm test                 # Vitest: conversation memory and stored threads
+cd frontend && npm test                 # Vitest: conversations, public courses, routing and SEO
 ```
 
 ### Configuration
@@ -100,62 +104,59 @@ POSTGRES_USER="postgres"
 POSTGRES_PASSWORD="admin123"
 ```
 
-### Landing page and SEO
+### Public courses and SEO
 
-`/` is a public landing page ([`frontend/src/pages/landing/`](./frontend/src/pages/landing/)):
-the pitch, the tool list, the key-handling story, an FAQ, and the API key form
-itself. Everything else is behind an API key, and a signed-out visitor on any
-other route is redirected to `/`, so `/` is the only indexable URL — which is
-why [`sitemap.xml`](./frontend/public/sitemap.xml) lists nothing else.
+The public pages are `/`, `/about`, `/courses` and `/courses/:slug` for each
+course in [`catalog.ts`](./frontend/src/courses/catalog.ts). Course content is
+in [`lessons.ts`](./frontend/src/courses/lessons.ts). Each course has three
+lessons with a worked example, an exercise and checks for the result. The
+homepage, footer and workspace sidebar link to the catalog.
 
-The landing page renders before the session check resolves, so the page a
-crawler reads has no round trip in front of it. A returning visitor (one with
-`activeProvider` in localStorage) sees the loading state instead, to avoid a
-flash of the landing page on the way to the workspace.
+Courses and About render independently of the API key session check, including
+for returning visitors with a stale provider in localStorage. AI tools, usage,
+memory and saved history still require a key and are excluded from the sitemap.
+When a learner follows a course link to a tool, the key form preserves that
+destination and opens it after sign-in without sending an AI request.
 
-The tool cards and the FAQ's tool list are generated from `TOOL_GROUPS` in
-[`frontend/src/tools.ts`](./frontend/src/tools.ts) — the same list the router
-and sidebar use — so the landing page cannot advertise a tool that does not
-exist. The `FAQPage` structured data is built from the array that renders the
-visible FAQ for the same reason; the stable `WebSite` and `SoftwareApplication`
-markup lives in `index.html`.
+`npm run build` compiles the app, then runs
+[`generate-public-pages.mjs`](./frontend/scripts/generate-public-pages.mjs).
+It renders the same React public pages into static HTML in `dist/`, including
+their titles, descriptions, canonical URLs, social metadata and structured data.
+No running backend or API key is needed for this build. The browser mounts the
+interactive app over this HTML. Without JavaScript, lessons and navigation
+remain readable and the landing page's API key form stays disabled.
 
-The public origin is written in four places, and moving the site means changing
-all four:
+[`seo.ts`](./frontend/src/seo.ts) supplies metadata and the public route list.
+The build regenerates [`sitemap.xml`](./frontend/public/sitemap.xml) from that
+list and copies it to `dist/`. To update only the checked-in sitemap:
 
-| File | What it holds |
-| --- | --- |
-| `frontend/index.html` | `<link rel="canonical">`, `og:url`, `og:image`, JSON-LD `@id`/`url` |
-| `frontend/public/sitemap.xml` | the `<loc>` and its `<lastmod>` |
-| `frontend/public/robots.txt` | the `Sitemap:` line |
-| `frontend/src/constant.ts` | `SITE_URL`, used by the footer link |
+```bash
+cd frontend && npm run sitemap
+```
 
-`og-image.png` (1200×630) is the social preview card. `nginx.conf` gzips text
-responses, caches the fingerprinted `/assets/` for a year, and marks
-`index.html` `no-cache` so a deploy is picked up immediately.
+When adding a course, add its metadata and lessons, set its `updated` date to
+the actual content revision date, and rebuild. Use stable slugs: they are the
+public URLs. Update the other public pages' dates in `seo.ts` when their content
+changes. Tests check sitemap consistency, public access, exercise navigation,
+static lesson content and metadata restoration between routes.
 
-How fast that one indexable page renders is itself a ranking signal, so two
-things are arranged for its benefit:
+The landing page's tool cards and FAQ use `TOOL_GROUPS` in
+[`tools.ts`](./frontend/src/tools.ts). The FAQ structured data uses the visible
+FAQ array; course and breadcrumb structured data use the visible course data.
+Each public page has its own canonical URL, also updated on client navigation.
+Unknown course URLs show a noindex page, and production nginx returns HTTP 404
+for them. Other unknown workspace URLs retain the SPA fallback.
 
-- **The tool pages are lazy chunks** (`lazy()` in `App.tsx`). They are only
-  reachable after signing in, so bundling them with the landing page made the
-  page a crawler actually reads carry the whole app with it. Splitting them out
-  took the entry bundle from 536 kB to 330 kB — 167 kB to 108 kB gzipped.
-  `LandingPage` stays eagerly imported, because it must paint with no extra
-  round trip.
-- **Inter is requested from `index.html`, not with an `@import` in
-  `index.css`.** An `@import` cannot start until the stylesheet holding it has
-  downloaded and parsed, which put HTML → CSS → font CSS → font files in
-  series ahead of the first paint. Note that the usual next step — loading it
-  asynchronously with `media="print" onload="this.media='all'"` — is not
-  available here: the Content-Security-Policy has no `unsafe-inline` for
-  scripts, which is deliberate, and that pattern needs an inline handler.
+To change the public origin, update `SITE_URL` in `constant.ts`, the static
+product/image URLs in `index.html`, and the `Sitemap:` URL in `robots.txt`, then
+regenerate the sitemap and rebuild. `og-image.png` (1200×630) is the shared
+social preview card.
 
-An unknown URL cannot answer with a real 404, because nginx serves
-`index.html` for anything it does not recognise. A signed-out visitor is
-redirected to `/`, where the canonical tag consolidates the URL; a signed-in
-one gets `NotFoundPage`, which adds `<meta name="robots" content="noindex">`
-while it is mounted so the address is not filed as a thin page.
+The tool pages and public lesson content are separate lazy chunks, keeping
+the full lessons out of the homepage bundle. Inter is requested from
+`index.html` so font loading can start alongside the stylesheet. Nginx gzips
+text responses, caches fingerprinted `/assets/` for a year, and serves public
+HTML with `no-cache` so content updates are picked up after deployment.
 
 ### API key handling
 

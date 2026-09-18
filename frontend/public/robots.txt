@@ -1,5 +1,5 @@
 # https://chat.nevatal.tech/robots.txt
-# Change the host here, in index.html and in sitemap.xml together.
+# Change the host here, in index.html and src/constant.ts, then regenerate the sitemap.
 
 User-agent: *
 Allow: /
@@ -8,9 +8,8 @@ Allow: /
 # needs an API key session anyway.
 Disallow: /api/
 
-# The tool routes (/prompt, /translator, ...) are behind an API key and serve
-# the landing page to anyone without one. They are deliberately *not*
-# disallowed: crawlers need to fetch them to see the canonical tag pointing
-# back at /, which is what keeps them out of the index.
+# The home page, About and Courses are public and listed in the sitemap.
+# Tool routes remain behind an API key and redirect signed-out visitors home.
+# They are not disallowed, so crawlers can follow that redirect and read metadata.
 
 Sitemap: https://chat.nevatal.tech/sitemap.xml

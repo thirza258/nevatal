@@ -129,6 +129,8 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ onKeySubmit }) => {
       className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl ring-1 ring-gray-900/5"
       aria-labelledby="api-key-form-heading"
     >
+      <fieldset disabled={import.meta.env.SSR} className="min-w-0">
+      {import.meta.env.SSR && <p className="mb-4 text-sm text-gray-600">Enable JavaScript to connect an API key. You can read the courses without it.</p>}
       <h2 id="api-key-form-heading" className="text-xl font-bold text-gray-900">
         Start with your API key
       </h2>
@@ -248,6 +250,7 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ onKeySubmit }) => {
           ))}
         </ol>
       </details>
+      </fieldset>
     </form>
   );
 };

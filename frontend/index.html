@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!--
-      Every route serves this file, and every signed-out URL resolves to the
-      landing page, so these tags describe the landing page. The canonical URL
-      below is repeated in public/robots.txt and public/sitemap.xml; changing
-      the domain means changing all three.
+      The build renders public pages with their own content and metadata.
+      Keep the metadata markers: scripts/generate-public-pages.mjs replaces
+      this block for each page. Client navigation updates the same tags.
     -->
+    <!-- page-meta:start -->
     <title>Nevatal — AI Tools Hub for Your Own OpenAI, Gemini or OpenRouter Key</title>
     <meta
       name="description"
@@ -17,6 +17,12 @@
     />
     <link rel="canonical" href="https://chat.nevatal.tech/" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta property="og:url" content="https://chat.nevatal.tech/" />
+    <meta property="og:title" content="Nevatal — AI Tools Hub for Your Own OpenAI, Gemini or OpenRouter Key" />
+    <meta property="og:description" content="Seventeen focused AI tools and free practical courses. Bring your own provider API key to use the workspace." />
+    <meta name="twitter:title" content="Nevatal — AI Tools Hub for Your Own API Key" />
+    <meta name="twitter:description" content="Learn with free courses and use seventeen focused AI tools with your own OpenAI, Gemini or OpenRouter key." />
+    <!-- page-meta:end -->
     <meta name="theme-color" content="#111827" />
     <meta name="color-scheme" content="light" />
 
@@ -50,12 +56,6 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Nevatal" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:url" content="https://chat.nevatal.tech/" />
-    <meta property="og:title" content="Nevatal — AI Tools Hub for Your Own OpenAI, Gemini or OpenRouter Key" />
-    <meta
-      property="og:description"
-      content="Seventeen focused AI tools behind one interface. Bring your own provider key: it is encrypted before it leaves the browser and never stored in browser storage."
-    />
     <meta property="og:image" content="https://chat.nevatal.tech/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -63,11 +63,6 @@
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Nevatal — AI Tools Hub for Your Own API Key" />
-    <meta
-      name="twitter:description"
-      content="Seventeen focused AI tools behind one interface, running on your own OpenAI, Gemini or OpenRouter key. Open source and self-hostable."
-    />
     <meta name="twitter:image" content="https://chat.nevatal.tech/og-image.png" />
 
     <!--

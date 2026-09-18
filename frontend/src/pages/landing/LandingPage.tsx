@@ -1,5 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import ApiKeyForm from './ApiKeyForm';
+import CourseCard from '../../components/CourseCard';
+import { COURSES } from '../../courses/catalog';
 import { ALL_TOOLS, TOOL_GROUPS } from '../../tools';
 import { GITHUB_URL, SITE_URL } from '../../constant';
 
@@ -60,6 +63,10 @@ const FAQS: Faq[] = [
     question: 'Can I run Nevatal on my own server?',
     answer:
       'Yes. The whole stack — a React frontend and a Django backend — ships as Docker images, and docker compose up --build brings it up locally. The source is on GitHub.',
+  },
+  {
+    question: 'Can I learn to use the tools without an API key?',
+    answer: 'Yes. The Courses section has free, self-paced lessons on prompting, writing, business content, translation, documents, images and data workflows. Every lesson includes an example, an exercise and checks for the result. You only need a provider API key when you want to run an exercise in a tool.',
   },
   {
     question: 'Does Nevatal keep my documents?',
@@ -144,6 +151,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
             </ul>
 
             <div className="flex items-center gap-3">
+              <Link to="/courses" className="text-sm text-gray-300 hover:text-white">Courses</Link>
               <a
                 href={GITHUB_URL}
                 target="_blank"
@@ -353,6 +361,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
           </div>
         </section>
 
+        <section id="courses" className="scroll-mt-16 border-t border-gray-200 py-16 lg:py-20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <p className="text-sm font-semibold text-blue-700">Learn with Nevatal</p>
+                <h2 className="mt-2 text-3xl font-bold tracking-tight">A little practice goes a long way</h2>
+                <p className="mt-3 max-w-2xl text-gray-600">Free courses with practical examples, exercises and checks for your results. Read every lesson without an API key.</p>
+              </div>
+              <Link to="/courses" className="shrink-0 text-sm font-semibold text-blue-700 hover:underline">Explore all {COURSES.length} courses →</Link>
+            </div>
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {COURSES.slice(0, 3).map((course) => <CourseCard key={course.slug} course={course} />)}
+            </div>
+          </div>
+        </section>
+
         <section id="faq" className="scroll-mt-16 bg-gray-50 py-16 lg:py-20">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
             <h2 className="text-3xl font-bold tracking-tight">
@@ -412,10 +436,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
               Nevatal — an open source AI tools hub. MIT licensed.
             </span>
           </div>
-          <div className="flex items-center gap-5 text-sm">
+          <div className="flex flex-wrap items-center gap-5 text-sm">
             <a href={SITE_URL} className="hover:text-white">
               Home
             </a>
+            <Link to="/courses" className="hover:text-white">Courses</Link>
+            <Link to="/about" className="hover:text-white">About</Link>
             <a
               href={GITHUB_URL}
               target="_blank"
