@@ -1,14 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Only the landing page is listed. Every other route is behind an API key and
-  renders the landing page for a signed-out visitor, so listing them would
-  advertise URLs with no content of their own.
--->
+<!-- Generated from src/seo.ts and src/courses/catalog.ts. Run npm run sitemap after editing public pages. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://chat.nevatal.tech/</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-09-18</lastmod>
+  </url>
+  <url>
+    <loc>https://chat.nevatal.tech/about</loc>
+    <lastmod>2026-09-18</lastmod>
+  </url>
+  <url>
+    <loc>https://chat.nevatal.tech/courses</loc>
+    <lastmod>2026-09-18</lastmod>
+  </url>
+  <url>
+    <loc>https://chat.nevatal.tech/courses/prompting-fundamentals</loc>
+    <lastmod>2026-09-18</lastmod>
+  </url>
+  <url>
+    <loc>https://chat.nevatal.tech/courses/writing-and-editing</loc>
+    <lastmod>2026-09-18</lastmod>
+  </url>
+  <url>
+    <loc>https://chat.nevatal.tech/courses/business-content</loc>
+    <lastmod>2026-09-18</lastmod>
+  </url>
+  <url>
+    <loc>https://chat.nevatal.tech/courses/translation-and-feedback</loc>
+    <lastmod>2026-09-18</lastmod>
+  </url>
+  <url>
+    <loc>https://chat.nevatal.tech/courses/documents-and-images</loc>
+    <lastmod>2026-09-18</lastmod>
+  </url>
+  <url>
+    <loc>https://chat.nevatal.tech/courses/data-and-batch-workflows</loc>
+    <lastmod>2026-09-18</lastmod>
   </url>
 </urlset>

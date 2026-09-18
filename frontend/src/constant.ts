@@ -33,8 +33,8 @@ export const SITE_NAME = "Nevatal";
 
 /**
  * Public origin of the deployed app. Used for canonical URLs and JSON-LD.
- * Changing the domain means changing it in four places: here, `index.html`,
- * `public/robots.txt` and `public/sitemap.xml`.
+ * Changing the domain means changing it here, in `index.html` and in
+ * `public/robots.txt`, then running `npm run sitemap` and rebuilding.
  */
 export const SITE_URL = "https://chat.nevatal.tech";
 
