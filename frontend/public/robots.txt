@@ -2,6 +2,7 @@
 # Change the host here, in index.html and src/constant.ts, then regenerate the sitemap.
 
 User-agent: *
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
 Allow: /
 
 # Nothing under /api/ is a page — it is the JSON backend, and every endpoint
