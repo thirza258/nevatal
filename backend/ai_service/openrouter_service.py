@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import time
 from typing import Any, Optional
 
@@ -21,6 +22,60 @@ except Exception:  # pragma: no cover - fallback for environments without the pa
 # session in this process for the length of the TTL.
 MODELS_CACHE_TTL_SECONDS = 600
 MODELS_REQUEST_TIMEOUT_SECONDS = 15
+
+FREE_OPENROUTER_MODELS = [
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3.5-lightning:free",
+    "cohere/north-mini-code:free",
+    "recursive/flint-v1.0:free",
+    "xingchen-agi/xing4.0-29b-a4b:free",
+    "nvidia/nemotron-3.5-super-vl:free",
+    "dots-studio/dots-3-note-preview:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "google/gemma-4-31b-it:free",
+]
+
+
+def get_shuffled_free_models() -> list[str]:
+    models = list(FREE_OPENROUTER_MODELS)
+    random.shuffle(models)
+    return models
+
+
+def is_credit_exhausted_error(exc_or_status: Any, message: str = "") -> bool:
+    code = None
+    if isinstance(exc_or_status, int):
+        code = exc_or_status
+    else:
+        for attr in ("status_code", "http_status", "code"):
+            val = getattr(exc_or_status, attr, None)
+            if isinstance(val, int):
+                code = val
+                break
+        if code is None and hasattr(exc_or_status, "response"):
+            resp = getattr(exc_or_status, "response", None)
+            code = getattr(resp, "status_code", None)
+
+    msg_str = f"{exc_or_status} {message}".lower()
+    if code == 402:
+        return True
+
+    if "rate limit" in msg_str and not any(k in msg_str for k in ("credit", "payment", "balance")):
+        return False
+
+    credit_keywords = (
+        "402",
+        "credit",
+        "payment required",
+        "run out of credits",
+        "insufficient balance",
+        "insufficient credits",
+        "insufficient_quota",
+        "exceeded your current quota",
+        "out of credit",
+    )
+    return any(kw in msg_str for kw in credit_keywords)
 
 _models_cache: Optional[tuple[float, list[dict[str, Any]]]] = None
 
@@ -266,5 +321,18 @@ class OpenRouterService(BaseAIService):
             response_text = self.coerce_text(response)
             return self.ensure_json_response(response_text, response_schema_param)
         except Exception as e:
+            if is_credit_exhausted_error(e):
+                logger.warning("OpenRouter credits exhausted (%s), falling back to shuffled free models", e)
+                for free_model in get_shuffled_free_models():
+                    try:
+                        logger.info("Retrying with free fallback model: %s", free_model)
+                        fallback_llm = self._build_llm(key, free_model)
+                        fb_response = fallback_llm.invoke(build_messages(instruction, conversation, prompt))
+                        self.remember_message_usage(fb_response)
+                        fb_text = self.coerce_text(fb_response)
+                        return self.ensure_json_response(fb_text, response_schema_param)
+                    except Exception as fb_exc:
+                        logger.warning("Free model %s failed: %s", free_model, fb_exc)
+                        continue
             logger.error(f"An error occurred during OpenRouter API call: {e}")
             raise
