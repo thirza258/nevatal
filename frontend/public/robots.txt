@@ -1,4 +1,4 @@
-# https://chat.nevatal.tech/robots.txt
+# https://chat.nevatal.id/robots.txt
 # Change the host here, in index.html and src/constant.ts, then regenerate the sitemap.
 
 User-agent: *
@@ -13,4 +13,4 @@ Disallow: /api/
 # Tool routes remain behind an API key and redirect signed-out visitors home.
 # They are not disallowed, so crawlers can follow that redirect and read metadata.
 
-Sitemap: https://chat.nevatal.tech/sitemap.xml
+Sitemap: https://chat.nevatal.id/sitemap.xml

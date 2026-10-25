@@ -2,39 +2,39 @@
 <!-- Generated from src/seo.ts and src/courses/catalog.ts. Run npm run sitemap after editing public pages. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://chat.nevatal.tech/</loc>
+    <loc>https://chat.nevatal.id/</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
   <url>
-    <loc>https://chat.nevatal.tech/about</loc>
+    <loc>https://chat.nevatal.id/about</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
   <url>
-    <loc>https://chat.nevatal.tech/courses</loc>
+    <loc>https://chat.nevatal.id/courses</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
   <url>
-    <loc>https://chat.nevatal.tech/courses/prompting-fundamentals</loc>
+    <loc>https://chat.nevatal.id/courses/prompting-fundamentals</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
   <url>
-    <loc>https://chat.nevatal.tech/courses/writing-and-editing</loc>
+    <loc>https://chat.nevatal.id/courses/writing-and-editing</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
   <url>
-    <loc>https://chat.nevatal.tech/courses/business-content</loc>
+    <loc>https://chat.nevatal.id/courses/business-content</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
   <url>
-    <loc>https://chat.nevatal.tech/courses/translation-and-feedback</loc>
+    <loc>https://chat.nevatal.id/courses/translation-and-feedback</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
   <url>
-    <loc>https://chat.nevatal.tech/courses/documents-and-images</loc>
+    <loc>https://chat.nevatal.id/courses/documents-and-images</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
   <url>
-    <loc>https://chat.nevatal.tech/courses/data-and-batch-workflows</loc>
+    <loc>https://chat.nevatal.id/courses/data-and-batch-workflows</loc>
     <lastmod>2026-09-18</lastmod>
   </url>
 </urlset>

@@ -36,7 +36,7 @@ export const SITE_NAME = "Nevatal";
  * Changing the domain means changing it here, in `index.html` and in
  * `public/robots.txt`, then running `npm run sitemap` and rebuilding.
  */
-export const SITE_URL = "https://chat.nevatal.tech";
+export const SITE_URL = "https://chat.nevatal.id";
 
 /** Kept identical to the <title> in index.html so the landing page reads the
  *  same whether it was server-delivered or reached by client navigation. */
