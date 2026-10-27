@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "nevatal-chat",
+      "type": "skill-md",
+      "description": "Discover and call the Nevatal Chat AI tools API",
+      "url": "https://chat.nevatal.id/.well-known/agent-skills/nevatal-chat/SKILL.md",
+      "digest": "sha256:fce900dcb7635523460fcb3de865087ad454b92473964304c8d08538c4c05fcc"
+    }
+  ]
+}

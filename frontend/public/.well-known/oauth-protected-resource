@@ -1,0 +1,18 @@
+{
+  "resource": "https://chat.nevatal.id",
+  "authorization_servers": [
+    "https://chat.nevatal.id"
+  ],
+  "scopes_supported": [
+    "read",
+    "write"
+  ],
+  "bearer_methods_supported": [
+    "header"
+  ],
+  "resource_documentation": "https://chat.nevatal.id/auth.md",
+  "agent_auth": {
+    "skill": "https://chat.nevatal.id/auth.md",
+    "register_uri": "https://chat.nevatal.id/api/v1/agent/register"
+  }
+}

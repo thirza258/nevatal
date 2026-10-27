@@ -1,0 +1,46 @@
+{
+  "protocol_version": "0.1",
+  "organization": {
+    "name": "Nevatal",
+    "domain": "chat.nevatal.id"
+  },
+  "auth": {
+    "issuer": "https://chat.nevatal.id",
+    "direct": {
+      "scopes": [
+        "poppy:read",
+        "poppy:write"
+      ]
+    },
+    "device": {
+      "scopes": [
+        "poppy:read",
+        "poppy:write"
+      ]
+    }
+  },
+  "agent": {
+    "protocols": [
+      {
+        "type": "poppy",
+        "endpoint": "https://chat.nevatal.id/api/v1/"
+      }
+    ]
+  },
+  "apis": [
+    {
+      "type": "openapi",
+      "url": "https://chat.nevatal.id/api/v1/",
+      "description": "Nevatal Chat tool API"
+    },
+    {
+      "type": "mcp",
+      "url": "https://chat.nevatal.id/api/mcp",
+      "description": "Nevatal Chat MCP server"
+    }
+  ],
+  "web": {
+    "browser_session_endpoint": "https://chat.nevatal.id/"
+  },
+  "extensions": {}
+}

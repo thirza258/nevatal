@@ -1,0 +1,41 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Nevatal Chat",
+    "identifier": "did:web:chat.nevatal.id"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:chat.nevatal.id:server:mcp",
+      "displayName": "Nevatal Chat MCP Server",
+      "type": "application/mcp-server-card+json",
+      "url": "https://chat.nevatal.id/.well-known/mcp/server-card.json",
+      "representativeQueries": [
+        "list available ai tools",
+        "summarize a document",
+        "translate text"
+      ]
+    },
+    {
+      "identifier": "urn:air:chat.nevatal.id:agent:a2a",
+      "displayName": "Nevatal Chat A2A Agent",
+      "type": "application/json",
+      "url": "https://chat.nevatal.id/.well-known/agent-card.json",
+      "representativeQueries": [
+        "discover nevatal chat capabilities",
+        "run an ai writing task"
+      ]
+    },
+    {
+      "identifier": "urn:air:chat.nevatal.id:api:v1",
+      "displayName": "Nevatal Chat API",
+      "type": "application/json",
+      "url": "https://chat.nevatal.id/api/v1/",
+      "representativeQueries": [
+        "call the prompt endpoint",
+        "generate an image",
+        "analyze csv data"
+      ]
+    }
+  ]
+}

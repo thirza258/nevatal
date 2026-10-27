@@ -1,0 +1,19 @@
+{
+  "serverInfo": {
+    "name": "nevatal-chat-mcp",
+    "version": "1.0.0"
+  },
+  "endpoint": "https://chat.nevatal.id/api/mcp",
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    },
+    "resources": {
+      "subscribe": false,
+      "listChanged": false
+    },
+    "prompts": {
+      "listChanged": false
+    }
+  }
+}

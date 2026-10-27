@@ -1,0 +1,29 @@
+{
+  "issuer": "https://chat.nevatal.id",
+  "authorization_endpoint": "https://chat.nevatal.id/oauth/authorize",
+  "token_endpoint": "https://chat.nevatal.id/oauth/token",
+  "jwks_uri": "https://chat.nevatal.id/.well-known/jwks.json",
+  "response_types_supported": [
+    "code",
+    "token",
+    "id_token"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials",
+    "urn:ietf:params:oauth:grant-type:token-exchange"
+  ],
+  "scopes_supported": [
+    "openid",
+    "profile",
+    "email",
+    "read",
+    "write"
+  ],
+  "subject_types_supported": [
+    "public"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "RS256"
+  ]
+}

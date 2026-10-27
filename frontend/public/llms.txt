@@ -1,0 +1,26 @@
+# Nevatal Chat
+
+> An open-source AI tools hub: seventeen focused AI tools for writing,
+> translation, summarising, document Q&A, image generation and data analysis,
+> running on the visitor's own OpenAI, Gemini or OpenRouter API key.
+
+## Pages
+
+- [Home](https://chat.nevatal.id/): product overview and tool launcher
+- [About](https://chat.nevatal.id/about): what Nevatal is and how it works
+- [Courses](https://chat.nevatal.id/courses): free practical AI courses
+- [Sitemap](https://chat.nevatal.id/sitemap.xml): all public pages
+
+## API and agent discovery
+
+- [API catalog](https://chat.nevatal.id/.well-known/api-catalog)
+- [A2A Agent Card](https://chat.nevatal.id/.well-known/agent-card.json)
+- [MCP Server Card](https://chat.nevatal.id/.well-known/mcp/server-card.json)
+- [Agent Skills Index](https://chat.nevatal.id/.well-known/agent-skills/index.json)
+- [Authentication guide](https://chat.nevatal.id/auth.md)
+- [Poppy manifest](https://chat.nevatal.id/.well-known/poppy.json)
+- [AI catalog](https://chat.nevatal.id/.well-known/ai-catalog.json)
+
+## Source
+
+- [GitHub repository](https://github.com/thirza258/nevatal)

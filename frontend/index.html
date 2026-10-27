@@ -19,6 +19,9 @@
       content="An open source AI tools hub: writing, translation, summarising, document Q&amp;A and image generation, all running on your own OpenAI, Gemini or OpenRouter API key."
     />
     <link rel="canonical" href="https://chat.nevatal.id/" />
+    <link rel="alternate" type="text/markdown" href="/index.md" />
+    <link rel="ai-catalog" href="/.well-known/ai-catalog.json" />
+    <link rel="agent-card" href="/.well-known/agent-card.json" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <meta property="og:url" content="https://chat.nevatal.id/" />
     <meta property="og:title" content="Nevatal — AI Tools Hub for Your Own OpenAI, Gemini or OpenRouter Key" />
@@ -167,6 +170,64 @@
          data-full-width-responsive="true"></ins>
     <script>
          (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+    <script id="webmcp-tools">
+    (function () {
+      const tools = [
+        {
+          name: "get_site_info",
+          description: "Read the Nevatal Chat web app manifest and canonical site information.",
+          inputSchema: { type: "object", properties: {} },
+          execute: async function () {
+            const res = await fetch("/manifest.webmanifest");
+            return await res.json();
+          }
+        },
+        {
+          name: "get_api_catalog",
+          description: "Read the machine-readable API catalog for Nevatal Chat.",
+          inputSchema: { type: "object", properties: {} },
+          execute: async function () {
+            const res = await fetch("/.well-known/api-catalog");
+            return await res.json();
+          }
+        },
+        {
+          name: "check_api_status",
+          description: "Check that the Nevatal Chat tool API is reachable.",
+          inputSchema: { type: "object", properties: {} },
+          execute: async function () {
+            const res = await fetch("/api/");
+            return { status: res.status, body: await res.text() };
+          }
+        }
+      ];
+
+      function register() {
+        const ctx = (typeof navigator !== "undefined" && navigator.modelContext) ||
+                    (typeof document !== "undefined" && document.modelContext);
+        if (!ctx) return;
+        if (typeof ctx.provideContext === "function") {
+          try { ctx.provideContext({ tools: tools }); } catch (e) {}
+        }
+        if (typeof ctx.registerTool === "function") {
+          tools.forEach(function (tool) {
+            try { ctx.registerTool(tool); } catch (e) {}
+          });
+        }
+      }
+
+      register();
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", register);
+      }
+      window.addEventListener("load", register);
+      let count = 0;
+      const interval = setInterval(function () {
+        register();
+        if (++count > 20) clearInterval(interval);
+      }, 250);
+    })();
     </script>
 </body>
 </html>

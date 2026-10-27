@@ -1,0 +1,25 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://chat.nevatal.id/api/v1/",
+      "service-desc": [
+        {
+          "href": "https://chat.nevatal.id/api/v1/",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://chat.nevatal.id/auth.md",
+          "type": "text/markdown"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://chat.nevatal.id/",
+          "type": "text/html"
+        }
+      ]
+    }
+  ]
+}

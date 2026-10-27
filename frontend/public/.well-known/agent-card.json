@@ -1,0 +1,46 @@
+{
+  "name": "Nevatal Chat Agent",
+  "description": "AI tools hub for writing, translation, summarising, document Q&A, image generation and data analysis, running on the caller's own OpenAI, Gemini or OpenRouter API key.",
+  "url": "https://chat.nevatal.id",
+  "provider": {
+    "name": "Nevatal",
+    "url": "https://chat.nevatal.id"
+  },
+  "version": "1.0.0",
+  "protocolVersion": "0.3.0",
+  "preferredTransport": "JSONRPC",
+  "supportedInterfaces": [
+    {
+      "url": "https://chat.nevatal.id/api/v1/",
+      "protocolBinding": "JSONRPC",
+      "protocolVersion": "0.3.0"
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "text/plain"
+  ],
+  "skills": [
+    {
+      "id": "ai-tools",
+      "name": "Nevatal AI Tools",
+      "description": "Runs focused AI tasks such as prompting, rewriting, summarising, translating, document Q&A and image generation with the caller's provider key.",
+      "tags": [
+        "ai",
+        "writing",
+        "translation",
+        "document-qa"
+      ]
+    }
+  ],
+  "authentication": {
+    "type": "oauth2",
+    "discovery_url": "https://chat.nevatal.id/.well-known/oauth-authorization-server"
+  }
+}
