@@ -80,6 +80,7 @@ export const PROJECTS: Project[] = [
       'A retrieval system that refuses to guess: every answer cites a verifiable verse or narration, and says so when the corpus is not enough.',
     category: 'AI & Research',
     tags: ['RAG', 'Ollama', 'Citations'],
+    url: 'https://muslim.nevatal.id',
   },
   {
     name: 'Furina ML',
@@ -110,6 +111,7 @@ export const PROJECTS: Project[] = [
       'Fifteen courses across markets, ethics, strategy and Python bots, with a trading simulator, strategy lab and econometrics playground.',
     category: 'Learning',
     tags: ['Django', 'Simulator', 'Courses'],
+    url: 'https://quant.nevatal.id',
   },
   {
     name: 'VoltQuest',
@@ -119,6 +121,7 @@ export const PROJECTS: Project[] = [
       'Courses in computer architecture, assembly, electronics and desktop development, with runnable tutorials, exams and verifiable PDF certificates.',
     category: 'Learning',
     tags: ['C++', 'Courses', 'Certificates'],
+    url: 'https://pcb.nevatal.id',
   },
   {
     name: 'LeetBug',
@@ -160,6 +163,17 @@ export const PROJECTS: Project[] = [
       'N5–N1 courses, 200 kanji cards, grammar drills and original listening passages, wrapped in a sakura theme that follows your device.',
     category: 'Learning',
     tags: ['React', 'Education'],
+    url: 'https://hira.nevatal.id',
+  },
+  {
+    name: 'AdControl Learning',
+    slug: 'adcontrol-learning',
+    tagline: 'Free digital marketing courses, from SEO to GEO.',
+    description:
+      'Free, practical courses on digital marketing, SEO, GEO, SEM, affiliate marketing, analytics and conversion optimization — from AdControl Learning.',
+    category: 'Learning',
+    tags: ['Courses', 'Marketing'],
+    url: 'https://marketing.nevatal.id',
   },
   {
     name: 'SDG Country Profiles',
@@ -200,6 +214,7 @@ export const PROJECTS: Project[] = [
       'A zero-backend syntax reference and code comparator: browse how each language expresses a concept, then compare two or three implementations.',
     category: 'Tools & Ops',
     tags: ['Vanilla JS', 'Static', 'Nginx'],
+    url: 'https://c.nevatal.id',
   },
   {
     name: 'GenshinWallCraft',
@@ -209,6 +224,7 @@ export const PROJECTS: Project[] = [
       'Generate task-overlay wallpapers from artwork, manage saved tasks and private downloads, or open Pixel Studio to draw characters, tilesets and scenes.',
     category: 'Creative',
     tags: ['Generators', 'Pixel art'],
+    url: 'https://genshinwallpaper.nevatal.id',
   },
   {
     name: 'Literal Storyboard',
@@ -227,15 +243,6 @@ export const PROJECTS: Project[] = [
       'Self-hosted video upload with FFmpeg transcoding, HTTP-206 streaming, comments and a durable leased work queue that survives restarts.',
     category: 'Creative',
     tags: ['Django', 'FFmpeg', 'Queue'],
-  },
-  {
-    name: 'Discord Ops Bot',
-    slug: 'discord-ops-bot',
-    tagline: 'Server operations, inside Discord.',
-    description:
-      'Docker and HTTP monitoring, host telemetry and crash alerts in embeds — with GPT-4o on hand for troubleshooting and community answers.',
-    category: 'Tools & Ops',
-    tags: ['Python', 'Discord', 'Monitoring'],
   },
 ]
 
