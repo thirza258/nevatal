@@ -29,4 +29,10 @@ describe('app shell', () => {
   it('keeps the excluded telenursing work out of the portfolio', () => {
     expect(renderAt('/projects').toLowerCase()).not.toContain('telenursing')
   })
+
+  it('offers a live preview control for public projects', () => {
+    const html = renderAt('/projects')
+    expect(html).toContain('aria-label="Preview Webisaurus"')
+    expect(html).toContain('Internal')
+  })
 })

@@ -1,7 +1,11 @@
+import { useState } from 'react'
+import ProjectPreview from './ProjectPreview'
 import { PROJECT_CATEGORY_TONE, type Project } from '../data/projects'
-import { ArrowUpRight } from './icons'
+import { ArrowUpRight, Eye } from './icons'
 
 const ProjectCard = ({ project }: { project: Project }) => {
+  const [previewOpen, setPreviewOpen] = useState(false)
+
   const content = (
     <>
       <div className="flex items-center justify-between gap-3">
@@ -10,7 +14,26 @@ const ProjectCard = ({ project }: { project: Project }) => {
           {project.category}
         </span>
         {project.url ? (
-          <ArrowUpRight className="h-4 w-4 text-ink/30 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink" />
+          <span className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(true)}
+              aria-label={`Preview ${project.name}`}
+              className="flex items-center gap-1 rounded-full border border-ink/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink/50 transition hover:border-ink/30 hover:bg-ink hover:text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Preview</span>
+            </button>
+            <a
+              href={project.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Open ${project.name} in a new tab`}
+              className="rounded-full p-1 text-ink/30 transition hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+            >
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </span>
         ) : (
           <span className="rounded-full border border-ink/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-ink/50">
             Internal
@@ -32,18 +55,16 @@ const ProjectCard = ({ project }: { project: Project }) => {
     </>
   )
 
-  const className =
-    'group flex h-full flex-col rounded-2xl border border-ink/10 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-ink/25 hover:shadow-[0_18px_50px_-24px_rgba(10,13,18,0.35)]'
-
-  if (project.url) {
-    return (
-      <a href={project.url} target="_blank" rel="noopener noreferrer" className={className}>
+  return (
+    <>
+      <article className="group flex h-full flex-col rounded-2xl border border-ink/10 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-ink/25 hover:shadow-[0_18px_50px_-24px_rgba(10,13,18,0.35)]">
         {content}
-      </a>
-    )
-  }
-
-  return <article className={className}>{content}</article>
+      </article>
+      {previewOpen && project.url && (
+        <ProjectPreview project={project} url={project.url} onClose={() => setPreviewOpen(false)} />
+      )}
+    </>
+  )
 }
 
 export default ProjectCard
