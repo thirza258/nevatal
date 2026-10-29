@@ -118,6 +118,11 @@ services:
       # Optional. Unset, the backend generates its own transport key and keeps
       # it in the media volume below.
       API_KEY_PRIVATE_KEY: \${API_KEY_PRIVATE_KEY:-}
+      # Safe production defaults. Turn the redirect and HSTS on only once HTTPS
+      # is confirmed end to end; see the notes in .env.example.
+      SECURE_SSL_REDIRECT: \${SECURE_SSL_REDIRECT:-False}
+      SECURE_HSTS_SECONDS: \${SECURE_HSTS_SECONDS:-0}
+      SCHEMA_PUBLIC: \${SCHEMA_PUBLIC:-False}
     volumes:
       # Document AI writes each upload's index to media/rag/<owner>/1|2|3/.
       # Without this volume every deploy would replace the container and take
@@ -134,6 +139,16 @@ services:
       - "5176:80"
     depends_on:
       - backend
+    restart: unless-stopped
+
+  # Company hub. Static nginx build; the blog reads the public WordPress REST
+  # API from the browser, so it has no backend dependency. Point the public
+  # hostname at this port at the tunnel when switching over from WordPress.
+  hub:
+    image: ${DOCKER_USERNAME}/nevatal-hub:${IMAGE_TAG}
+    container_name: nevatal_hub
+    ports:
+      - "5181:80"
     restart: unless-stopped
 
 volumes:
@@ -175,3 +190,5 @@ echo "=== CLEANUP ==="
 docker image prune -f
 
 echo "=== DEPLOYED ${IMAGE_TAG} ==="
+echo "AI hub:      http://<host>:5176"
+echo "Company hub: http://<host>:5181"
