@@ -1,18 +1,34 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import { AI_HUB_URL, NAV_LINKS } from '../lib/constants'
+import { easeOut } from '../lib/motion'
 import { ArrowUpRight, Close, Menu } from './icons'
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
 
   useEffect(() => {
     setIsOpen(false)
   }, [pathname])
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/90 text-paper backdrop-blur">
+    <header
+      className={`sticky top-0 z-50 border-b text-paper backdrop-blur transition-colors duration-300 ${
+        scrolled
+          ? 'border-white/10 bg-ink/95 shadow-[0_16px_50px_-30px_rgba(0,0,0,0.9)]'
+          : 'border-white/5 bg-ink/80'
+      }`}
+    >
       <div className="border-b border-white/10 bg-brand text-ink">
         <div className="container-x flex h-8 items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] sm:justify-between">
           <span className="sm:hidden">Nevatal AI Hub is live — 17 tools</span>
@@ -75,9 +91,18 @@ const Header = () => {
           </div>
         </nav>
 
-        {isOpen && (
-          <div id="mobile-nav" className="border-t border-white/10 py-4 md:hidden">
-            <ul className="space-y-1">
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              id="mobile-nav"
+              key="mobile-nav"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: easeOut }}
+              className="overflow-hidden border-t border-white/10 md:hidden"
+            >
+            <ul className="space-y-1 py-4">
               {NAV_LINKS.map((link) => (
                 <li key={link.to}>
                   <NavLink
@@ -103,8 +128,9 @@ const Header = () => {
                 </a>
               </li>
             </ul>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   )

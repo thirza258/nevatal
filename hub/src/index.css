@@ -69,13 +69,13 @@
 }
 
 .hero-surface {
-  background-color: #0a0d12;
+  background-color: #08090b;
   background-image:
-    radial-gradient(60% 60% at 82% 8%, rgba(47, 107, 255, 0.2) 0%, transparent 62%),
-    radial-gradient(52% 52% at 6% 92%, rgba(255, 197, 61, 0.13) 0%, transparent 62%),
-    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-  background-size: auto, auto, 48px 48px, 48px 48px;
+    radial-gradient(56% 56% at 84% 4%, rgba(47, 107, 255, 0.16) 0%, transparent 64%),
+    radial-gradient(48% 48% at 4% 96%, rgba(255, 197, 61, 0.1) 0%, transparent 62%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 56px 56px, 56px 56px;
 }
 
 .marquee-mask {
@@ -83,11 +83,17 @@
 }
 
 .marquee-track {
-  animation: marquee 48s linear infinite;
+  animation: marquee 64s linear infinite;
 }
 
 .marquee-mask:hover .marquee-track {
   animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
 }
 
 .chips-scroll {

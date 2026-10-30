@@ -3,6 +3,8 @@ export const SITE_URL = 'https://nevatal.id'
 
 export const AI_HUB_URL = 'https://chat.nevatal.id'
 export const AI_HUB_COURSES_URL = 'https://chat.nevatal.id/courses'
+export const AI_TOOL_COUNT = 17
+export const BLOG_TOTAL_FALLBACK = 400
 export const GITHUB_URL = 'https://github.com/thirza258/nevatal'
 export const GITHUB_PROFILE_URL = 'https://github.com/thirza258'
 

@@ -44,10 +44,32 @@ const ProjectPreview = ({
   const [shotReady, setShotReady] = useState(false)
   const [seed, setSeed] = useState(() => Math.random().toString(36).slice(2, 8))
   const closeRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab') return
+      const root = dialogRef.current
+      if (!root) return
+      const focusable = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), iframe, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      )
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     const previousOverflow = document.body.style.overflow
@@ -95,6 +117,7 @@ const ProjectPreview = ({
       }}
     >
       <motion.div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={`${project.name} preview`}
@@ -194,6 +217,7 @@ const ProjectPreview = ({
                   onLoad={() => setLiveReady(true)}
                   allow="fullscreen"
                   referrerPolicy="strict-origin-when-cross-origin"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
                 />
                 {!liveReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white">

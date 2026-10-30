@@ -14,8 +14,11 @@ describe('app shell', () => {
   it('renders the landing page with the portfolio and blog sections', () => {
     const html = renderAt('/')
     expect(html).toContain('AI products that')
+    expect(html).toContain('One hub. Seventeen ways to think.')
     expect(html).toContain('Built, shipped and still running.')
+    expect(html).toContain('Built across the entire stack.')
     expect(html).toContain('Notes from the workshop.')
+    expect(html).toContain('Put the portfolio to work.')
     expect(html).toContain('chat.nevatal.id')
   })
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import ProjectPreview from './ProjectPreview'
 import { PROJECT_CATEGORY_TONE, type Project } from '../data/projects'
@@ -7,6 +7,7 @@ import { ArrowUpRight, Eye } from './icons'
 
 const ProjectCard = ({ project }: { project: Project }) => {
   const [previewOpen, setPreviewOpen] = useState(false)
+  const previewTriggerRef = useRef<HTMLButtonElement>(null)
 
   const content = (
     <>
@@ -18,6 +19,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
         {project.url ? (
           <span className="flex items-center gap-1">
             <motion.button
+              ref={previewTriggerRef}
               type="button"
               onClick={() => setPreviewOpen(true)}
               aria-label={`Preview ${project.name}`}
@@ -74,7 +76,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
       >
         {content}
       </motion.article>
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => previewTriggerRef.current?.focus()}>
         {previewOpen && project.url && (
           <ProjectPreview
             key="preview"
