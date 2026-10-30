@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import ProjectPreview from './ProjectPreview'
 import { PROJECT_CATEGORY_TONE, type Project } from '../data/projects'
+import { cardIn, spring } from '../lib/motion'
 import { ArrowUpRight, Eye } from './icons'
 
 const ProjectCard = ({ project }: { project: Project }) => {
@@ -15,15 +17,17 @@ const ProjectCard = ({ project }: { project: Project }) => {
         </span>
         {project.url ? (
           <span className="flex items-center gap-1">
-            <button
+            <motion.button
               type="button"
               onClick={() => setPreviewOpen(true)}
               aria-label={`Preview ${project.name}`}
-              className="flex items-center gap-1 rounded-full border border-ink/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink/50 transition hover:border-ink/30 hover:bg-ink hover:text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.94 }}
+              className="flex items-center gap-1 rounded-full border border-ink/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink/50 transition-colors hover:border-ink/30 hover:bg-ink hover:text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
             >
               <Eye className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Preview</span>
-            </button>
+            </motion.button>
             <a
               href={project.url}
               target="_blank"
@@ -57,12 +61,29 @@ const ProjectCard = ({ project }: { project: Project }) => {
 
   return (
     <>
-      <article className="group flex h-full flex-col rounded-2xl border border-ink/10 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-ink/25 hover:shadow-[0_18px_50px_-24px_rgba(10,13,18,0.35)]">
+      <motion.article
+        layout
+        variants={cardIn}
+        initial="hidden"
+        whileInView="show"
+        exit="out"
+        viewport={{ once: true, margin: '-40px' }}
+        whileHover={{ y: -6 }}
+        transition={spring}
+        className="group flex h-full flex-col rounded-2xl border border-ink/10 bg-white p-6 transition-shadow hover:border-ink/25 hover:shadow-[0_18px_50px_-24px_rgba(10,13,18,0.35)]"
+      >
         {content}
-      </article>
-      {previewOpen && project.url && (
-        <ProjectPreview project={project} url={project.url} onClose={() => setPreviewOpen(false)} />
-      )}
+      </motion.article>
+      <AnimatePresence>
+        {previewOpen && project.url && (
+          <ProjectPreview
+            key="preview"
+            project={project}
+            url={project.url}
+            onClose={() => setPreviewOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   )
 }

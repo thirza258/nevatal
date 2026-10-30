@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import PostCard from '../components/PostCard'
 import ProjectCard from '../components/ProjectCard'
 import { ArrowRight, ArrowUpRight, Check, Spark } from '../components/icons'
@@ -11,6 +12,7 @@ import {
   GITHUB_PROFILE_URL,
   SITE_URL,
 } from '../lib/constants'
+import { easeOut, fadeUp, spring, stagger } from '../lib/motion'
 import { usePageMeta } from '../lib/seo'
 import { getCategories, getPosts, type WPPost } from '../lib/wp'
 
@@ -110,20 +112,23 @@ const HomePage = () => {
       <section className="hero-surface relative overflow-hidden text-paper">
         <div className="container-x py-16 sm:py-20 lg:py-28">
           <div className="grid items-center gap-14 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="animate-fade-up">
-              <p className="eyebrow flex items-center gap-2 text-brand">
+            <motion.div initial="hidden" animate="show" variants={stagger}>
+              <motion.p variants={fadeUp} className="eyebrow flex items-center gap-2 text-brand">
                 <Spark className="h-4 w-4" /> Independent AI studio
-              </p>
-              <h1 className="mt-6 font-display text-4xl font-semibold leading-[1.04] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
+              </motion.p>
+              <motion.h1
+                variants={fadeUp}
+                className="mt-6 font-display text-4xl font-semibold leading-[1.04] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl"
+              >
                 AI products that <span className="text-brand">earn their place.</span>
-              </h1>
-              <p className="mt-6 max-w-xl text-lg leading-relaxed text-paper/70">
+              </motion.h1>
+              <motion.p variants={fadeUp} className="mt-6 max-w-xl text-lg leading-relaxed text-paper/70">
                 Nevatal designs, ships and runs a portfolio of AI-first software: a seventeen-tool
                 workspace, grounded research assistants, learning platforms and the small utilities
                 that keep the lights on.
-              </p>
+              </motion.p>
 
-              <div className="mt-9 flex flex-wrap gap-3">
+              <motion.div variants={fadeUp} className="mt-9 flex flex-wrap gap-3">
                 <Link to="/projects" className="btn btn-primary">
                   Explore the portfolio <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -135,9 +140,12 @@ const HomePage = () => {
                 >
                   Open the AI Hub <ArrowUpRight className="h-4 w-4" />
                 </a>
-              </div>
+              </motion.div>
 
-              <dl className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-white/10 pt-6">
+              <motion.dl
+                variants={fadeUp}
+                className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-white/10 pt-6"
+              >
                 {STATS.map((stat) => (
                   <div key={stat.label}>
                     <dt className="sr-only">{stat.label}</dt>
@@ -145,18 +153,36 @@ const HomePage = () => {
                     <dd className="mt-1 text-[11px] leading-snug text-paper/55">{stat.label}</dd>
                   </div>
                 ))}
-              </dl>
-            </div>
+              </motion.dl>
+            </motion.div>
 
-            <div className="w-full max-w-md animate-fade-up lg:justify-self-end [animation-delay:120ms]">
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: easeOut, delay: 0.15 }}
+              className="w-full max-w-md lg:justify-self-end"
+            >
               <div className="relative">
-                <div className="absolute -inset-8 rounded-full bg-brand/10 blur-3xl" aria-hidden="true" />
-                <div className="relative grid grid-cols-2 gap-3">
-                  <a
+                <motion.div
+                  className="absolute -inset-8 rounded-full bg-brand/10 blur-3xl"
+                  aria-hidden="true"
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.div
+                  initial="hidden"
+                  animate="show"
+                  variants={stagger}
+                  className="relative grid grid-cols-2 gap-3"
+                >
+                  <motion.a
                     href={AI_HUB_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group relative col-span-2 overflow-hidden rounded-3xl bg-brand p-6 text-ink transition duration-300 hover:-translate-y-1"
+                    variants={fadeUp}
+                    whileHover={{ y: -4 }}
+                    transition={spring}
+                    className="group relative col-span-2 overflow-hidden rounded-3xl bg-brand p-6 text-ink"
                   >
                     <div
                       className="absolute -right-12 -top-12 h-40 w-40 rounded-full border-[18px] border-ink/10"
@@ -182,13 +208,16 @@ const HomePage = () => {
                         </span>
                       ))}
                     </div>
-                  </a>
+                  </motion.a>
 
-                  <a
+                  <motion.a
                     href="https://rag.nevatal.id"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-white/25"
+                    variants={fadeUp}
+                    whileHover={{ y: -4 }}
+                    transition={spring}
+                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 hover:border-white/25"
                   >
                     <p className="text-[10px] uppercase tracking-[0.16em] text-paper/50">
                       Grounded retrieval
@@ -197,13 +226,16 @@ const HomePage = () => {
                     <p className="mt-1 text-xs leading-relaxed text-paper/60">
                       Compare dense, sparse and hybrid search — then let the models vote.
                     </p>
-                  </a>
+                  </motion.a>
 
-                  <a
+                  <motion.a
                     href="https://leetbug.nevatal.id"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-white/25"
+                    variants={fadeUp}
+                    whileHover={{ y: -4 }}
+                    transition={spring}
+                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 hover:border-white/25"
                   >
                     <p className="text-[10px] uppercase tracking-[0.16em] text-paper/50">
                       Practice
@@ -212,13 +244,16 @@ const HomePage = () => {
                     <p className="mt-1 text-xs leading-relaxed text-paper/60">
                       Debugging challenges that grade the fix, not the answer.
                     </p>
-                  </a>
+                  </motion.a>
 
-                  <a
+                  <motion.a
                     href="https://uptime.nevatal.id"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="col-span-2 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-white/25"
+                    variants={fadeUp}
+                    whileHover={{ y: -4 }}
+                    transition={spring}
+                    className="col-span-2 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 hover:border-white/25"
                   >
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.16em] text-paper/50">
@@ -231,10 +266,10 @@ const HomePage = () => {
                     <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
                     </span>
-                  </a>
-                </div>
+                  </motion.a>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
 

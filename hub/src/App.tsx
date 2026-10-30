@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion'
 import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import ScrollToTop from './components/ScrollToTop'
@@ -9,7 +10,7 @@ import PostPage from './pages/PostPage'
 import ProjectsPage from './pages/ProjectsPage'
 
 const App = () => (
-  <>
+  <MotionConfig reducedMotion="user">
     <ScrollToTop />
     <Routes>
       <Route element={<Layout />}>
@@ -21,7 +22,7 @@ const App = () => (
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
-  </>
+  </MotionConfig>
 )
 
 export default App
