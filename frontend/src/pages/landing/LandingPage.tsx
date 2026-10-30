@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ApiKeyForm from './ApiKeyForm';
-import SlideReveal from './SlideReveal';
+import { SlideReveal, ScrollMoveCard } from './SlideReveal';
 import CourseCard from '../../components/CourseCard';
 import { COURSES } from '../../courses/catalog';
 import { ALL_TOOLS, TOOL_GROUPS } from '../../tools';
@@ -507,7 +507,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                 className="group relative flex items-center justify-center p-1.5 focus:outline-none"
                 aria-label={`Go to slide ${slide.number}: ${slide.title}`}
               >
-                {/* Dot indicator */}
                 <span
                   className={`block rounded-full transition-all duration-300 ${
                     isActive
@@ -515,8 +514,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                       : 'w-2 h-2 bg-gray-700 hover:bg-gray-400'
                   }`}
                 />
-
-                {/* Tooltip on hover */}
                 <span className="pointer-events-none absolute right-7 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-900 text-gray-200 text-xs font-medium py-1 px-2.5 rounded-lg whitespace-nowrap shadow-xl border border-gray-700/80">
                   {slide.number}. {slide.title}
                 </span>
@@ -526,7 +523,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
 
           <div className="w-4 h-px bg-gray-800 my-0.5" />
 
-          {/* Next Slide Advance Button */}
           <button
             type="button"
             onClick={handleNextSlide}
@@ -685,20 +681,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
       <main id="top">
         {/* SLIDE 01: Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-b from-gray-950 via-gray-900 to-gray-900 text-white pt-10 pb-20 lg:pt-16 lg:pb-28">
-          {/* Ambient decorative glowing mesh orbs */}
           <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-tr from-blue-600/20 via-indigo-600/25 to-purple-600/20 blur-[130px] rounded-full -z-0 opacity-80" aria-hidden="true" />
           <div className="pointer-events-none absolute top-1/3 -left-32 w-96 h-96 bg-blue-500/10 blur-[100px] rounded-full -z-0" aria-hidden="true" />
           <div className="pointer-events-none absolute bottom-10 right-0 w-96 h-96 bg-purple-500/10 blur-[100px] rounded-full -z-0" aria-hidden="true" />
-
-          {/* Background grid */}
           <div className="absolute inset-0 bg-grid-white opacity-[0.03] pointer-events-none -z-0" aria-hidden="true" />
 
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-              {/* Left Column: Slides in smoothly from left */}
+              {/* Left Column: Big section presentation reveal */}
               <div className="lg:col-span-7 space-y-6">
-                <SlideReveal direction="left" delay={50}>
-                  {/* Slide Show Category Pill */}
+                <SlideReveal direction="up" delay={50}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-950/60 backdrop-blur-md px-3.5 py-1.5 text-xs font-medium text-blue-200 shadow-inner shadow-blue-500/20">
                       <span className="flex h-2 w-2 relative">
@@ -712,21 +704,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
                     {ALL_TOOLS.length} focused AI tools, running on your own API key
                   </h1>
-                </SlideReveal>
 
-                <SlideReveal direction="up" delay={150}>
-                  <p className="text-lg sm:text-xl text-gray-300 font-normal leading-relaxed max-w-2xl">
+                  <p className="mt-5 text-lg sm:text-xl text-gray-300 font-normal leading-relaxed max-w-2xl">
                     Nevatal is a private workspace for writing, translation,
                     document Q&amp;A, data analysis, and generative vision. Connect an
                     OpenAI, Google Gemini or OpenRouter key and every tool is
                     immediately yours — no subscription, no per-seat pricing, and no
                     middleman retaining your data.
                   </p>
-                </SlideReveal>
 
-                {/* Value Checklist */}
-                <SlideReveal direction="up" delay={250}>
-                  <ul className="grid sm:grid-cols-2 gap-3 text-sm text-gray-200 pt-2">
+                  {/* Value Checklist */}
+                  <ul className="mt-6 grid sm:grid-cols-2 gap-3 text-sm text-gray-200">
                     {[
                       'Client-side RSA-OAEP encryption before leaving your browser',
                       'Pay your provider direct wholesale rates with 0% Nevatal markup',
@@ -739,11 +727,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                       </li>
                     ))}
                   </ul>
-                </SlideReveal>
 
-                {/* CTA button cluster */}
-                <SlideReveal direction="up" delay={350}>
-                  <div className="flex flex-wrap items-center gap-4 pt-4">
+                  {/* CTA button cluster */}
+                  <div className="mt-7 flex flex-wrap items-center gap-4">
                     <a
                       href="#get-started"
                       className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 px-6 py-3.5 text-base font-semibold text-white shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
@@ -772,11 +758,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                       Browse all {ALL_TOOLS.length} tools →
                     </a>
                   </div>
-                </SlideReveal>
 
-                {/* Quick stats counter bar */}
-                <SlideReveal direction="up" delay={450}>
-                  <div className="pt-6 border-t border-gray-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {/* Quick stats counter bar */}
+                  <div className="mt-8 pt-6 border-t border-gray-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
                       <div className="text-2xl sm:text-3xl font-extrabold text-white">17</div>
                       <div className="text-xs text-gray-400 mt-0.5">Specialized Tools</div>
@@ -797,11 +781,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                 </SlideReveal>
               </div>
 
-              {/* Right Column: Slides in smoothly from right */}
+              {/* Right Column: Card moving into place with scroll */}
               <div id="get-started" className="lg:col-span-5 scroll-mt-24">
-                <SlideReveal direction="right" delay={200}>
+                <ScrollMoveCard from="right" distance={40} stagger={false}>
                   <ApiKeyForm onKeySubmit={onKeySubmit} />
-                </SlideReveal>
+                </ScrollMoveCard>
               </div>
             </div>
           </div>
@@ -811,7 +795,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
         <section id="simulator" className="scroll-mt-20 py-16 lg:py-24 bg-gray-900 border-b border-gray-800 text-white relative">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SlideReveal direction="up">
-              <div className="text-center max-w-3xl mx-auto mb-12">
+              <div className="text-center max-w-3xl mx-auto mb-10">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-900/60 text-blue-300 border border-blue-700/50">
                   ⚡ {LANDING_SLIDES[1].badge}
                 </span>
@@ -821,38 +805,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                 <p className="mt-3 text-base text-gray-400">
                   Experience how dedicated input fields and streaming output beat blank prompt chatboxes. Click through live tool scenarios below.
                 </p>
+
+                {/* Interactive Tab Switcher */}
+                <div className="flex flex-wrap justify-center gap-2 mt-8">
+                  {SIMULATOR_DEMOS.map((demo) => {
+                    const isActive = activeSimulatorTab === demo.id;
+                    return (
+                      <button
+                        key={demo.id}
+                        type="button"
+                        onClick={() => setActiveSimulatorTab(demo.id)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
+                          isActive
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 scale-105'
+                            : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-700/60'
+                        }`}
+                      >
+                        <span>{demo.iconText}</span>
+                        <span>{demo.name}</span>
+                        <span className={`text-[11px] px-1.5 py-0.5 rounded ${isActive ? 'bg-blue-500/60 text-white' : 'bg-gray-700 text-gray-400'}`}>
+                          {demo.badge}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </SlideReveal>
 
-            {/* Interactive Tab Switcher */}
-            <SlideReveal direction="up" delay={150}>
-              <div className="flex flex-wrap justify-center gap-2 mb-8">
-                {SIMULATOR_DEMOS.map((demo) => {
-                  const isActive = activeSimulatorTab === demo.id;
-                  return (
-                    <button
-                      key={demo.id}
-                      type="button"
-                      onClick={() => setActiveSimulatorTab(demo.id)}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
-                        isActive
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 scale-105'
-                          : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-700/60'
-                      }`}
-                    >
-                      <span>{demo.iconText}</span>
-                      <span>{demo.name}</span>
-                      <span className={`text-[11px] px-1.5 py-0.5 rounded ${isActive ? 'bg-blue-500/60 text-white' : 'bg-gray-700 text-gray-400'}`}>
-                        {demo.badge}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </SlideReveal>
-
-            {/* Terminal Window Mockup */}
-            <SlideReveal direction="scale" delay={250}>
+            {/* Terminal Window Card moving into place with mouse scroll */}
+            <ScrollMoveCard from="bottom" distance={45}>
               <div className="max-w-4xl mx-auto rounded-2xl border border-gray-700/80 bg-gray-950/90 shadow-2xl overflow-hidden backdrop-blur-xl">
                 {/* Window Header */}
                 <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-gray-800 bg-gray-900/80">
@@ -916,7 +898,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                   </div>
                 </div>
               </div>
-            </SlideReveal>
+            </ScrollMoveCard>
           </div>
         </section>
 
@@ -924,7 +906,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
         <section id="why-byok" className="scroll-mt-16 py-16 lg:py-24 bg-white text-gray-900">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SlideReveal direction="up">
-              <div className="text-center max-w-3xl mx-auto mb-16">
+              <div className="text-center max-w-3xl mx-auto mb-14">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   💰 {LANDING_SLIDES[2].badge}
                 </span>
@@ -937,10 +919,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
               </div>
             </SlideReveal>
 
-            {/* Side-by-side comparison cards: Left slides from left, Right slides from right */}
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Side-by-side comparison cards: Left moves from left, Right moves from right */}
+            <div className="grid md:grid-cols-2 gap-8 mb-12 items-stretch">
               {/* Traditional SaaS Card */}
-              <SlideReveal direction="left" delay={100} className="h-full">
+              <ScrollMoveCard from="left" distance={45} className="h-full">
                 <div className="h-full rounded-2xl border border-gray-200 bg-gray-50/70 p-6 sm:p-8 flex flex-col justify-between">
                   <div>
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700 mb-4">
@@ -975,10 +957,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                     Typical annual spend per seat: <strong>$240 – $480</strong>
                   </div>
                 </div>
-              </SlideReveal>
+              </ScrollMoveCard>
 
               {/* Nevatal BYOK Card */}
-              <SlideReveal direction="right" delay={150} className="h-full">
+              <ScrollMoveCard from="right" distance={45} className="h-full">
                 <div className="h-full relative rounded-2xl border-2 border-blue-600 bg-white p-6 sm:p-8 shadow-xl flex flex-col justify-between">
                   <div className="absolute -top-3.5 right-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">
                     Nevatal BYOK
@@ -1018,11 +1000,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                     <span className="text-base font-bold text-emerald-600">~$0.24</span>
                   </div>
                 </div>
-              </SlideReveal>
+              </ScrollMoveCard>
             </div>
 
-            {/* Interactive Savings Calculator: Slides up */}
-            <SlideReveal direction="up" delay={200}>
+            {/* Interactive Savings Calculator: Card moving into place with scroll */}
+            <ScrollMoveCard from="bottom" distance={40}>
               <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50 border border-blue-100 p-6 sm:p-8 max-w-4xl mx-auto shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <div>
@@ -1068,7 +1050,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                   </div>
                 </div>
               </div>
-            </SlideReveal>
+            </ScrollMoveCard>
           </div>
         </section>
 
@@ -1076,7 +1058,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
         <section id="tools" className="scroll-mt-16 py-16 lg:py-24 bg-gray-50 border-t border-gray-200">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SlideReveal direction="up">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                 <div>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                     🛠️ {LANDING_SLIDES[3].badge}
@@ -1115,10 +1097,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                   )}
                 </div>
               </div>
-            </SlideReveal>
 
-            {/* Category Filter Pills */}
-            <SlideReveal direction="up" delay={100}>
+              {/* Category Filter Pills */}
               <div className="flex flex-wrap items-center gap-2 mb-8" role="tablist" aria-label="Tool Categories">
                 <button
                   type="button"
@@ -1149,7 +1129,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
               </div>
             </SlideReveal>
 
-            {/* Tool Grid with staggered slide-in cards */}
+            {/* Tool Grid with cards moving to place based on mouse scrolling movement */}
             {filteredTools.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 p-8">
                 <p className="text-gray-500 text-sm">No tools matching "{searchQuery}".</p>
@@ -1170,14 +1150,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                   const needsGemini = tool.path === '/document-ai' || tool.path === '/image-generation';
 
                   return (
-                    <SlideReveal
+                    <ScrollMoveCard
                       key={tool.path}
-                      direction="up"
-                      delay={(idx % 6) * 60}
-                      duration={600}
+                      index={idx}
+                      from="bottom"
+                      distance={45}
                     >
                       <article
-                        className="group relative flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/5 h-full"
+                        className="group relative flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/5 h-full"
                       >
                         <div>
                           <div className="flex items-center justify-between gap-2 mb-3">
@@ -1222,7 +1202,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                           </a>
                         </div>
                       </article>
-                    </SlideReveal>
+                    </ScrollMoveCard>
                   );
                 })}
               </div>
@@ -1247,9 +1227,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
               </div>
             </SlideReveal>
 
+            {/* Step Cards moving into place with mouse scroll */}
             <ol className="grid gap-8 md:grid-cols-3 relative">
               {STEPS.map((step, index) => (
-                <SlideReveal key={step.title} direction="up" delay={index * 150} className="h-full">
+                <ScrollMoveCard key={step.title} index={index} from="bottom" distance={45} className="h-full">
                   <li
                     className="relative rounded-2xl border border-gray-200 bg-gray-50/60 p-6 sm:p-8 flex flex-col justify-between transition-all hover:bg-white hover:shadow-lg hover:border-blue-200 h-full"
                   >
@@ -1270,7 +1251,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                       {index === 2 && 'Complete session history & export'}
                     </div>
                   </li>
-                </SlideReveal>
+                </ScrollMoveCard>
               ))}
             </ol>
           </div>
@@ -1282,9 +1263,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
           
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-12 gap-12 items-start">
-              {/* Left Column: Security Philosophy & Interactive Pipeline */}
+              {/* Left Column: Big section presentation reveal */}
               <div className="lg:col-span-7 space-y-6">
-                <SlideReveal direction="left">
+                <SlideReveal direction="up">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800/80">
                     🛡️ {LANDING_SLIDES[5].badge}
                   </span>
@@ -1300,8 +1281,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                   </p>
                 </SlideReveal>
 
-                {/* 4-Step Interactive Security Architecture */}
-                <SlideReveal direction="up" delay={150}>
+                {/* 4-Step Interactive Security Pipeline: Moving to place with scroll */}
+                <ScrollMoveCard from="bottom" distance={35}>
                   <div className="mt-6 space-y-3">
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                       Interactive Encryption Pipeline (Click to inspect)
@@ -1336,7 +1317,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                       })}
                     </div>
 
-                    {/* Active Step Deep Dive Box */}
                     <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-gray-950 border border-blue-500/30 text-sm leading-relaxed text-gray-300 animate-fadeIn">
                       <div className="flex items-center gap-2 text-blue-400 font-semibold text-xs uppercase tracking-wide mb-1.5">
                         <span>Step Detail</span>
@@ -1346,12 +1326,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                       {securitySteps[selectedSecurityStep].detail}
                     </div>
                   </div>
-                </SlideReveal>
+                </ScrollMoveCard>
               </div>
 
-              {/* Right Column: Key Guide Card */}
+              {/* Right Column: Key Guide Card moving to place with scroll */}
               <div className="lg:col-span-5">
-                <SlideReveal direction="right" delay={200}>
+                <ScrollMoveCard from="right" distance={40}>
                   <div className="rounded-2xl border border-gray-800 bg-gray-800/60 backdrop-blur-xl p-6 sm:p-8 space-y-6">
                     <div>
                       <h3 className="text-xl font-bold text-white">Which key do I need?</h3>
@@ -1389,7 +1369,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                       </code>
                     </div>
                   </div>
-                </SlideReveal>
+                </ScrollMoveCard>
               </div>
             </div>
           </div>
@@ -1421,11 +1401,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
               </div>
             </SlideReveal>
 
+            {/* Course Cards moving into place with mouse scroll */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {COURSES.slice(0, 3).map((course, idx) => (
-                <SlideReveal key={course.slug} direction="up" delay={idx * 150} className="h-full">
+                <ScrollMoveCard key={course.slug} index={idx} from="bottom" distance={45} className="h-full">
                   <CourseCard course={course} />
-                </SlideReveal>
+                </ScrollMoveCard>
               ))}
             </div>
           </div>
@@ -1448,12 +1429,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
               </div>
             </SlideReveal>
 
-            <div className="divide-y divide-gray-200 border-y border-gray-200">
-              {FAQS.map((faq, index) => {
-                const isOpen = openFaqIndex === index;
-                return (
-                  <SlideReveal key={faq.question} direction="up" delay={index * 40}>
+            {/* FAQ Accordion moving into place with mouse scroll */}
+            <ScrollMoveCard from="bottom" distance={35}>
+              <div className="divide-y divide-gray-200 border-y border-gray-200">
+                {FAQS.map((faq, index) => {
+                  const isOpen = openFaqIndex === index;
+                  return (
                     <details
+                      key={faq.question}
                       className="group py-5 transition-all"
                       open={isOpen}
                       onClick={(e) => {
@@ -1476,10 +1459,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                         {faq.answer}
                       </p>
                     </details>
-                  </SlideReveal>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </ScrollMoveCard>
           </div>
         </section>
 
@@ -1488,7 +1471,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
           <div className="pointer-events-none absolute -bottom-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-500/20 blur-[100px] rounded-full" aria-hidden="true" />
           
           <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
-            <SlideReveal direction="scale">
+            <ScrollMoveCard from="bottom" distance={40}>
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-blue-900/60 text-blue-200 border border-blue-700/50">
                 ✨ {LANDING_SLIDES[8].badge}
               </span>
@@ -1520,7 +1503,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
                   <span>Star on GitHub</span>
                 </a>
               </div>
-            </SlideReveal>
+            </ScrollMoveCard>
           </div>
         </section>
       </main>
