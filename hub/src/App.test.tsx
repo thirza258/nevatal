@@ -36,6 +36,7 @@ describe('app shell', () => {
   it('offers a live preview control for public projects', () => {
     const html = renderAt('/projects')
     expect(html).toContain('aria-label="Preview Webisaurus"')
-    expect(html).toContain('Internal')
+    expect(html).toContain('aria-label="Preview Literal Storyboard"')
+    expect(html).toContain('aria-label="Preview VideoTex"')
   })
 })

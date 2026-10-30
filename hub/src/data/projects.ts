@@ -234,6 +234,7 @@ export const PROJECTS: Project[] = [
       'Pick a city, get a fresh story beat, choices and painted scenery — every model call routed through OpenRouter so the storyteller can be swapped.',
     category: 'Creative',
     tags: ['OpenRouter', 'Games'],
+    url: 'https://story.nevatal.id',
   },
   {
     name: 'VideoTex',
@@ -243,6 +244,7 @@ export const PROJECTS: Project[] = [
       'Self-hosted video upload with FFmpeg transcoding, HTTP-206 streaming, comments and a durable leased work queue that survives restarts.',
     category: 'Creative',
     tags: ['Django', 'FFmpeg', 'Queue'],
+    url: 'https://video.nevatal.id',
   },
 ]
 

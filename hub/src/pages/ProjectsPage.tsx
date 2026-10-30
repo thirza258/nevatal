@@ -16,6 +16,15 @@ type Filter = 'All' | ProjectCategory
 
 const FILTERS: Filter[] = ['All', ...PROJECT_CATEGORIES]
 
+const CATEGORY_COUNTS = FILTERS.reduce<Record<Filter, number>>(
+  (acc, option) => {
+    acc[option] =
+      option === 'All' ? PROJECTS.length : PROJECTS.filter((project) => project.category === option).length
+    return acc
+  },
+  { All: PROJECTS.length } as Record<Filter, number>
+)
+
 const PROJECTS_LD = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
@@ -39,7 +48,7 @@ const ProjectsPage = () => {
   usePageMeta({
     title: 'Projects — Nevatal',
     description:
-      'The Nevatal portfolio: the AI Hub workspace, grounded RAG research tools, learning platforms, creative experiments and developer utilities.',
+      'The Nevatal portfolio: the AI Hub workspace, grounded RAG research tools, learning platforms, creative experiments and developer utilities — every project live.',
     path: '/projects',
     jsonLd: PROJECTS_LD,
   })
@@ -78,28 +87,28 @@ const ProjectsPage = () => {
           animate={{ y: [0, -22, 0], scale: [1, 1.08, 1] }}
           transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
         />
-        <div className="container-x relative py-16 sm:py-20">
-          <motion.div initial="hidden" animate="show" variants={stagger}>
+        <div className="container-x relative py-16 sm:py-20 lg:py-24">
+          <motion.div initial="hidden" animate="show" variants={stagger} className="max-w-4xl">
             <motion.p variants={fadeUp} className="eyebrow text-brand">
               Portfolio
             </motion.p>
             <motion.h1
               variants={fadeUp}
-              className="mt-4 max-w-3xl font-display text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl"
+              className="mt-4 font-display text-[clamp(2.8rem,7vw,5.6rem)] font-semibold leading-[1.02] tracking-tight"
             >
               Work that ships.
             </motion.h1>
             <motion.p variants={fadeUp} className="mt-5 max-w-2xl text-lg leading-relaxed text-paper/65">
               {PROJECTS.length} products across AI, learning, creative work, data and operations.
-              Live where they can be, clearly marked where they are internal.
+              Every one is live — open a preview or jump straight in.
             </motion.p>
           </motion.div>
         </div>
       </section>
 
-      <section className="bg-paper py-12 sm:py-16">
-        <div className="container-x">
-          <div className="flex flex-col gap-5 border-b border-ink/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
+      <section className="bg-[#08090B] pb-16 text-paper sm:pb-24">
+        <div className="sticky top-24 z-30 border-y border-white/10 bg-[#08090B]/90 backdrop-blur">
+          <div className="container-x flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
               {FILTERS.map((option) => {
                 const active = filter === option
@@ -108,40 +117,63 @@ const ProjectsPage = () => {
                     key={option}
                     type="button"
                     onClick={() => setFilter(option)}
-                    className={`relative whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium ${
+                    className={`relative whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                       active
-                        ? 'border-ink text-paper'
-                        : 'border-ink/15 bg-white text-ink/60 hover:border-ink/35 hover:text-ink'
+                        ? 'border-brand text-ink'
+                        : 'border-white/15 text-paper/55 hover:border-white/30 hover:text-paper'
                     }`}
                   >
                     {active && (
                       <motion.span
                         layoutId="project-filter-pill"
-                        className="absolute inset-0 rounded-full bg-ink"
+                        className="absolute inset-0 rounded-full bg-brand"
                         transition={spring}
                       />
                     )}
-                    <span className="relative z-10">{option}</span>
+                    <span className="relative z-10 flex items-center gap-1.5">
+                      {option}
+                      <span
+                        className={`text-[10px] tabular-nums ${
+                          active ? 'text-ink/60' : 'text-paper/30'
+                        }`}
+                      >
+                        {CATEGORY_COUNTS[option]}
+                      </span>
+                    </span>
                   </button>
                 )
               })}
             </div>
 
-            <label className="flex w-full items-center gap-2 rounded-full border border-ink/15 bg-white px-4 py-2.5 focus-within:border-ink/40 lg:w-72">
-              <Search className="h-4 w-4 flex-none text-ink/50" />
+            <label className="flex w-full items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2.5 focus-within:border-white/40 lg:w-72">
+              <Search className="h-4 w-4 flex-none text-paper/40" />
               <span className="sr-only">Search projects</span>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search the portfolio…"
-                className="w-full bg-transparent text-sm text-ink placeholder:text-ink/35 focus:outline-none"
+                className="w-full bg-transparent text-sm text-paper placeholder:text-paper/30 focus:outline-none"
               />
             </label>
           </div>
+        </div>
 
-          <p className="mt-6 text-xs uppercase tracking-[0.16em] text-ink/55">
-            Showing {visible.length} of {PROJECTS.length} projects
-          </p>
+        <div className="container-x">
+          <div className="mt-6 flex items-center justify-between gap-4 text-xs uppercase tracking-[0.16em] text-paper/45">
+            <p className="flex items-baseline gap-1.5">
+              Showing
+              <motion.span
+                key={visible.length}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="font-semibold tabular-nums text-paper"
+              >
+                {visible.length}
+              </motion.span>
+              of {PROJECTS.length} projects
+            </p>
+            <p className="hidden sm:block">{filter === 'All' ? 'All categories' : filter}</p>
+          </div>
 
           <motion.div
             layout
@@ -151,7 +183,7 @@ const ProjectsPage = () => {
           >
             <AnimatePresence initial={false}>
               {visible.map((project) => (
-                <ProjectCard key={project.slug} project={project} />
+                <ProjectCard key={project.slug} project={project} tone="dark" />
               ))}
             </AnimatePresence>
           </motion.div>
@@ -164,10 +196,12 @@ const ProjectsPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.25 }}
-                className="mt-10 rounded-2xl border border-ink/10 bg-white p-10 text-center"
+                className="mt-10 rounded-2xl border border-white/10 bg-[#101216] p-10 text-center"
               >
-                <p className="font-display text-xl font-semibold">Nothing matches that search.</p>
-                <p className="mt-2 text-sm text-ink/55">
+                <p className="font-display text-xl font-semibold text-paper">
+                  Nothing matches that search.
+                </p>
+                <p className="mt-2 text-sm text-paper/50">
                   Try a broader term, or clear the filters to see the whole portfolio.
                 </p>
                 <button
@@ -176,7 +210,7 @@ const ProjectsPage = () => {
                     setFilter('All')
                     setQuery('')
                   }}
-                  className="btn btn-dark mt-5"
+                  className="btn btn-primary mt-5"
                 >
                   Clear filters
                 </button>
@@ -191,7 +225,7 @@ const ProjectsPage = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.6, ease: easeOut }}
-        className="bg-ink py-16 text-paper"
+        className="border-t border-white/10 bg-[#0B0D10] py-16 text-paper"
       >
         <div className="container-x flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <div>
@@ -214,10 +248,13 @@ const ProjectsPage = () => {
         </div>
       </motion.section>
 
-      <div className="bg-paper">
-        <div className="container-x py-8 text-center text-xs text-ink/50">
+      <div className="border-t border-white/10 bg-[#08090B]">
+        <div className="container-x py-8 text-center text-xs text-paper/45">
           Looking for the writing instead?{' '}
-          <Link to="/blog" className="font-semibold text-ink/60 underline underline-offset-4 hover:text-ink">
+          <Link
+            to="/blog"
+            className="font-semibold text-paper underline underline-offset-4 hover:text-brand"
+          >
             Visit the blog
           </Link>
           .
