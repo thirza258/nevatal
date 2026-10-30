@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { ArrowUpRight } from '../components/icons'
 
@@ -47,8 +48,10 @@ const AICapabilities = () => {
   const active = STAGES.find((stage) => stage.id === activeId) ?? STAGES[0]
 
   return (
-    <section className="bg-paper py-20 sm:py-28">
-      <div className="container-x">
+    <section className="relative overflow-hidden bg-paper py-20 sm:py-28">
+      <AbstractShape shape="triangle-outline" tone="dark" className="-right-10 top-10 h-56 w-56" />
+      <AbstractShape shape="arc" tone="brand" className="bottom-8 left-6 hidden h-32 w-32 lg:block" />
+      <div className="container-x relative">
         <Reveal>
           <p className="eyebrow text-blue">Applied AI</p>
           <h2 className="mt-4 max-w-3xl font-display text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { Stagger, StaggerItem } from '../components/motion/Stagger'
 import { ArrowUpRight, Check } from '../components/icons'
@@ -89,8 +90,10 @@ const AIHubSection = () => {
   const active = DEMO_TOOLS.find((tool) => tool.id === activeId) ?? DEMO_TOOLS[0]
 
   return (
-    <section className="border-t border-white/5 bg-ink py-24 text-paper sm:py-32">
-      <div className="container-x grid items-center gap-14 lg:grid-cols-[0.95fr_1.05fr]">
+    <section className="relative overflow-hidden border-t border-white/5 bg-ink py-24 text-paper sm:py-32">
+      <AbstractShape shape="ring" tone="brand" className="-right-24 bottom-10 h-56 w-56" />
+      <AbstractShape shape="triangle-outline" tone="light" className="-left-20 top-14 h-52 w-52" />
+      <div className="container-x relative grid items-center gap-14 lg:grid-cols-[0.95fr_1.05fr]">
         <div>
           <Reveal>
             <p className="eyebrow text-brand">The flagship</p>

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import PostCard from '../components/PostCard'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { Stagger, StaggerItem } from '../components/motion/Stagger'
 import { ArrowRight } from '../components/icons'
@@ -12,8 +13,10 @@ interface LatestWritingProps {
 }
 
 const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
-  <section className="bg-paper-2/50 py-20 sm:py-28">
-    <div className="container-x">
+  <section className="relative overflow-hidden bg-paper-2/50 py-20 sm:py-28">
+    <AbstractShape shape="triangle-outline" tone="dark" className="-right-16 top-20 h-48 w-48" />
+    <AbstractShape shape="ring" tone="brand" className="-left-20 bottom-10 h-44 w-44" />
+    <div className="container-x relative">
       <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div>
           <p className="eyebrow text-blue">Writing</p>

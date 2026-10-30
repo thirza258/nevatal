@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { ArrowUpRight } from '../components/icons'
 import { spring } from '../lib/motion'
@@ -60,8 +61,10 @@ const InfrastructureSection = () => {
   const active = COMPONENTS.find((component) => component.id === activeId) ?? COMPONENTS[0]
 
   return (
-    <section className="border-t border-white/5 bg-ink py-20 text-paper sm:py-28">
-      <div className="container-x">
+    <section className="relative overflow-hidden border-t border-white/5 bg-ink py-20 text-paper sm:py-28">
+      <AbstractShape shape="triangle-outline" tone="light" className="right-0 top-10 h-48 w-48" />
+      <AbstractShape shape="ring" tone="brand" className="-left-16 bottom-8 h-48 w-48" />
+      <div className="container-x relative">
         <Reveal>
           <p className="eyebrow text-brand">Infrastructure</p>
           <h2 className="mt-4 max-w-2xl font-display text-3xl font-semibold tracking-tight sm:text-4xl">

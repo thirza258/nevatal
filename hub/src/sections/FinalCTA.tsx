@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { ArrowUpRight } from '../components/icons'
 import { AI_HUB_URL } from '../lib/constants'
@@ -12,6 +13,13 @@ const FinalCTA = () => (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_120%_at_0%_100%,rgba(10,13,18,0.12),transparent_60%)]"
+    />
+    <AbstractShape shape="triangle-outline" tone="dark" className="right-6 top-6 h-64 w-64" />
+    <AbstractShape
+      shape="square"
+      tone="dark"
+      rotate={false}
+      className="bottom-6 left-10 hidden h-20 w-20 sm:block"
     />
     <Reveal className="container-x relative flex flex-col items-start justify-between gap-8 py-16 sm:flex-row sm:items-center sm:py-20">
       <div>

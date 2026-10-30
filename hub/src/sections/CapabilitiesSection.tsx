@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { ArrowRight, ArrowUpRight } from '../components/icons'
 import { spring } from '../lib/motion'
@@ -64,8 +65,10 @@ const CapabilitiesSection = () => {
   const active = CAPABILITIES.find((capability) => capability.id === activeId) ?? CAPABILITIES[0]
 
   return (
-    <section className="bg-paper-2/40 py-20 sm:py-28">
-      <div className="container-x grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+    <section className="relative overflow-hidden bg-paper-2/40 py-20 sm:py-28">
+      <AbstractShape shape="ring" tone="dark" className="-right-20 top-10 h-52 w-52" />
+      <AbstractShape shape="triangle-outline" tone="dark" className="-left-16 bottom-6 h-48 w-48" />
+      <div className="container-x relative grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
         <Reveal>
           <p className="eyebrow text-blue">How we work</p>
           <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">

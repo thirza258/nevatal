@@ -1,5 +1,6 @@
 import { motion, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import AbstractShape from '../components/decor/AbstractShape'
 import AnimatedCounter from '../components/motion/AnimatedCounter'
 import { ArrowRight, ArrowUpRight, Spark } from '../components/icons'
 import { PROJECTS } from '../data/projects'
@@ -24,6 +25,14 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
 
   return (
     <section className="hero-surface relative overflow-hidden text-paper">
+      <AbstractShape shape="triangle-outline" tone="light" className="-right-24 top-4 h-72 w-72" />
+      <AbstractShape shape="ring" tone="brand" className="-left-20 bottom-28 hidden h-48 w-48 sm:block" />
+      <AbstractShape
+        shape="square"
+        tone="light"
+        rotate={false}
+        className="left-[46%] top-24 hidden h-16 w-16 lg:block"
+      />
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute -left-24 top-24 h-80 w-80 rounded-full bg-blue/20 blur-3xl"

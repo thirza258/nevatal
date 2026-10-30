@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { ArrowUpRight } from '../components/icons'
 import { PROJECTS, type Project } from '../data/projects'
@@ -16,8 +17,15 @@ const ProductEcosystem = () => {
   const active = ECOSYSTEM.find((project) => project.slug === activeSlug) ?? ECOSYSTEM[0]
 
   return (
-    <section className="border-t border-white/5 bg-[#0B0D10] py-24 text-paper sm:py-32">
-      <div className="container-x grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+    <section className="relative overflow-hidden border-t border-white/5 bg-[#0B0D10] py-24 text-paper sm:py-32">
+      <AbstractShape shape="triangle-outline" tone="brand" className="-right-16 top-8 h-56 w-56" />
+      <AbstractShape
+        shape="square"
+        tone="light"
+        rotate={false}
+        className="-left-10 bottom-12 hidden h-24 w-24 md:block"
+      />
+      <div className="container-x relative grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <div>
           <Reveal>
             <p className="eyebrow text-brand">The ecosystem</p>

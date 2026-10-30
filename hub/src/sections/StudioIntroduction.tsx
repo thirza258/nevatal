@@ -1,4 +1,5 @@
 import { motion, type Variants } from 'framer-motion'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { easeOut, stagger } from '../lib/motion'
 
@@ -16,8 +17,10 @@ const DISCIPLINES = [
 ]
 
 const StudioIntroduction = () => (
-  <section className="bg-paper py-24 sm:py-32">
-    <div className="container-x">
+  <section className="relative overflow-hidden bg-paper py-24 sm:py-32">
+    <AbstractShape shape="triangle-outline" tone="dark" className="-right-20 top-10 h-64 w-64" />
+    <AbstractShape shape="ring" tone="dark" className="-left-16 bottom-0 hidden h-44 w-44 sm:block" />
+    <div className="container-x relative">
       <Reveal>
         <p className="eyebrow text-maroon">A small studio. A wide technical scope.</p>
       </Reveal>

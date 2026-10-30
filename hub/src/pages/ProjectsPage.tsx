@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import ProjectCard from '../components/ProjectCard'
+import AbstractShape from '../components/decor/AbstractShape'
 import AnimatedCounter from '../components/motion/AnimatedCounter'
 import { Search } from '../components/icons'
 import {
@@ -99,6 +100,13 @@ const ProjectsPage = () => {
           animate={{ y: [0, -22, 0], scale: [1, 1.08, 1] }}
           transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
         />
+        <AbstractShape shape="triangle-outline" tone="light" className="-left-16 bottom-10 h-48 w-48" />
+        <AbstractShape
+          shape="square"
+          tone="light"
+          rotate={false}
+          className="right-10 top-14 hidden h-20 w-20 lg:block"
+        />
         <div className="container-x relative py-16 sm:py-20 lg:py-24">
           <motion.div initial="hidden" animate="show" variants={stagger} className="max-w-4xl">
             <motion.p variants={fadeUp} className="eyebrow text-brand">
@@ -132,7 +140,9 @@ const ProjectsPage = () => {
         </div>
       </section>
 
-      <section className="bg-[#08090B] pb-16 text-paper sm:pb-24">
+      <section className="relative overflow-hidden bg-[#08090B] pb-16 text-paper sm:pb-24">
+        <AbstractShape shape="ring" tone="brand" className="-right-24 top-16 h-64 w-64" />
+        <AbstractShape shape="triangle-outline" tone="light" className="-left-20 bottom-16 h-48 w-48" />
         <div className="sticky top-24 z-30 border-y border-white/10 bg-[#08090B]/90 backdrop-blur">
           <div className="container-x flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
@@ -184,7 +194,7 @@ const ProjectsPage = () => {
           </div>
         </div>
 
-        <div className="container-x">
+        <div className="container-x relative">
           <div className="mt-6 flex items-center justify-between gap-4 text-xs uppercase tracking-[0.16em] text-paper/45">
             <p className="flex items-baseline gap-1.5">
               Showing
@@ -245,7 +255,7 @@ const ProjectsPage = () => {
           </AnimatePresence>
         </div>
 
-        <div className="container-x mt-16">
+        <div className="container-x relative mt-16">
           <p className="eyebrow text-brand">Stack across the portfolio</p>
           <div className="marquee-mask mt-4 border-y border-white/10 bg-white/[0.02] py-3">
             <div className="marquee-track flex w-max items-center gap-4 pr-4">

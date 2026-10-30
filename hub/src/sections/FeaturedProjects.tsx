@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import ProjectCard from '../components/ProjectCard'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { ArrowRight } from '../components/icons'
 import { PROJECT_CATEGORIES, PROJECTS, type ProjectCategory } from '../data/projects'
@@ -20,8 +21,10 @@ const FeaturedProjects = () => {
   )
 
   return (
-    <section className="bg-paper py-20 sm:py-28">
-      <div className="container-x">
+    <section className="relative overflow-hidden bg-paper py-20 sm:py-28">
+      <AbstractShape shape="ring" tone="dark" className="-right-16 top-16 h-52 w-52" />
+      <AbstractShape shape="triangle-outline" tone="dark" className="-left-16 bottom-10 h-48 w-48" />
+      <div className="container-x relative">
         <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>
             <p className="eyebrow text-maroon">Selected projects</p>

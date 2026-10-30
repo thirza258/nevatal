@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { ArrowUpRight } from '../components/icons'
 import { spring } from '../lib/motion'
@@ -50,8 +51,15 @@ const LearningSection = () => {
   const active = TOPICS.find((topic) => topic.id === activeId) ?? TOPICS[0]
 
   return (
-    <section className="bg-paper py-20 sm:py-28">
-      <div className="container-x grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+    <section className="relative overflow-hidden bg-paper py-20 sm:py-28">
+      <AbstractShape shape="arc" tone="dark" className="-right-10 bottom-0 h-44 w-44" />
+      <AbstractShape
+        shape="square"
+        tone="brand"
+        rotate={false}
+        className="left-8 top-10 hidden h-20 w-20 sm:block"
+      />
+      <div className="container-x relative grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <Reveal>
           <p className="eyebrow text-maroon">Learning</p>
           <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">

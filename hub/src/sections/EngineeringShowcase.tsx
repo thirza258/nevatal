@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import AbstractShape from '../components/decor/AbstractShape'
 import Reveal from '../components/motion/Reveal'
 import { spring } from '../lib/motion'
 
@@ -74,8 +75,15 @@ const EngineeringShowcase = () => {
   const active = LAYERS.find((layer) => layer.id === activeId) ?? LAYERS[0]
 
   return (
-    <section className="border-t border-white/5 bg-ink py-20 text-paper sm:py-28">
-      <div className="container-x">
+    <section className="relative overflow-hidden border-t border-white/5 bg-ink py-20 text-paper sm:py-28">
+      <AbstractShape
+        shape="square"
+        tone="brand"
+        rotate={false}
+        className="right-8 top-10 hidden h-28 w-28 lg:block"
+      />
+      <AbstractShape shape="triangle-outline" tone="light" className="-left-20 bottom-10 h-52 w-52" />
+      <div className="container-x relative">
         <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>
             <p className="eyebrow text-brand">Product engineering</p>
