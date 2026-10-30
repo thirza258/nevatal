@@ -18,12 +18,16 @@ const ProductEcosystem = () => {
 
   return (
     <section className="relative overflow-hidden border-t border-white/5 bg-[#0B0D10] py-24 text-paper sm:py-32">
-      <AbstractShape shape="triangle-outline" tone="brand" className="-right-16 top-8 h-56 w-56" />
       <AbstractShape
-        shape="square"
+        shape="triangle-outline"
+        tone="brand"
+        className="-right-6 top-8 h-40 w-40 sm:-right-10 sm:h-56 sm:w-56"
+      />
+      <AbstractShape
+        shape="trapezoid"
         tone="light"
         rotate={false}
-        className="-left-10 bottom-12 hidden h-24 w-24 md:block"
+        className="-left-6 bottom-10 h-16 w-16 sm:-left-8 sm:h-24 sm:w-24"
       />
       <div className="container-x relative grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <div>

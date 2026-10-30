@@ -49,8 +49,16 @@ const AICapabilities = () => {
 
   return (
     <section className="relative overflow-hidden bg-paper py-20 sm:py-28">
-      <AbstractShape shape="triangle-outline" tone="dark" className="-right-10 top-10 h-56 w-56" />
-      <AbstractShape shape="arc" tone="brand" className="bottom-8 left-6 hidden h-32 w-32 lg:block" />
+      <AbstractShape
+        shape="triangle-outline"
+        tone="blue"
+        className="-right-6 top-8 h-40 w-40 sm:-right-8 sm:h-56 sm:w-56"
+      />
+      <AbstractShape
+        shape="trapezoid-outline"
+        tone="maroon"
+        className="bottom-6 left-3 h-24 w-24 sm:left-6 sm:h-32 sm:w-32"
+      />
       <div className="container-x relative">
         <Reveal>
           <p className="eyebrow text-blue">Applied AI</p>

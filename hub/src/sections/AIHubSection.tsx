@@ -91,8 +91,16 @@ const AIHubSection = () => {
 
   return (
     <section className="relative overflow-hidden border-t border-white/5 bg-ink py-24 text-paper sm:py-32">
-      <AbstractShape shape="ring" tone="brand" className="-right-24 bottom-10 h-56 w-56" />
-      <AbstractShape shape="triangle-outline" tone="light" className="-left-20 top-14 h-52 w-52" />
+      <AbstractShape
+        shape="ring"
+        tone="brand"
+        className="-right-8 bottom-8 h-36 w-36 sm:-right-14 sm:h-56 sm:w-56"
+      />
+      <AbstractShape
+        shape="trapezoid-outline"
+        tone="light"
+        className="-left-8 top-12 h-32 w-32 sm:-left-12 sm:h-52 sm:w-52"
+      />
       <div className="container-x relative grid items-center gap-14 lg:grid-cols-[0.95fr_1.05fr]">
         <div>
           <Reveal>

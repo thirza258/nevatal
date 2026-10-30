@@ -25,10 +25,18 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
 
   return (
     <section className="hero-surface relative overflow-hidden text-paper">
-      <AbstractShape shape="triangle-outline" tone="light" className="-right-24 top-4 h-72 w-72" />
-      <AbstractShape shape="ring" tone="brand" className="-left-20 bottom-28 hidden h-48 w-48 sm:block" />
       <AbstractShape
-        shape="square"
+        shape="triangle-outline"
+        tone="light"
+        className="-right-8 top-6 h-40 w-40 sm:-right-14 sm:h-72 sm:w-72"
+      />
+      <AbstractShape
+        shape="ring"
+        tone="brand"
+        className="-left-8 bottom-24 h-32 w-32 sm:-left-14 sm:h-48 sm:w-48"
+      />
+      <AbstractShape
+        shape="trapezoid"
         tone="light"
         rotate={false}
         className="left-[46%] top-24 hidden h-16 w-16 lg:block"

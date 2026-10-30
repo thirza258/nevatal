@@ -18,8 +18,16 @@ const DISCIPLINES = [
 
 const StudioIntroduction = () => (
   <section className="relative overflow-hidden bg-paper py-24 sm:py-32">
-    <AbstractShape shape="triangle-outline" tone="dark" className="-right-20 top-10 h-64 w-64" />
-    <AbstractShape shape="ring" tone="dark" className="-left-16 bottom-0 hidden h-44 w-44 sm:block" />
+    <AbstractShape
+      shape="triangle"
+      tone="maroon"
+      className="-right-6 top-8 h-40 w-40 sm:-right-10 sm:h-64 sm:w-64"
+    />
+    <AbstractShape
+      shape="trapezoid-outline"
+      tone="blue"
+      className="-left-8 bottom-2 h-32 w-32 sm:-left-12 sm:h-44 sm:w-44"
+    />
     <div className="container-x relative">
       <Reveal>
         <p className="eyebrow text-maroon">A small studio. A wide technical scope.</p>

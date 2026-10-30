@@ -62,8 +62,17 @@ const InfrastructureSection = () => {
 
   return (
     <section className="relative overflow-hidden border-t border-white/5 bg-ink py-20 text-paper sm:py-28">
-      <AbstractShape shape="triangle-outline" tone="light" className="right-0 top-10 h-48 w-48" />
-      <AbstractShape shape="ring" tone="brand" className="-left-16 bottom-8 h-48 w-48" />
+      <AbstractShape
+        shape="triangle-outline"
+        tone="light"
+        className="-right-6 top-8 h-36 w-36 sm:right-2 sm:h-52 sm:w-52"
+      />
+      <AbstractShape
+        shape="trapezoid"
+        tone="brand"
+        rotate={false}
+        className="-left-8 bottom-8 h-32 w-32 sm:-left-12 sm:h-44 sm:w-44"
+      />
       <div className="container-x relative">
         <Reveal>
           <p className="eyebrow text-brand">Infrastructure</p>

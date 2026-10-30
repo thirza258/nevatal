@@ -22,8 +22,16 @@ const FeaturedProjects = () => {
 
   return (
     <section className="relative overflow-hidden bg-paper py-20 sm:py-28">
-      <AbstractShape shape="ring" tone="dark" className="-right-16 top-16 h-52 w-52" />
-      <AbstractShape shape="triangle-outline" tone="dark" className="-left-16 bottom-10 h-48 w-48" />
+      <AbstractShape
+        shape="trapezoid-outline"
+        tone="blue"
+        className="-right-8 top-10 h-36 w-36 sm:-right-12 sm:h-52 sm:w-52"
+      />
+      <AbstractShape
+        shape="triangle"
+        tone="maroon"
+        className="-left-8 bottom-8 h-32 w-32 sm:-left-12 sm:h-48 sm:w-48"
+      />
       <div className="container-x relative">
         <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>

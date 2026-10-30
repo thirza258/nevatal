@@ -77,12 +77,16 @@ const EngineeringShowcase = () => {
   return (
     <section className="relative overflow-hidden border-t border-white/5 bg-ink py-20 text-paper sm:py-28">
       <AbstractShape
-        shape="square"
+        shape="trapezoid"
         tone="brand"
         rotate={false}
-        className="right-8 top-10 hidden h-28 w-28 lg:block"
+        className="right-4 top-8 h-24 w-24 sm:right-8 sm:top-10 sm:h-28 sm:w-28"
       />
-      <AbstractShape shape="triangle-outline" tone="light" className="-left-20 bottom-10 h-52 w-52" />
+      <AbstractShape
+        shape="triangle-outline"
+        tone="light"
+        className="-left-8 bottom-8 h-36 w-36 sm:-left-12 sm:h-52 sm:w-52"
+      />
       <div className="container-x relative">
         <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>

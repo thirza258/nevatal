@@ -14,12 +14,16 @@ const FinalCTA = () => (
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_120%_at_0%_100%,rgba(10,13,18,0.12),transparent_60%)]"
     />
-    <AbstractShape shape="triangle-outline" tone="dark" className="right-6 top-6 h-64 w-64" />
     <AbstractShape
-      shape="square"
+      shape="triangle-outline"
+      tone="dark"
+      className="right-4 top-4 h-44 w-44 sm:right-10 sm:top-8 sm:h-64 sm:w-64"
+    />
+    <AbstractShape
+      shape="trapezoid-outline"
       tone="dark"
       rotate={false}
-      className="bottom-6 left-10 hidden h-20 w-20 sm:block"
+      className="bottom-4 left-6 h-16 w-16 sm:bottom-6 sm:left-10 sm:h-24 sm:w-24"
     />
     <Reveal className="container-x relative flex flex-col items-start justify-between gap-8 py-16 sm:flex-row sm:items-center sm:py-20">
       <div>

@@ -52,12 +52,16 @@ const LearningSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-paper py-20 sm:py-28">
-      <AbstractShape shape="arc" tone="dark" className="-right-10 bottom-0 h-44 w-44" />
       <AbstractShape
-        shape="square"
+        shape="trapezoid"
+        tone="maroon"
+        className="-right-6 bottom-0 h-32 w-32 sm:-right-10 sm:h-44 sm:w-44"
+      />
+      <AbstractShape
+        shape="triangle"
         tone="brand"
         rotate={false}
-        className="left-8 top-10 hidden h-20 w-20 sm:block"
+        className="left-4 top-6 h-14 w-14 sm:left-8 sm:top-10 sm:h-20 sm:w-20"
       />
       <div className="container-x relative grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <Reveal>

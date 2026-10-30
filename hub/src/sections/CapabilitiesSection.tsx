@@ -66,8 +66,16 @@ const CapabilitiesSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-paper-2/40 py-20 sm:py-28">
-      <AbstractShape shape="ring" tone="dark" className="-right-20 top-10 h-52 w-52" />
-      <AbstractShape shape="triangle-outline" tone="dark" className="-left-16 bottom-6 h-48 w-48" />
+      <AbstractShape
+        shape="trapezoid-outline"
+        tone="blue"
+        className="-right-8 top-10 h-36 w-36 sm:-right-12 sm:h-52 sm:w-52"
+      />
+      <AbstractShape
+        shape="triangle-outline"
+        tone="maroon"
+        className="-left-8 bottom-6 h-32 w-32 sm:-left-12 sm:h-44 sm:w-44"
+      />
       <div className="container-x relative grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
         <Reveal>
           <p className="eyebrow text-blue">How we work</p>

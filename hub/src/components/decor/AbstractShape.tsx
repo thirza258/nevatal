@@ -1,13 +1,23 @@
 import type { ReactNode } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 
-type Shape = 'triangle' | 'triangle-outline' | 'ring' | 'square' | 'cross' | 'arc'
-type Tone = 'light' | 'dark' | 'brand'
+type Shape =
+  | 'triangle'
+  | 'triangle-outline'
+  | 'trapezoid'
+  | 'trapezoid-outline'
+  | 'ring'
+  | 'square'
+  | 'cross'
+  | 'arc'
+type Tone = 'light' | 'dark' | 'brand' | 'blue' | 'maroon'
 
 const TONES: Record<Tone, { stroke: string; fill: string }> = {
-  light: { stroke: 'rgba(255,255,255,0.12)', fill: 'rgba(255,255,255,0.02)' },
-  dark: { stroke: 'rgba(10,13,18,0.12)', fill: 'rgba(10,13,18,0.02)' },
-  brand: { stroke: 'rgba(255,197,61,0.4)', fill: 'rgba(255,197,61,0.05)' },
+  light: { stroke: 'rgba(255,255,255,0.24)', fill: 'rgba(255,255,255,0.04)' },
+  dark: { stroke: 'rgba(10,13,18,0.2)', fill: 'rgba(10,13,18,0.035)' },
+  brand: { stroke: 'rgba(255,197,61,0.65)', fill: 'rgba(255,197,61,0.08)' },
+  blue: { stroke: 'rgba(47,107,255,0.35)', fill: 'rgba(47,107,255,0.05)' },
+  maroon: { stroke: 'rgba(159,18,57,0.3)', fill: 'rgba(159,18,57,0.05)' },
 }
 
 const AbstractShape = ({
@@ -27,6 +37,10 @@ const AbstractShape = ({
   const shapes: Record<Shape, ReactNode> = {
     triangle: <path d="M100 16 184 176H16Z" fill={colors.fill} stroke={colors.stroke} />,
     'triangle-outline': <path d="M100 16 184 176H16Z" fill="none" stroke={colors.stroke} />,
+    trapezoid: <path d="M42 166 70 34h60l28 132Z" fill={colors.fill} stroke={colors.stroke} />,
+    'trapezoid-outline': (
+      <path d="M42 166 70 34h60l28 132Z" fill="none" stroke={colors.stroke} />
+    ),
     ring: (
       <circle
         cx="100"
@@ -62,7 +76,7 @@ const AbstractShape = ({
     <motion.svg
       aria-hidden="true"
       viewBox="0 0 200 200"
-      strokeWidth="1"
+      strokeWidth="1.4"
       className={`pointer-events-none absolute select-none ${className ?? ''}`}
       animate={reduceMotion || !rotate ? undefined : { rotate: [0, 5, 0], y: [0, -8, 0] }}
       transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}

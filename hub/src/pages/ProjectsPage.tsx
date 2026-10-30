@@ -100,12 +100,16 @@ const ProjectsPage = () => {
           animate={{ y: [0, -22, 0], scale: [1, 1.08, 1] }}
           transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
         />
-        <AbstractShape shape="triangle-outline" tone="light" className="-left-16 bottom-10 h-48 w-48" />
         <AbstractShape
-          shape="square"
+          shape="trapezoid-outline"
           tone="light"
+          className="-left-8 bottom-8 h-36 w-36 sm:-left-12 sm:h-48 sm:w-48"
+        />
+        <AbstractShape
+          shape="triangle-outline"
+          tone="brand"
           rotate={false}
-          className="right-10 top-14 hidden h-20 w-20 lg:block"
+          className="right-4 top-10 h-20 w-20 sm:right-10 sm:top-14 sm:h-28 sm:w-28"
         />
         <div className="container-x relative py-16 sm:py-20 lg:py-24">
           <motion.div initial="hidden" animate="show" variants={stagger} className="max-w-4xl">
@@ -141,8 +145,16 @@ const ProjectsPage = () => {
       </section>
 
       <section className="relative overflow-hidden bg-[#08090B] pb-16 text-paper sm:pb-24">
-        <AbstractShape shape="ring" tone="brand" className="-right-24 top-16 h-64 w-64" />
-        <AbstractShape shape="triangle-outline" tone="light" className="-left-20 bottom-16 h-48 w-48" />
+        <AbstractShape
+          shape="triangle-outline"
+          tone="light"
+          className="-right-8 top-8 h-36 w-36 sm:-right-14 sm:top-16 sm:h-56 sm:w-56"
+        />
+        <AbstractShape
+          shape="trapezoid-outline"
+          tone="brand"
+          className="-left-8 bottom-8 h-36 w-36 sm:-left-12 sm:bottom-16 sm:h-48 sm:w-48"
+        />
         <div className="sticky top-24 z-30 border-y border-white/10 bg-[#08090B]/90 backdrop-blur">
           <div className="container-x flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">

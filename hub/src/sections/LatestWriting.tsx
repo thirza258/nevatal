@@ -14,8 +14,17 @@ interface LatestWritingProps {
 
 const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
   <section className="relative overflow-hidden bg-paper-2/50 py-20 sm:py-28">
-    <AbstractShape shape="triangle-outline" tone="dark" className="-right-16 top-20 h-48 w-48" />
-    <AbstractShape shape="ring" tone="brand" className="-left-20 bottom-10 h-44 w-44" />
+    <AbstractShape
+      shape="trapezoid"
+      tone="brand"
+      rotate={false}
+      className="-right-8 top-12 h-28 w-28 sm:-right-12 sm:h-40 sm:w-40"
+    />
+    <AbstractShape
+      shape="triangle-outline"
+      tone="blue"
+      className="-left-8 bottom-6 h-32 w-32 sm:-left-12 sm:h-44 sm:w-44"
+    />
     <div className="container-x relative">
       <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div>
