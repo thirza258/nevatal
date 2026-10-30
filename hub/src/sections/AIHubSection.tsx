@@ -95,7 +95,7 @@ const AIHubSection = () => {
           <Reveal>
             <p className="eyebrow text-brand">The flagship</p>
             <h2 className="mt-4 font-display text-[clamp(2.2rem,4.5vw,3.5rem)] font-semibold leading-[1.05] tracking-tight">
-              One hub. Seventeen ways to think.
+              One hub. More ways to work with AI.
             </h2>
             <p className="mt-5 max-w-lg leading-relaxed text-paper/60">
               A single workspace for prompting, writing, translation, documents and data — each

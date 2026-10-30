@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
+import AICapabilities from '../sections/AICapabilities'
 import AIHubSection from '../sections/AIHubSection'
 import CapabilitiesSection from '../sections/CapabilitiesSection'
+import EngineeringShowcase from '../sections/EngineeringShowcase'
 import FeaturedProjects from '../sections/FeaturedProjects'
 import FinalCTA from '../sections/FinalCTA'
 import HomeHero from '../sections/HomeHero'
+import InfrastructureSection from '../sections/InfrastructureSection'
 import LatestWriting from '../sections/LatestWriting'
+import LearningSection from '../sections/LearningSection'
+import ProductEcosystem from '../sections/ProductEcosystem'
+import StudioIntroduction from '../sections/StudioIntroduction'
 import { GITHUB_PROFILE_URL, SITE_URL } from '../lib/constants'
 import { usePageMeta } from '../lib/seo'
 import { getCategories, getPosts, type WPPost } from '../lib/wp'
@@ -61,8 +67,14 @@ const HomePage = () => {
   return (
     <>
       <HomeHero postTotal={postTotal} />
+      <StudioIntroduction />
+      <ProductEcosystem />
       <AIHubSection />
+      <AICapabilities />
+      <EngineeringShowcase />
       <FeaturedProjects />
+      <LearningSection />
+      <InfrastructureSection />
       <CapabilitiesSection />
       <LatestWriting posts={posts} categories={categoryNames} state={postsState} />
       <FinalCTA />

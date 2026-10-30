@@ -37,9 +37,11 @@ const ProjectPreview = ({
   url: string
   onClose: () => void
 }) => {
-  const [tab, setTab] = useState<Tab>('live')
+  // english.nevatal.id sends X-Frame-Options: DENY, so start on the screenshot there.
+  const [tab, setTab] = useState<Tab>(project.slug === 'english-practice' ? 'screenshot' : 'live')
   const [liveReady, setLiveReady] = useState(false)
   const [liveTimedOut, setLiveTimedOut] = useState(false)
+  const [shotMode, setShotMode] = useState<'local' | 'remote'>('local')
   const [shotAttempt, setShotAttempt] = useState(0)
   const [shotReady, setShotReady] = useState(false)
   const [seed, setSeed] = useState(() => Math.random().toString(36).slice(2, 8))
@@ -91,16 +93,20 @@ const ProjectPreview = ({
   }, [tab, liveReady, liveTimedOut])
 
   useEffect(() => {
-    if (tab !== 'screenshot' || shotReady || shotAttempt >= SHOT_MAX_ATTEMPTS - 1) return
+    if (tab !== 'screenshot' || shotMode !== 'remote' || shotReady) return
+    if (shotAttempt >= SHOT_MAX_ATTEMPTS - 1) return
     const timer = window.setTimeout(() => setShotAttempt((attempt) => attempt + 1), SHOT_RETRY_MS)
     return () => window.clearTimeout(timer)
-  }, [tab, shotAttempt, shotReady])
+  }, [tab, shotMode, shotAttempt, shotReady])
 
-  const shotExhausted = tab === 'screenshot' && !shotReady && shotAttempt >= SHOT_MAX_ATTEMPTS - 1
+  const shotExhausted =
+    shotMode === 'remote' && tab === 'screenshot' && !shotReady && shotAttempt >= SHOT_MAX_ATTEMPTS - 1
   const host = hostOf(url)
+  const localShot = `/previews/${project.slug}.jpg`
 
   const retryScreenshot = () => {
     setSeed(Math.random().toString(36).slice(2, 8))
+    setShotMode('remote')
     setShotAttempt(0)
     setShotReady(false)
   }
@@ -236,14 +242,22 @@ const ProjectPreview = ({
                 className="absolute inset-0"
               >
                 <img
-                  key={shotAttempt}
-                  src={shotSource(url, seed, shotAttempt)}
+                  key={shotMode === 'local' ? 'local' : shotAttempt}
+                  src={shotMode === 'local' ? localShot : shotSource(url, seed, shotAttempt)}
                   alt={`Screenshot of ${project.name}`}
                   className={`h-full w-full object-cover object-top transition-opacity duration-700 ${
                     shotReady ? 'opacity-100' : 'opacity-30'
                   }`}
                   onLoad={(event) => {
-                    if (event.currentTarget.naturalWidth >= SHOT_READY_WIDTH) setShotReady(true)
+                    if (shotMode === 'local' || event.currentTarget.naturalWidth >= SHOT_READY_WIDTH) {
+                      setShotReady(true)
+                    }
+                  }}
+                  onError={() => {
+                    if (shotMode === 'local') {
+                      setShotReady(false)
+                      setShotMode('remote')
+                    }
                   }}
                 />
                 {!shotReady && (
@@ -267,8 +281,13 @@ const ProjectPreview = ({
                       <>
                         <span className="h-6 w-6 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
                         <p className="text-xs font-medium text-ink/55">
-                          Generating screenshot…{' '}
-                          {shotAttempt > 0 && `attempt ${shotAttempt + 1} of ${SHOT_MAX_ATTEMPTS}`}
+                          {shotMode === 'local'
+                            ? 'Loading preview…'
+                            : `Generating screenshot… ${
+                                shotAttempt > 0
+                                  ? `attempt ${shotAttempt + 1} of ${SHOT_MAX_ATTEMPTS}`
+                                  : ''
+                              }`}
                         </p>
                       </>
                     )}
@@ -283,7 +302,9 @@ const ProjectPreview = ({
           <p className="text-[11px] leading-relaxed text-ink/45">
             {tab === 'live'
               ? 'Blank frame? The site may block embedding — switch to Screenshot.'
-              : 'Screenshots render on demand via WordPress mShots.'}
+              : shotMode === 'local'
+                ? 'Preview captured from the live site.'
+                : 'Screenshots render on demand via WordPress mShots.'}
           </p>
           <a
             href={url}

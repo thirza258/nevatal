@@ -99,7 +99,7 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
           initial="hidden"
           animate="show"
           variants={group}
-          className="w-full max-w-md lg:justify-self-end"
+          className="w-full max-w-lg lg:justify-self-end"
         >
           <div className="relative">
             <div className="absolute -inset-8 rounded-full bg-brand/10 blur-3xl" aria-hidden="true" />
@@ -111,25 +111,41 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
                 href={AI_HUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative col-span-2 overflow-hidden rounded-3xl bg-brand p-6 text-ink"
+                className="group col-span-2 overflow-hidden rounded-2xl border border-white/10 bg-[#0F1216] transition-colors hover:border-white/25"
               >
-                <div
-                  className="absolute -right-12 -top-12 h-40 w-40 rounded-full border-[18px] border-ink/10"
-                  aria-hidden="true"
-                />
-                <div className="flex items-center justify-between">
-                  <span className="eyebrow">Flagship product</span>
-                  <ArrowUpRight className="h-5 w-5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+                  <span className="flex gap-1.5" aria-hidden="true">
+                    <span className="h-2 w-2 rounded-full bg-white/15" />
+                    <span className="h-2 w-2 rounded-full bg-white/15" />
+                    <span className="h-2 w-2 rounded-full bg-white/15" />
+                  </span>
+                  <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-[9px] text-paper/40">
+                    chat.nevatal.id
+                  </span>
+                  <span className="ml-auto text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
+                    Flagship
+                  </span>
                 </div>
-                <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
-                  Nevatal AI Hub
-                </h2>
-                <p className="mt-1 text-sm font-medium text-ink/70">
-                  Seventeen focused tools. One key. No subscription.
-                </p>
-                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">
-                  OpenAI · Gemini · OpenRouter
-                </p>
+                <img
+                  src="/previews/ai-hub.jpg"
+                  alt="Nevatal AI Hub interface"
+                  width={1280}
+                  height={800}
+                  fetchPriority="high"
+                  decoding="async"
+                  className="aspect-[16/10] w-full object-cover object-top transition duration-500 group-hover:scale-[1.02]"
+                />
+                <div className="flex items-end justify-between gap-3 p-4">
+                  <div>
+                    <h2 className="font-display text-lg font-semibold tracking-tight">
+                      Nevatal AI Hub
+                    </h2>
+                    <p className="mt-0.5 text-xs text-paper/55">
+                      Seventeen focused tools. One key. No subscription.
+                    </p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 flex-none text-paper/30 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand" />
+                </div>
               </motion.a>
 
               <motion.a
@@ -139,15 +155,30 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
                 href="https://rag.nevatal.id"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition-colors hover:border-white/25"
+                className="group overflow-hidden rounded-2xl border border-white/10 bg-[#0F1216] transition-colors hover:border-white/25"
               >
-                <p className="text-[10px] uppercase tracking-[0.16em] text-paper/50">
-                  Grounded retrieval
-                </p>
-                <h3 className="mt-2 font-display text-lg font-semibold">RAGReader</h3>
-                <p className="mt-1 text-xs leading-relaxed text-paper/60">
-                  Compare dense, sparse and hybrid search — then let the models vote.
-                </p>
+                <div className="flex items-center gap-1.5 border-b border-white/10 px-2.5 py-1.5">
+                  <span className="flex gap-1" aria-hidden="true">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/15" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/15" />
+                  </span>
+                  <span className="truncate text-[9px] text-paper/35">rag.nevatal.id</span>
+                </div>
+                <img
+                  src="/previews/ragreader.jpg"
+                  alt="RAGReader interface"
+                  width={1280}
+                  height={800}
+                  loading="eager"
+                  decoding="async"
+                  className="aspect-[16/10] w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
+                />
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold">RAGReader</h3>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-paper/50">
+                    Dense, sparse and hybrid search — then the models vote.
+                  </p>
+                </div>
               </motion.a>
 
               <motion.a
@@ -157,13 +188,30 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
                 href="https://leetbug.nevatal.id"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition-colors hover:border-white/25"
+                className="group overflow-hidden rounded-2xl border border-white/10 bg-[#0F1216] transition-colors hover:border-white/25"
               >
-                <p className="text-[10px] uppercase tracking-[0.16em] text-paper/50">Practice</p>
-                <h3 className="mt-2 font-display text-lg font-semibold">LeetBug</h3>
-                <p className="mt-1 text-xs leading-relaxed text-paper/60">
-                  Debugging challenges that grade the fix, not the answer.
-                </p>
+                <div className="flex items-center gap-1.5 border-b border-white/10 px-2.5 py-1.5">
+                  <span className="flex gap-1" aria-hidden="true">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/15" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/15" />
+                  </span>
+                  <span className="truncate text-[9px] text-paper/35">leetbug.nevatal.id</span>
+                </div>
+                <img
+                  src="/previews/leetbug.jpg"
+                  alt="LeetBug interface"
+                  width={1280}
+                  height={800}
+                  loading="eager"
+                  decoding="async"
+                  className="aspect-[16/10] w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
+                />
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold">LeetBug</h3>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-paper/50">
+                    Debugging challenges that grade the fix, not the answer.
+                  </p>
+                </div>
               </motion.a>
 
               <motion.a

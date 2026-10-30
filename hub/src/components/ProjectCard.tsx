@@ -7,13 +7,44 @@ import { ArrowUpRight, Eye } from './icons'
 
 type CardTone = 'light' | 'dark'
 
-const ProjectCard = ({ project, tone = 'light' }: { project: Project; tone?: CardTone }) => {
+const ProjectCard = ({
+  project,
+  tone = 'light',
+  showScreenshot = false,
+}: {
+  project: Project
+  tone?: CardTone
+  showScreenshot?: boolean
+}) => {
   const dark = tone === 'dark'
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [shotVisible, setShotVisible] = useState(true)
   const previewTriggerRef = useRef<HTMLButtonElement>(null)
 
   const content = (
     <>
+      {showScreenshot && shotVisible && (
+        <div
+          className={`relative mb-4 overflow-hidden rounded-xl border ${
+            dark ? 'border-white/10 bg-white/[0.03]' : 'border-ink/10 bg-ink/[0.03]'
+          }`}
+        >
+          <img
+            src={`/previews/${project.slug}.jpg`}
+            alt={`Screenshot of ${project.name}`}
+            loading="lazy"
+            decoding="async"
+            width={1280}
+            height={800}
+            onError={() => setShotVisible(false)}
+            className="aspect-[16/10] w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
+          />
+          <span
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent opacity-0 transition group-hover:opacity-100"
+            aria-hidden="true"
+          />
+        </div>
+      )}
       <div className="flex items-center justify-between gap-3">
         <span
           className={`flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${

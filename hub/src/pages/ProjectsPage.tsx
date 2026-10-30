@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import ProjectCard from '../components/ProjectCard'
+import AnimatedCounter from '../components/motion/AnimatedCounter'
 import { Search } from '../components/icons'
 import {
   PROJECT_CATEGORIES,
@@ -24,6 +25,17 @@ const CATEGORY_COUNTS = FILTERS.reduce<Record<Filter, number>>(
   },
   { All: PROJECTS.length } as Record<Filter, number>
 )
+
+const TECH_TAGS = Array.from(new Set(PROJECTS.flatMap((project) => project.tags))).sort((a, b) =>
+  a.localeCompare(b)
+)
+
+const PORTFOLIO_STATS = [
+  { value: PROJECTS.length, label: 'live projects' },
+  { value: PROJECT_CATEGORIES.length, label: 'categories' },
+  { value: TECH_TAGS.length, label: 'technologies in use' },
+  { value: PROJECTS.filter((project) => project.featured).length, label: 'featured projects' },
+]
 
 const PROJECTS_LD = {
   '@context': 'https://schema.org',
@@ -102,6 +114,20 @@ const ProjectsPage = () => {
               {PROJECTS.length} products across AI, learning, creative work, data and operations.
               Every one is live — open a preview or jump straight in.
             </motion.p>
+            <motion.dl
+              variants={fadeUp}
+              className="mt-10 grid max-w-3xl grid-cols-2 gap-6 border-t border-white/10 pt-6 sm:grid-cols-4"
+            >
+              {PORTFOLIO_STATS.map((stat) => (
+                <div key={stat.label}>
+                  <dt className="sr-only">{stat.label}</dt>
+                  <dd className="font-display text-2xl font-semibold text-paper">
+                    <AnimatedCounter value={stat.value} />
+                  </dd>
+                  <dd className="mt-1 text-[11px] leading-snug text-paper/55">{stat.label}</dd>
+                </div>
+              ))}
+            </motion.dl>
           </motion.div>
         </div>
       </section>
@@ -183,7 +209,7 @@ const ProjectsPage = () => {
           >
             <AnimatePresence initial={false}>
               {visible.map((project) => (
-                <ProjectCard key={project.slug} project={project} tone="dark" />
+                <ProjectCard key={project.slug} project={project} tone="dark" showScreenshot />
               ))}
             </AnimatePresence>
           </motion.div>
@@ -217,6 +243,30 @@ const ProjectsPage = () => {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        <div className="container-x mt-16">
+          <p className="eyebrow text-brand">Stack across the portfolio</p>
+          <div className="marquee-mask mt-4 border-y border-white/10 bg-white/[0.02] py-3">
+            <div className="marquee-track flex w-max items-center gap-4 pr-4">
+              {[0, 1].map((copy) => (
+                <div
+                  key={copy}
+                  className="flex items-center gap-4"
+                  aria-hidden={copy === 1 ? 'true' : undefined}
+                >
+                  {TECH_TAGS.map((tag) => (
+                    <span
+                      key={tag}
+                      className="whitespace-nowrap rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-paper/40"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
