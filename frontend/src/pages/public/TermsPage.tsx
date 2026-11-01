@@ -9,6 +9,13 @@ export default function TermsPage() {
         <p className="mt-2 text-sm text-gray-500">Effective Date: November 1, 2026</p>
       </div>
 
+      <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 sm:p-5 text-sm text-blue-950">
+        <strong className="block font-semibold mb-1">📢 Independent Personal Project &amp; Non-Affiliation Disclaimer:</strong>
+        <p className="leading-relaxed">
+          Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles, case studies, and educational resources. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. The platform operates on a 100% free, non-profit basis (MIT licensed) and takes zero commercial profit. Any marketing, search engine optimization (SEO), and social media outreach conducted for this project is undertaken purely for educational and experimental purposes to study and observe the effectiveness of organic distribution. Nevatal is not affiliated with, sponsored by, or endorsed by any external corporate entities, commercial enterprises, or medical EMR (Electronic Medical Records) software platforms sharing a similar name, nor does it use their logos or branding. Any similarity in name is pure coincidence, originating from hackathon prototypes and personal developer experiments.
+        </p>
+      </div>
+
       <section className="space-y-3">
         <h2 className="text-xl font-bold text-gray-900 border-b border-gray-200 pb-2">1. Agreement to Terms</h2>
         <p>

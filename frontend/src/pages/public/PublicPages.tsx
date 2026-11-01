@@ -48,16 +48,21 @@ export default function PublicPages() {
         </Routes>
       </main>
       <footer className="border-t border-gray-200 bg-gray-50">
-        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 px-4 py-8 text-sm text-gray-600 sm:flex-row sm:px-6">
-          <p>Nevatal — practical AI tools and free courses.</p>
-          <nav aria-label="Footer" className="flex flex-wrap gap-5">
-            <Link to="/" className="hover:text-blue-700">Home</Link>
-            <Link to="/courses" className="hover:text-blue-700">Courses</Link>
-            <Link to="/about" className="hover:text-blue-700">About</Link>
-            <Link to="/privacy" className="hover:text-blue-700">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-blue-700">Terms of Service</Link>
-            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-700">Source on GitHub</a>
-          </nav>
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-gray-600 sm:px-6">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row">
+            <p>Nevatal — practical AI tools and free courses.</p>
+            <nav aria-label="Footer" className="flex flex-wrap gap-5">
+              <Link to="/" className="hover:text-blue-700">Home</Link>
+              <Link to="/courses" className="hover:text-blue-700">Courses</Link>
+              <Link to="/about" className="hover:text-blue-700">About</Link>
+              <Link to="/privacy" className="hover:text-blue-700">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-blue-700">Terms of Service</Link>
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-700">Source on GitHub</a>
+            </nav>
+          </div>
+          <p className="text-xs text-gray-500 border-t border-gray-200/80 pt-4 leading-relaxed">
+            Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles and educational prototypes. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. It is 100% free, non-profit, takes zero commercial profits, and is not affiliated with, sponsored by, or endorsed by any external corporate entities or medical EMR platforms sharing a similar name. Any SEO and social media outreach is undertaken purely for educational purposes to observe organic distribution effectiveness.
+          </p>
         </div>
       </footer>
     </div>

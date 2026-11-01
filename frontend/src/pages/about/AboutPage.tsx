@@ -59,6 +59,15 @@ const AboutPage: React.FC = () => {
             remove it at any time with "Clear API key" in the top bar.
           </p>
         </section>
+
+        <section className="bg-blue-50/70 rounded-lg border border-blue-200 px-6 py-5 text-sm text-blue-950">
+          <h2 className="text-base font-semibold text-blue-950 mb-2">
+            Independent Personal Project Notice
+          </h2>
+          <p className="leading-relaxed">
+            Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles, case studies, and educational resources. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. The platform operates on a 100% free, non-profit basis (MIT licensed) and takes zero commercial profit. Any marketing, search engine optimization (SEO), and social media outreach conducted for this project is undertaken purely for educational and experimental purposes to study and observe the effectiveness of organic distribution. Nevatal is not affiliated with, sponsored by, or endorsed by any external corporate entities, commercial enterprises, or medical EMR (Electronic Medical Records) software platforms sharing a similar name, nor does it use their logos or branding. Any similarity in name is pure coincidence, originating from hackathon prototypes and personal developer experiments.
+          </p>
+        </section>
       </div>
     </div>
   );

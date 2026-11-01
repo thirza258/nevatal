@@ -466,3 +466,9 @@ IMAGE_TAG=<git-sha> ./deploy.sh   # omit IMAGE_TAG to use the one in .env
 
 It reads `DOCKER_USERNAME` and `IMAGE_TAG` from `.env` in that directory, pulls
 the tagged images with retries, and restarts the stack.
+
+## Disclaimer
+
+Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles, case studies, and educational resources. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. It operates on a 100% free, non-profit basis (MIT licensed) and takes zero commercial profit. Any marketing, search engine optimization (SEO), and social media outreach conducted for this project is undertaken purely for educational and experimental purposes to study and observe the effectiveness of organic distribution.
+
+Nevatal is not affiliated with, sponsored by, or endorsed by any external corporate entities, commercial companies, or medical EMR (Electronic Medical Records) software platforms sharing a similar name, nor does it use their logos or branding. Any similarity in name is pure coincidence, originating from hackathon prototypes and personal developer experiments.

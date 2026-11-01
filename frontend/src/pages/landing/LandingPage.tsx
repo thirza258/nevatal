@@ -1550,6 +1550,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
             </a>
           </div>
         </div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 border-t border-gray-800 text-xs text-gray-400 leading-relaxed">
+          <p>
+            Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles and educational prototypes. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. It is 100% free, non-profit, takes zero commercial profits, and is not affiliated with, sponsored by, or endorsed by any external corporate entities or medical EMR platforms sharing a similar name. Any SEO and social media outreach is conducted purely for educational and experimental purposes to study organic reach effectiveness.
+          </p>
+        </div>
       </footer>
     </div>
   );
