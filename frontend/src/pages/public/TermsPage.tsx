@@ -57,6 +57,17 @@ export default function TermsPage() {
         </p>
       </section>
 
+      <section className="space-y-3">
+        <h2 className="text-xl font-bold text-gray-900 border-b border-gray-200 pb-2">6. Contact &amp; Legal Notices</h2>
+        <p>
+          For legal inquiries, takedown requests, or terms clarifications, please email{" "}
+          <a href="mailto:nevatalapp@gmail.com" className="text-blue-600 font-semibold hover:underline">
+            nevatalapp@gmail.com
+          </a>
+          .
+        </p>
+      </section>
+
       <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
         <Link to="/" className="text-sm font-semibold text-blue-600 hover:text-blue-500">
           ← Back to Nevatal Home

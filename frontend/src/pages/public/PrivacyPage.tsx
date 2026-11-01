@@ -61,6 +61,17 @@ export default function PrivacyPage() {
         </p>
       </section>
 
+      <section className="space-y-3">
+        <h2 className="text-xl font-bold text-gray-900 border-b border-gray-200 pb-2">5. Privacy Inquiries &amp; Contact</h2>
+        <p>
+          For privacy concerns, data deletion requests, or questions regarding our self-hosted infrastructure, contact us at{" "}
+          <a href="mailto:nevatalapp@gmail.com" className="text-blue-600 font-semibold hover:underline">
+            nevatalapp@gmail.com
+          </a>
+          .
+        </p>
+      </section>
+
       <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
         <Link to="/" className="text-sm font-semibold text-blue-600 hover:text-blue-500">
           ← Back to Nevatal Home
