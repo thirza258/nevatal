@@ -3,12 +3,21 @@ import { COURSES, coursePath } from './courses/catalog';
 import { findToolByPath } from './tools';
 
 export const normalizePath = (pathname: string) => pathname.replace(/\/+$/, '') || '/';
-export const isPublicContentPath = (pathname: string) =>
-  normalizePath(pathname) === '/about' || /^\/courses(?:\/|$)/.test(pathname);
+export const isPublicContentPath = (pathname: string) => {
+  const normalized = normalizePath(pathname);
+  return (
+    normalized === '/about' ||
+    normalized === '/privacy' ||
+    normalized === '/terms' ||
+    /^\/courses(?:\/|$)/.test(pathname)
+  );
+};
 
 export const PUBLIC_PAGES = [
   { path: '/', updated: '2026-09-18' },
   { path: '/about', updated: '2026-09-18' },
+  { path: '/privacy', updated: '2026-11-01' },
+  { path: '/terms', updated: '2026-11-01' },
   { path: '/courses', updated: '2026-09-18' },
   ...COURSES.map((course) => ({ path: coursePath(course), updated: course.updated })),
 ];

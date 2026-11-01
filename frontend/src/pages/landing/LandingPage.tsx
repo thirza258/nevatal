@@ -1534,6 +1534,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onKeySubmit }) => {
             <Link to="/about" className="hover:text-white transition-colors">
               About
             </Link>
+            <Link to="/privacy" className="hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+            <Link to="/terms" className="hover:text-white transition-colors">
+              Terms of Service
+            </Link>
             <a
               href={GITHUB_URL}
               target="_blank"

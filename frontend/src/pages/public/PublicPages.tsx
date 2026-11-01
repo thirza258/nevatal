@@ -4,6 +4,8 @@ import { GITHUB_URL } from '../../constant';
 import CoursesPage from '../courses/CoursesPage';
 import CoursePage from '../courses/CoursePage';
 import AboutPage from '../about/AboutPage';
+import PrivacyPage from './PrivacyPage';
+import TermsPage from './TermsPage';
 import NotFoundPage from '../NotFoundPage';
 
 /** Shared by the browser and the static HTML build; no session is needed to read. */
@@ -40,6 +42,8 @@ export default function PublicPages() {
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/courses/:slug" element={<CoursePage />} />
           <Route path="/about" element={<div className="px-4 py-10 sm:px-6"><AboutPage /></div>} />
+          <Route path="/privacy" element={<div className="px-4 py-10 sm:px-6"><PrivacyPage /></div>} />
+          <Route path="/terms" element={<div className="px-4 py-10 sm:px-6"><TermsPage /></div>} />
           <Route path="*" element={<NotFoundPage homePath="/courses" homeLabel="Browse courses" />} />
         </Routes>
       </main>
@@ -50,6 +54,8 @@ export default function PublicPages() {
             <Link to="/" className="hover:text-blue-700">Home</Link>
             <Link to="/courses" className="hover:text-blue-700">Courses</Link>
             <Link to="/about" className="hover:text-blue-700">About</Link>
+            <Link to="/privacy" className="hover:text-blue-700">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-blue-700">Terms of Service</Link>
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-700">Source on GitHub</a>
           </nav>
         </div>
