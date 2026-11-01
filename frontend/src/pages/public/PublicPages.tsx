@@ -60,9 +60,14 @@ export default function PublicPages() {
               <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-700">Source on GitHub</a>
             </nav>
           </div>
-          <p className="text-xs text-gray-500 border-t border-gray-200/80 pt-4 leading-relaxed">
-            Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles and educational prototypes. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. The name was sourced from an automated business name generator for hackathon projects. It is 100% free, non-profit, takes zero commercial profits, and is not affiliated with, sponsored by, or endorsed by any external corporate entities or medical EMR platforms sharing a similar name. Any SEO and social media outreach is undertaken purely for educational purposes to observe organic distribution effectiveness.
-          </p>
+          <div className="border-t border-gray-200/80 pt-4 text-xs text-gray-500 leading-relaxed space-y-2">
+            <p className="font-medium text-gray-700">
+              This project is under nevatal.id for educational purposes.
+            </p>
+            <p>
+              Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles and educational prototypes. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. The name was sourced from an automated business name generator for hackathon projects. It is 100% free, non-profit, takes zero commercial profits, and is not affiliated with, sponsored by, or endorsed by any external corporate entities or medical EMR platforms sharing a similar name. Any SEO and social media outreach is undertaken purely for educational purposes to observe organic distribution effectiveness.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
