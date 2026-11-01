@@ -24,6 +24,12 @@ export const ArrowRight = (props: IconProps) => (
   </svg>
 )
 
+export const ArrowLeft = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <path d="M20 12H5m6-6-6 6 6 6" />
+  </svg>
+)
+
 export const Check = (props: IconProps) => (
   <svg {...base} {...props}>
     <path d="m4.5 12.5 4.5 4.5L19.5 6.5" />

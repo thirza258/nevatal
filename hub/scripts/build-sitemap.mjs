@@ -12,6 +12,8 @@ const staticPages = [
   { path: '/projects', lastmod: new Date().toISOString().slice(0, 10) },
   { path: '/blog', lastmod: new Date().toISOString().slice(0, 10) },
   { path: '/about', lastmod: new Date().toISOString().slice(0, 10) },
+  { path: '/privacy', lastmod: new Date().toISOString().slice(0, 10) },
+  { path: '/terms', lastmod: new Date().toISOString().slice(0, 10) },
 ]
 
 const posts = []

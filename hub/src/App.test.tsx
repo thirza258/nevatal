@@ -32,6 +32,8 @@ describe('app shell', () => {
     expect(renderAt('/projects')).toContain('Work that ships.')
     expect(renderAt('/blog')).toContain('Notes from the workshop.')
     expect(renderAt('/about')).toContain('Independent by design.')
+    expect(renderAt('/privacy')).toContain('Privacy Policy')
+    expect(renderAt('/terms')).toContain('Terms of Service')
     expect(renderAt('/missing-page')).toContain('404')
   })
 

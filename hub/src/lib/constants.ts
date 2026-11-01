@@ -19,9 +19,9 @@ export const WP_API_BASES = [
 ].filter((value): value is string => Boolean(value))
 
 export const NAV_LINKS = [
+  { to: '/about', label: 'About' },
   { to: '/projects', label: 'Projects' },
   { to: '/blog', label: 'Writing' },
-  { to: '/about', label: 'Studio' },
 ]
 
 export const AI_TOOLS = [

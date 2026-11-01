@@ -38,9 +38,9 @@ const STACK = [
 
 const AboutPage = () => {
   usePageMeta({
-    title: 'Studio — Nevatal',
+    title: 'About — Nevatal',
     description:
-      'Nevatal is an independent AI studio building and operating AI workspaces, grounded retrieval tools, learning platforms and developer utilities.',
+      'Nevatal is an independent personal open-source software project developed in Indonesia, documented as technical articles, case studies, and educational tools.',
     path: '/about',
   })
 
@@ -48,12 +48,12 @@ const AboutPage = () => {
     <>
       <section className="hero-surface text-paper">
         <div className="container-x py-16 sm:py-24">
-          <p className="eyebrow text-brand">Studio</p>
+          <p className="eyebrow text-brand">About</p>
           <h1 className="mt-4 max-w-4xl font-display text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
             Independent by design. AI-first by default.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-paper/65">
-            Nevatal is an independent software studio. We design, build and operate AI products end
+            Nevatal is an independent, personal open-source software project developed in Indonesia. We design, build and operate AI products end
             to end — the model layer, the retrieval, the interface and the server it runs on.
           </p>
 
@@ -153,6 +153,37 @@ const AboutPage = () => {
                 {item}
               </span>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-ink/10 bg-white py-16 sm:py-20">
+        <div className="container-x">
+          <div className="rounded-2xl border border-blue-600/20 bg-blue-500/5 p-8 sm:p-10">
+            <p className="eyebrow text-blue">Transparency &amp; Legal Notice</p>
+            <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl text-ink">
+              Independent Personal Project &amp; Non-Affiliation Disclaimer
+            </h2>
+            <div className="mt-6 space-y-4 text-sm leading-relaxed text-ink/80">
+              <p>
+                <strong>Nevatal</strong> is an independent, personal open-source software project developed in Indonesia, documented as technical articles, case studies, and educational resources. All projects under the Nevatal umbrella are strictly personal software projects and are not affiliated with any commercial entity.
+              </p>
+              <p>
+                The name &ldquo;Nevatal&rdquo; was sourced purely from an automated business name generator for hackathons and personal developer experiments. Any similarity in name with any other entity is pure coincidence.
+              </p>
+              <p>
+                Nevatal operates on a 100% free, non-profit basis under the MIT License and takes zero commercial profit. Any marketing, search engine optimization (SEO), and social media outreach conducted for this project is undertaken purely for educational and experimental purposes to study and observe the effectiveness of organic distribution.
+              </p>
+              <p>
+                Nevatal is not affiliated with, sponsored by, or endorsed by any external corporate entities, commercial enterprises, or medical EMR (Electronic Medical Records) software platforms, nor does it use their branding or logos.
+              </p>
+              <p className="pt-2">
+                For questions, collaborations, or notices, contact us at:{' '}
+                <a href="mailto:nevatalapp@gmail.com" className="font-semibold text-blue-600 underline hover:text-blue-700">
+                  nevatalapp@gmail.com
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </section>

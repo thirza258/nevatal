@@ -69,9 +69,11 @@ const Footer = () => (
         <FooterColumn
           title="Explore"
           links={[
+            { label: 'About', href: '/about' },
             { label: 'Projects', href: '/projects' },
             { label: 'Writing', href: '/blog' },
-            { label: 'Studio', href: '/about' },
+            { label: 'Privacy Policy', href: '/privacy' },
+            { label: 'Terms of Service', href: '/terms' },
           ]}
         />
 
@@ -96,15 +98,34 @@ const Footer = () => (
         />
       </div>
 
-      <div className="mt-14 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-        <p>© {new Date().getFullYear()} Nevatal. All rights reserved.</p>
+      <div className="mt-14 border-t border-white/10 pt-6 text-xs text-paper/50 leading-relaxed">
         <p>
-          Writing powered by{' '}
-          <a href={WP_SITE_URL} className="underline decoration-white/20 underline-offset-4 hover:text-paper">
-            WordPress
+          Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles, case studies, and educational resources. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. The name was sourced from an automated business name generator for hackathons. The platform operates on a 100% free, non-profit basis (MIT licensed) and takes zero commercial profit. Any marketing, search engine optimization (SEO), and social media outreach conducted for this project is undertaken purely for educational and experimental purposes to study and observe the effectiveness of organic distribution. Not affiliated with, sponsored by, or endorsed by any external corporate entities, commercial enterprises, or medical EMR software platforms sharing a similar name, nor does it use their logos or branding. This project is under nevatal.id for educational purposes. Contact:{' '}
+          <a href="mailto:nevatalapp@gmail.com" className="text-paper/80 underline hover:text-paper">
+            nevatalapp@gmail.com
           </a>
-          . Built in-house.
         </p>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <p>© {new Date().getFullYear()} Nevatal. MIT Licensed. This project is under nevatal.id for educational purposes.</p>
+        <div className="flex flex-wrap items-center gap-4 text-paper/60">
+          <Link to="/about" className="hover:text-paper hover:underline">
+            About
+          </Link>
+          <Link to="/privacy" className="hover:text-paper hover:underline">
+            Privacy Policy
+          </Link>
+          <Link to="/terms" className="hover:text-paper hover:underline">
+            Terms of Service
+          </Link>
+          <span>
+            Writing powered by{' '}
+            <a href={WP_SITE_URL} className="underline decoration-white/20 underline-offset-4 hover:text-paper">
+              WordPress
+            </a>
+          </span>
+        </div>
       </div>
     </div>
   </footer>
