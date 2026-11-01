@@ -61,7 +61,7 @@ export default function PublicPages() {
             </nav>
           </div>
           <p className="text-xs text-gray-500 border-t border-gray-200/80 pt-4 leading-relaxed">
-            Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles and educational prototypes. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. It is 100% free, non-profit, takes zero commercial profits, and is not affiliated with, sponsored by, or endorsed by any external corporate entities or medical EMR platforms sharing a similar name. Any SEO and social media outreach is undertaken purely for educational purposes to observe organic distribution effectiveness.
+            Nevatal is an independent, personal open-source software project developed in Indonesia, documented as technical articles and educational prototypes. All Nevatal projects are strictly personal projects and are not affiliated with any commercial entity. The name was sourced from an automated business name generator for hackathon projects. It is 100% free, non-profit, takes zero commercial profits, and is not affiliated with, sponsored by, or endorsed by any external corporate entities or medical EMR platforms sharing a similar name. Any SEO and social media outreach is undertaken purely for educational purposes to observe organic distribution effectiveness.
           </p>
         </div>
       </footer>
