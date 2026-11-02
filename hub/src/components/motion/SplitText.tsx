@@ -20,9 +20,9 @@ export const MaskWord = ({
     <span className="-mb-[0.2em] inline-block overflow-hidden pb-[0.2em] align-bottom">
       <motion.span
         className={`inline-block ${className}`}
-        initial={reduce ? false : { y: '115%', rotate: 7 }}
+        initial={reduce ? false : { y: '100%', rotate: 0 }}
         animate={{ y: '0%', rotate: 0 }}
-        transition={{ duration: 1, ease: easeOut, delay }}
+        transition={{ duration: 0.45, ease: easeOut, delay }}
       >
         {children}
       </motion.span>
@@ -34,7 +34,7 @@ export const MaskWord = ({
 const SplitText = ({
   text,
   delay = 0,
-  gap = 0.06,
+  gap = 0.04,
   className = '',
 }: {
   text: string

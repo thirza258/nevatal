@@ -1,30 +1,34 @@
 import { useRef, type ReactNode } from 'react'
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion'
 import { useWide } from '../../lib/hooks'
-import { polarPoints, polygonOf, toPolygon, type PolarShape } from '../../lib/shapes'
+import type { PolarShape } from '../../lib/shapes'
 
 export type Morph = 'pill' | 'arch' | 'circle' | Exclude<PolarShape, 'rect' | 'square' | 'circle'>
-
-const RECT = polygonOf('rect')
-
-/** A polar shape shrunk towards the middle, so it starts as a shape *inside* the section. */
-const shrunk = (shape: PolarShape, scale: number) =>
-  toPolygon(polarPoints(shape).map(([x, y]) => [50 + (x - 50) * scale, 50 + (y - 50) * scale]))
 
 const rangeFor = (morph: Morph, wide: boolean): [string, string] => {
   switch (morph) {
     case 'pill':
       return wide
-        ? ['inset(5% 6% 5% 6% round 240px)', 'inset(0% 0% 0% 0% round 0px)']
-        : ['inset(2% 4% 2% 4% round 48px)', 'inset(0% 0% 0% 0% round 0px)']
+        ? ['inset(4% 5% 4% 5% round 180px)', 'inset(0% 0% 0% 0% round 0px)']
+        : ['inset(2% 3% 2% 3% round 48px)', 'inset(0% 0% 0% 0% round 0px)']
     case 'arch':
       return wide
-        ? ['inset(4% 8% 0% 8% round 50% 50% 0% 0%)', 'inset(0% 0% 0% 0% round 0% 0% 0% 0%)']
-        : ['inset(2% 4% 0% 4% round 48% 48% 0% 0%)', 'inset(0% 0% 0% 0% round 0% 0% 0% 0%)']
+        ? ['inset(3% 6% 0% 6% round 50% 50% 0% 0%)', 'inset(0% 0% 0% 0% round 0% 0% 0% 0%)']
+        : ['inset(2% 3% 0% 3% round 48% 48% 0% 0%)', 'inset(0% 0% 0% 0% round 0% 0% 0% 0%)']
     case 'circle':
       return ['circle(12% at 50% 35%)', 'circle(150% at 50% 35%)']
+    case 'sparkle':
+      return wide
+        ? ['inset(3% 5% 3% 5% round 96px)', 'inset(0% 0% 0% 0% round 0px)']
+        : ['inset(2% 3% 2% 3% round 48px)', 'inset(0% 0% 0% 0% round 0px)']
+    case 'blob':
+      return wide
+        ? ['inset(3% 5% 3% 5% round 120px)', 'inset(0% 0% 0% 0% round 0px)']
+        : ['inset(2% 3% 2% 3% round 48px)', 'inset(0% 0% 0% 0% round 0px)']
     default:
-      return [shrunk(morph, wide ? 0.78 : 0.92), RECT]
+      return wide
+        ? ['inset(3% 5% 3% 5% round 64px)', 'inset(0% 0% 0% 0% round 0px)']
+        : ['inset(2% 3% 2% 3% round 32px)', 'inset(0% 0% 0% 0% round 0px)']
   }
 }
 
@@ -38,7 +42,7 @@ const MorphLayer = ({
   className: string
 }) => {
   const clipPath = useTransform(progress, [0, 1], range)
-  return <motion.div aria-hidden="true" className={className} style={{ clipPath }} />
+  return <motion.div aria-hidden="true" className={className} style={{ clipPath, willChange: 'clip-path' }} />
 }
 
 /**

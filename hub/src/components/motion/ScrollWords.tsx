@@ -10,10 +10,10 @@ const Word = ({
   progress: MotionValue<number>
   range: [number, number]
 }) => {
-  const opacity = useTransform(progress, range, [0.14, 1])
-  const y = useTransform(progress, range, ['0.25em', '0em'])
+  const opacity = useTransform(progress, range, [0.35, 1])
+  const y = useTransform(progress, range, ['0.08em', '0em'])
   return (
-    <motion.span className="inline-block" style={{ opacity, y }}>
+    <motion.span className="inline-block will-change-[opacity]" style={{ opacity, y }}>
       {word}
     </motion.span>
   )

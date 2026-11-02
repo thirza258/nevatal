@@ -41,15 +41,14 @@ const PillPile = ({
   const ref = useRef<HTMLUListElement>(null)
   const fine = useFinePointer()
   const reduce = useReducedMotion()
-  const entered = useInViewport(ref, { once: true, margin: '0px 0px -12% 0px' })
+  const entered = useInViewport(ref, { once: true, margin: '0px 0px 40px 0px' })
 
   const specs = useMemo(
     () =>
       items.map((_, index) => {
         const random = createRandom(`${seed}:${SESSION_SALT}:${index}`)
         return {
-          rotate: random.range(-13, 13),
-          drop: random.range(-280, -160),
+          rotate: random.range(-10, 10),
           style: STYLES[tone][index % STYLES[tone].length],
         }
       }),
@@ -62,9 +61,9 @@ const PillPile = ({
         <motion.li
           key={item}
           data-cursor={fine ? 'drag' : undefined}
-          initial={reduce ? false : { y: specs[index].drop, opacity: 0, rotate: 0 }}
+          initial={reduce ? false : { y: 20, opacity: 0 }}
           animate={entered || reduce ? { y: 0, opacity: 1, rotate: specs[index].rotate } : undefined}
-          transition={{ type: 'spring', stiffness: 150, damping: 11, delay: index * 0.09 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 22, delay: index * 0.04 }}
           drag={fine}
           dragConstraints={ref}
           dragElastic={0.22}

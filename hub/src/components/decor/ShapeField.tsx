@@ -106,7 +106,7 @@ const FieldShape = ({
 
   return (
     <motion.div
-      className="absolute"
+      className="absolute will-change-transform"
       style={{
         left: `${wide ? spec.x : spec.mx}%`,
         top: `${spec.y}%`,
@@ -114,14 +114,15 @@ const FieldShape = ({
         height: size,
         y: reduce ? 0 : y,
         rotate: reduce ? spec.rotate : rotate,
+        willChange: 'transform',
       }}
     >
       <motion.div
         data-cursor={draggable ? 'drag' : undefined}
-        className={`h-full w-full ${draggable ? 'pointer-events-auto cursor-grab touch-none active:cursor-grabbing' : ''}`}
+        className={`h-full w-full will-change-transform ${draggable ? 'pointer-events-auto cursor-grab touch-none active:cursor-grabbing' : ''}`}
         initial={{ scale: 0 }}
         animate={{ scale: entered ? 1 : 0 }}
-        transition={{ type: 'spring', stiffness: 220, damping: 14, delay: entered ? 0.15 + index * 0.07 : 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20, delay: entered ? index * 0.03 : 0 }}
         drag={draggable}
         dragConstraints={constraints}
         dragElastic={0.18}
@@ -178,7 +179,7 @@ const ShapeField = ({
   const reduce = Boolean(useReducedMotion())
   const fine = useFinePointer()
   const wide = useWide()
-  const entered = useInViewport(ref, { once: true, margin: '0px 0px -15% 0px' })
+  const entered = useInViewport(ref, { once: true, margin: '0px 0px 40px 0px' })
   const onScreen = useInViewport(ref, { margin: '120px' })
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
 

@@ -170,11 +170,11 @@ const ProductEcosystem = () => {
                   height={800}
                   loading="lazy"
                   decoding="async"
-                  initial={{ clipPath: 'circle(0% at 50% 50%)', zIndex: 1 }}
-                  animate={{ clipPath: 'circle(75% at 50% 50%)', zIndex: 1 }}
-                  exit={{ zIndex: 0, transition: { duration: 0.7 } }}
-                  transition={{ duration: 0.7, ease: easeOut }}
-                  className="absolute inset-0 h-full w-full object-cover object-top"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35, ease: easeOut }}
+                  className="absolute inset-0 h-full w-full object-cover object-top will-change-[opacity]"
                 />
               </AnimatePresence>
               {running && (

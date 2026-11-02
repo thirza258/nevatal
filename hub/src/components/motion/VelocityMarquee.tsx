@@ -49,7 +49,7 @@ const VelocityMarquee = ({
 
   return (
     <div ref={ref} className={`overflow-hidden ${className}`}>
-      <motion.div className="flex w-max flex-nowrap" style={{ x }}>
+      <motion.div className="flex w-max flex-nowrap will-change-transform" style={{ x, willChange: 'transform' }}>
         <div className="flex flex-none items-center">{children}</div>
         <div className="flex flex-none items-center" aria-hidden="true">
           {children}

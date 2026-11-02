@@ -25,8 +25,8 @@ const Header = () => {
     const previous = scrollY.getPrevious() ?? 0
     setScrolled(latest > 24)
     if (latest < 160) setHidden(false)
-    else if (latest > previous + 4) setHidden(true)
-    else if (latest < previous - 4) setHidden(false)
+    else if (latest > previous + 12) setHidden(true)
+    else if (latest < previous - 12) setHidden(false)
   })
 
   const concealed = hidden && !isOpen

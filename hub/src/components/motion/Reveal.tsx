@@ -13,8 +13,8 @@ interface RevealProps {
   once?: boolean
 }
 
-/** Rises, settles and un-tilts into place as it scrolls into view. */
-const Reveal = ({ children, className, delay = 0, y = 36, rotate = 0, scale = 1, once = true }: RevealProps) => {
+/** Rises smoothly and settles promptly into place as it scrolls into view. */
+const Reveal = ({ children, className, delay = 0, y = 16, rotate = 0, scale = 1, once = true }: RevealProps) => {
   const variants: Variants = {
     hidden: { opacity: 0, y, rotate, scale },
     show: {
@@ -22,7 +22,7 @@ const Reveal = ({ children, className, delay = 0, y = 36, rotate = 0, scale = 1,
       y: 0,
       rotate: 0,
       scale: 1,
-      transition: { duration: 0.85, ease: easeOut, delay },
+      transition: { duration: 0.45, ease: easeOut, delay },
     },
   }
 

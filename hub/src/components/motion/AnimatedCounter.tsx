@@ -6,14 +6,14 @@ import { easeOut } from '../../lib/motion'
 const AnimatedCounter = ({
   value,
   suffix = '',
-  duration = 1.4,
+  duration = 0.7,
 }: {
   value: number
   suffix?: string
   duration?: number
 }) => {
   const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInViewport(ref, { once: true, margin: '-10% 0px' })
+  const inView = useInViewport(ref, { once: true, margin: '0px' })
   const reduceMotion = useReducedMotion()
   // Without an observer (server, tests) there is nothing to count up from.
   const [display, setDisplay] = useState(canObserve ? 0 : value)

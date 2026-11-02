@@ -34,7 +34,7 @@ const SEPARATORS: Array<{ kind: ShapeKind; color: ShapeColor }> = [
 
 const group = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.09, delayChildren: 0.45 } },
+  show: { transition: { staggerChildren: 0.05, delayChildren: 0.08 } },
 }
 
 /** A product screenshot cut into a shape, which tilts towards the pointer. */
@@ -72,7 +72,7 @@ const ShapeCard = ({
   const tiltY = useMotionValue(0)
   const rotateX = useSpring(tiltX, { stiffness: 200, damping: 18 })
   const rotateY = useSpring(tiltY, { stiffness: 200, damping: 18 })
-  const y = useTransform(progress, [0, 1], [0, depth])
+  const y = useTransform(progress, [0, 1], [0, depth * 0.45])
   const tilts = fine && !reduce
 
   return (
@@ -81,7 +81,7 @@ const ShapeCard = ({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="group block"
+        className="group block will-change-transform"
         style={{ y: reduce ? 0 : y, rotateX, rotateY, transformPerspective: 900 }}
         onPointerMove={(event) => {
           if (!tilts) return
@@ -131,7 +131,7 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
   const ref = useRef<HTMLElement>(null)
   const reduce = useReducedMotion()
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
-  const titleY = useTransform(scrollYProgress, [0, 1], ['0%', '38%'])
+  const titleY = useTransform(scrollYProgress, [0, 1], ['0%', '10%'])
 
   const stats = [
     { value: AI_TOOL_COUNT, suffix: '', label: 'AI tools in the flagship workspace', shape: 'sparkle' as const, color: 'sun' as const },
@@ -153,9 +153,9 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
         <div className="flex items-center justify-between gap-4">
           <motion.p
             className="eyebrow text-ink"
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: easeOut }}
+            transition={{ duration: 0.35, ease: easeOut }}
           >
             <Shape kind="sparkle" color="sun" className="h-4 w-4" /> Independent AI studio
           </motion.p>
@@ -172,24 +172,24 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
         </div>
 
         <motion.h1
-          style={{ y: reduce ? 0 : titleY }}
+          style={{ y: reduce ? 0 : titleY, willChange: 'transform' }}
           className="mt-8 font-display text-[clamp(3rem,8.6vw,8rem)] font-semibold leading-[0.92] tracking-[-0.055em]"
         >
           <span className="sr-only">AI products that earn their place.</span>
           <span aria-hidden="true" className="block">
-            <MaskWord delay={0.1}>AI</MaskWord> <MaskWord delay={0.17}>products</MaskWord>{' '}
-            <MaskWord delay={0.24}>that</MaskWord>
+            <MaskWord delay={0.02}>AI</MaskWord> <MaskWord delay={0.05}>products</MaskWord>{' '}
+            <MaskWord delay={0.08}>that</MaskWord>
           </span>
           <span aria-hidden="true" className="block">
-            <MaskWord delay={0.31}>earn</MaskWord> <MaskWord delay={0.38}>their</MaskWord>{' '}
+            <MaskWord delay={0.11}>earn</MaskWord> <MaskWord delay={0.14}>their</MaskWord>{' '}
             <span className="relative isolate inline-block">
               <motion.span
                 className="absolute -inset-x-[0.06em] bottom-[0.04em] top-[0.2em] -z-10 origin-left rounded-[0.18em] bg-sun"
                 initial={reduce ? false : { scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ delay: 0.95, duration: 0.8, ease: easeOut }}
+                transition={{ delay: 0.28, duration: 0.45, ease: easeOut }}
               />
-              <MaskWord delay={0.45} className="pr-[0.06em] font-serif font-normal italic tracking-[-0.02em]">
+              <MaskWord delay={0.17} className="pr-[0.06em] font-serif font-normal italic tracking-[-0.02em]">
                 place.
               </MaskWord>
             </span>
