@@ -180,6 +180,17 @@ VOLUME_NAME="${COMPOSE_PROJECT}_media_data"
 docker volume create "$VOLUME_NAME" >/dev/null 2>&1 || true
 docker run --rm -v "${VOLUME_NAME}:/m" alpine chown -R 10001:10001 /m || true
 
+# Clean up any unmanaged containers conflicting with service container names
+for cname in postgres_db nevatal_backend nevatal_frontend nevatal_hub; do
+  if docker container inspect "$cname" >/dev/null 2>&1; then
+    proj=$(docker container inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$cname" 2>/dev/null || true)
+    if [ "$proj" != "$COMPOSE_PROJECT" ]; then
+      echo "Removing conflicting container $cname (outside compose project $COMPOSE_PROJECT)..."
+      docker rm -f "$cname" || true
+    fi
+  fi
+done
+
 echo "=== STARTING STACK ==="
 docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
 
