@@ -100,3 +100,15 @@ export const Play = (props: IconProps) => (
     <path d="M7 5.5v13l11-6.5-11-6.5Z" />
   </svg>
 )
+
+export const ArrowDown = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <path d="M12 4v14m-6-6 6 6 6-6" />
+  </svg>
+)
+
+export const ArrowUp = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <path d="M12 20V6m-6 6 6-6 6 6" />
+  </svg>
+)

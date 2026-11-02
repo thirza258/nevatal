@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion'
+import { motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion'
 import { useFinePointer } from '../lib/hooks'
 
 type Mode = 'hidden' | 'idle' | 'link' | 'drag'
@@ -62,19 +62,7 @@ const Cursor = () => {
         animate={{ width: size, height: size, opacity: mode === 'hidden' ? 0 : 1 }}
         transition={{ type: 'spring', stiffness: 380, damping: 28 }}
       >
-        <AnimatePresence>
-          {mode === 'drag' && (
-            <motion.span
-              key="drag"
-              initial={{ opacity: 0, scale: 0.6 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6 }}
-              className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-black"
-            >
-              Drag
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {/* Dot scales smoothly without text hints */}
       </motion.div>
     </motion.div>
   )

@@ -7,12 +7,12 @@ import {
   GITHUB_URL,
   WP_SITE_URL,
 } from '../lib/constants'
-import { useFinePointer } from '../lib/hooks'
 import { revealProps } from '../lib/inview'
 import { easeOut, springPop } from '../lib/motion'
 import ShapeField from './decor/ShapeField'
 import LogoMark from './LogoMark'
-import { ArrowUpRight } from './icons'
+import { ArrowUp, ArrowUpRight } from './icons'
+import { scrollToTop } from '../lib/scroll'
 
 const FooterColumn = ({
   title,
@@ -62,7 +62,6 @@ const letter: Variants = {
 }
 
 const Wordmark = () => {
-  const fine = useFinePointer()
   return (
     <div className="relative mt-16 select-none px-2 sm:mt-20">
       <motion.p
@@ -91,11 +90,15 @@ const Wordmark = () => {
         ))}
       </motion.p>
       <ShapeField seed="footer" tone="sun" count={7} mobileCount={4} layout="scatter" sizes={[44, 100]} className="z-10" />
-      {fine && (
-        <p className="pointer-events-none absolute right-5 top-0 hidden font-mono text-[10px] uppercase tracking-[0.18em] text-ink/75 sm:block">
-          The shapes are loose — throw them around
-        </p>
-      )}
+      <button
+        type="button"
+        onClick={scrollToTop}
+        className="absolute right-5 top-0 z-20 flex items-center gap-2 rounded-full border border-ink/20 bg-sun px-3.5 py-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-ink shadow-sm transition-all hover:border-ink hover:bg-ink hover:text-sun"
+        aria-label="Scroll back to top"
+      >
+        <span>Back to top</span>
+        <ArrowUp className="h-3.5 w-3.5" />
+      </button>
     </div>
   )
 }

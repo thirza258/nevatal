@@ -5,8 +5,9 @@ import Shape, { type ShapeKind } from '../components/decor/Shape'
 import ShapeField from '../components/decor/ShapeField'
 import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
-import { ArrowUpRight } from '../components/icons'
+import { ArrowDown, ArrowUpRight } from '../components/icons'
 import { spring } from '../lib/motion'
+import { scrollToSection } from '../lib/scroll'
 
 const COMPONENTS: Array<{
   id: string
@@ -77,7 +78,7 @@ const InfrastructureSection = () => {
   const active = COMPONENTS.find((component) => component.id === activeId) ?? COMPONENTS[0]
 
   return (
-    <MorphSection morph="blob" className="py-28 sm:py-36">
+    <MorphSection morph="blob" id="infrastructure" className="py-28 sm:py-36">
       <ShapeField seed="infrastructure" tone="sun" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
         <Reveal>
@@ -177,6 +178,16 @@ const InfrastructureSection = () => {
             </AnimatePresence>
           </Reveal>
         </div>
+
+        <Reveal delay={0.15} className="mt-14 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => scrollToSection('capabilities')}
+            className="btn btn-ink"
+          >
+            View studio capabilities <ArrowDown className="h-4 w-4" />
+          </button>
+        </Reveal>
       </div>
     </MorphSection>
   )

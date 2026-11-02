@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   motion,
@@ -16,11 +16,12 @@ import AnimatedCounter from '../components/motion/AnimatedCounter'
 import Magnetic from '../components/motion/Magnetic'
 import { MaskWord } from '../components/motion/SplitText'
 import VelocityMarquee from '../components/motion/VelocityMarquee'
-import { ArrowRight, ArrowUpRight, Shuffle } from '../components/icons'
+import { ArrowDown, ArrowRight, ArrowUpRight } from '../components/icons'
 import { PROJECTS } from '../data/projects'
 import { AI_HUB_URL, AI_TOOL_COUNT, BLOG_TOTAL_FALLBACK } from '../lib/constants'
 import { useFinePointer } from '../lib/hooks'
 import { cardIn, easeOut, fadeUp } from '../lib/motion'
+import { scrollToSection } from '../lib/scroll'
 
 const SEPARATORS: Array<{ kind: ShapeKind; color: ShapeColor }> = [
   { kind: 'sparkle', color: 'sun' },
@@ -128,7 +129,6 @@ const ShapeCard = ({
 
 const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
   const ref = useRef<HTMLElement>(null)
-  const [shuffle, setShuffle] = useState(0)
   const reduce = useReducedMotion()
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const titleY = useTransform(scrollYProgress, [0, 1], ['0%', '38%'])
@@ -147,7 +147,7 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
 
   return (
     <section ref={ref} className="relative overflow-clip bg-paper">
-      <ShapeField seed="hero" count={8} mobileCount={3} sizes={[46, 124]} shuffleKey={shuffle} />
+      <ShapeField seed="hero" count={8} mobileCount={3} sizes={[46, 124]} />
 
       <div className="container-x relative pt-12 sm:pt-16 lg:pt-20">
         <div className="flex items-center justify-between gap-4">
@@ -161,13 +161,13 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
           </motion.p>
           <motion.button
             type="button"
-            onClick={() => setShuffle((value) => value + 1)}
-            whileTap={{ scale: 0.9, rotate: -20 }}
-            className="eyebrow rounded-full border border-ink/15 px-3 py-2 text-ink/70 transition-colors hover:border-ink hover:text-ink"
-            aria-label="Shuffle the background shapes"
+            onClick={() => scrollToSection('studio')}
+            whileTap={{ scale: 0.95 }}
+            className="eyebrow rounded-full border border-ink/15 px-3 py-2 text-ink/75 transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+            aria-label="Scroll to studio section"
           >
-            <Shuffle className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Shuffle shapes</span>
+            <span>Explore studio</span>
+            <ArrowDown className="h-3.5 w-3.5" />
           </motion.button>
         </div>
 
@@ -214,6 +214,15 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
                   Open the AI Hub <ArrowUpRight className="h-4 w-4" />
                 </a>
               </Magnetic>
+              <Magnetic>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('ecosystem')}
+                  className="btn btn-line"
+                >
+                  View ecosystem <ArrowDown className="h-4 w-4" />
+                </button>
+              </Magnetic>
             </motion.div>
 
             <motion.dl variants={fadeUp} className="mt-14 grid max-w-lg grid-cols-3 border-t border-ink/10">
@@ -228,6 +237,27 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
                 </div>
               ))}
             </motion.dl>
+
+            <motion.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-2">
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink/50">Jump to:</span>
+              {[
+                { id: 'studio', label: 'Studio' },
+                { id: 'ecosystem', label: 'Ecosystem' },
+                { id: 'ai-hub', label: 'AI Hub' },
+                { id: 'applied-ai', label: 'Applied AI' },
+                { id: 'engineering', label: 'Stack' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => scrollToSection(item.id)}
+                  className="flex items-center gap-1 rounded-full border border-ink/10 bg-paper-2 px-2.5 py-1 font-mono text-[11px] text-ink/70 transition-colors hover:border-ink hover:text-ink"
+                >
+                  <span>{item.label}</span>
+                  <ArrowDown className="h-3 w-3 opacity-60" />
+                </button>
+              ))}
+            </motion.div>
           </motion.div>
 
           <motion.div

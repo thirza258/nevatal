@@ -6,10 +6,11 @@ import Shape from '../components/decor/Shape'
 import ShapeField from '../components/decor/ShapeField'
 import Heading from '../components/motion/Heading'
 import Magnetic from '../components/motion/Magnetic'
-import { ArrowRight, ArrowUpRight } from '../components/icons'
+import { ArrowDown, ArrowRight, ArrowUpRight } from '../components/icons'
 import { AI_HUB_URL } from '../lib/constants'
 import { useWide } from '../lib/hooks'
 import type { PolarShape } from '../lib/shapes'
+import { scrollToSection } from '../lib/scroll'
 
 /**
  * The call to action lives inside one big yellow shape: it swells into place
@@ -25,7 +26,7 @@ const FinalCTA = () => {
   const rotate = useTransform(scrollYProgress, [0, 1], [-25, 0])
 
   return (
-    <section className="relative overflow-clip bg-paper pb-24 pt-10 sm:pb-32">
+    <section id="final-cta" className="relative overflow-clip bg-paper pb-24 pt-10 sm:pb-32">
       <div ref={ref} className="container-x">
         <motion.div
           style={reduce ? undefined : { scale, rotate }}
@@ -72,6 +73,17 @@ const FinalCTA = () => {
                 >
                   See all projects <ArrowRight className="h-4 w-4" />
                 </Link>
+              </Magnetic>
+              <Magnetic>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('ecosystem')}
+                  className="btn btn-paper"
+                  onMouseEnter={() => setShape('circle')}
+                  onMouseLeave={() => setShape('blob')}
+                >
+                  Explore ecosystem <ArrowDown className="h-4 w-4" />
+                </button>
               </Magnetic>
             </div>
           </div>

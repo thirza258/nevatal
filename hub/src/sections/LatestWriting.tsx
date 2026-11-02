@@ -5,8 +5,9 @@ import ShapeField from '../components/decor/ShapeField'
 import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
 import { Stagger, StaggerItem } from '../components/motion/Stagger'
-import { ArrowRight } from '../components/icons'
+import { ArrowDown, ArrowRight } from '../components/icons'
 import type { WPPost } from '../lib/wp'
+import { scrollToSection } from '../lib/scroll'
 
 interface LatestWritingProps {
   posts: WPPost[]
@@ -15,7 +16,7 @@ interface LatestWritingProps {
 }
 
 const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
-  <section className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
+  <section id="writing" className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
     <ShapeField seed="writing" count={4} mobileCount={2} sizes={[40, 90]} />
     <div className="container-x relative">
       <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
@@ -64,6 +65,19 @@ const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
           </Link>
         </Reveal>
       )}
+
+      <div className="mt-14 flex flex-wrap items-center justify-center gap-3">
+        <Link to="/blog" className="btn btn-ink">
+          Browse full writing archive <ArrowRight className="h-4 w-4" />
+        </Link>
+        <button
+          type="button"
+          onClick={() => scrollToSection('final-cta')}
+          className="btn btn-line"
+        >
+          Get started with Nevatal <ArrowDown className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   </section>
 )

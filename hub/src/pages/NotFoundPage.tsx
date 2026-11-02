@@ -71,11 +71,6 @@ const NotFoundPage = () => {
               Read the blog
             </Link>
           </div>
-          {fine && (
-            <p className="mt-8 flex items-center justify-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink/60">
-              <Shape kind="sparkle" color="cobalt" className="h-3 w-3" /> The zero is loose — throw it
-            </p>
-          )}
         </div>
       </div>
     </section>

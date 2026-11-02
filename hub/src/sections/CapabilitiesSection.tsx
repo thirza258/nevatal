@@ -5,9 +5,10 @@ import MorphShape from '../components/decor/MorphShape'
 import Shape, { type ShapeColor } from '../components/decor/Shape'
 import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
-import { ArrowRight, ArrowUpRight } from '../components/icons'
+import { ArrowDown, ArrowRight, ArrowUpRight } from '../components/icons'
 import type { PolarShape } from '../lib/shapes'
 import { spring } from '../lib/motion'
+import { scrollToSection } from '../lib/scroll'
 
 interface CapabilityLink {
   label: string
@@ -78,7 +79,7 @@ const CapabilitiesSection = () => {
   const active = CAPABILITIES.find((capability) => capability.id === activeId) ?? CAPABILITIES[0]
 
   return (
-    <section className="relative overflow-clip bg-paper py-28 sm:py-36">
+    <section id="capabilities" className="relative overflow-clip bg-paper py-28 sm:py-36">
       <div className="container-x relative grid gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <Reveal>
           <p className="eyebrow text-ink">
@@ -163,6 +164,23 @@ const CapabilitiesSection = () => {
             </AnimatePresence>
           </div>
         </Reveal>
+      </div>
+
+      <div className="container-x mt-14 flex flex-wrap items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={() => scrollToSection('writing')}
+          className="btn btn-ink"
+        >
+          Read latest writing <ArrowDown className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollToSection('final-cta')}
+          className="btn btn-line"
+        >
+          Get in touch <ArrowDown className="h-4 w-4" />
+        </button>
       </div>
     </section>
   )

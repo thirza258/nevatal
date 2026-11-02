@@ -7,9 +7,10 @@ import Magnetic from '../components/motion/Magnetic'
 import Reveal from '../components/motion/Reveal'
 import { Stagger, StaggerItem } from '../components/motion/Stagger'
 import Typewriter from '../components/motion/Typewriter'
-import { ArrowUpRight } from '../components/icons'
+import { ArrowDown, ArrowUpRight } from '../components/icons'
 import { AI_HUB_COURSES_URL, AI_HUB_URL } from '../lib/constants'
 import { spring } from '../lib/motion'
+import { scrollToSection } from '../lib/scroll'
 
 interface DemoTool {
   id: string
@@ -102,7 +103,7 @@ const AIHubSection = () => {
   const active = DEMO_TOOLS.find((tool) => tool.id === activeId) ?? DEMO_TOOLS[0]
 
   return (
-    <section className="relative overflow-clip bg-paper py-28 sm:py-36">
+    <section id="ai-hub" className="relative overflow-clip bg-paper py-28 sm:py-36">
       <ShapeField seed="ai-hub" count={5} mobileCount={2} sizes={[40, 100]} />
       <div className="container-x relative grid items-center gap-16 lg:grid-cols-[0.92fr_1.08fr]">
         <div>
@@ -228,6 +229,22 @@ const AIHubSection = () => {
           <p className="mt-4 text-center font-mono text-[11px] text-ink/60">
             Interactive sample with local data — nothing is sent to a model from this page.
           </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Magnetic>
+              <a href={AI_HUB_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ink">
+                Open the AI Hub <ArrowUpRight className="h-4 w-4" />
+              </a>
+            </Magnetic>
+            <Magnetic>
+              <button
+                type="button"
+                onClick={() => scrollToSection('applied-ai')}
+                className="btn btn-line"
+              >
+                See applied AI pipeline <ArrowDown className="h-4 w-4" />
+              </button>
+            </Magnetic>
+          </div>
         </Reveal>
       </div>
     </section>

@@ -6,7 +6,9 @@ import ShapeField from '../components/decor/ShapeField'
 import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
 import Typewriter from '../components/motion/Typewriter'
+import { ArrowDown } from '../components/icons'
 import { spring } from '../lib/motion'
+import { scrollToSection } from '../lib/scroll'
 
 const LAYERS: Array<{
   id: string
@@ -97,7 +99,7 @@ const EngineeringShowcase = () => {
   const active = LAYERS.find((layer) => layer.id === activeId) ?? LAYERS[0]
 
   return (
-    <MorphSection morph="arch" className="py-28 sm:py-36">
+    <MorphSection morph="arch" id="engineering" className="py-28 sm:py-36">
       <ShapeField seed="engineering" tone="sun" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
         <Reveal>
@@ -200,6 +202,23 @@ const EngineeringShowcase = () => {
             </AnimatePresence>
           </Reveal>
         </div>
+
+        <Reveal delay={0.15} className="mt-14 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => scrollToSection('featured-projects')}
+            className="btn btn-ink"
+          >
+            Browse selected projects <ArrowDown className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection('infrastructure')}
+            className="btn btn-line"
+          >
+            Infrastructure details <ArrowDown className="h-4 w-4" />
+          </button>
+        </Reveal>
       </div>
     </MorphSection>
   )

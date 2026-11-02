@@ -3,6 +3,8 @@ import Shape from '../components/decor/Shape'
 import ShapeField from '../components/decor/ShapeField'
 import Reveal from '../components/motion/Reveal'
 import ScrollWords from '../components/motion/ScrollWords'
+import { ArrowDown } from '../components/icons'
+import { scrollToSection } from '../lib/scroll'
 
 const DISCIPLINES = [
   'Applied AI',
@@ -13,7 +15,7 @@ const DISCIPLINES = [
 ]
 
 const StudioIntroduction = () => (
-  <section className="relative overflow-clip bg-paper py-28 sm:py-40">
+  <section id="studio" className="relative overflow-clip bg-paper py-28 sm:py-40">
     <ShapeField seed="studio" count={5} mobileCount={2} sizes={[40, 96]} />
     <div className="container-x relative">
       <Reveal>
@@ -34,6 +36,22 @@ const StudioIntroduction = () => (
             accessible technology. The focus is turning technical ideas into practical products,
             tools, and learning experiences.
           </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => scrollToSection('ecosystem')}
+              className="btn btn-ink"
+            >
+              Explore the ecosystem <ArrowDown className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('ai-hub')}
+              className="btn btn-line"
+            >
+              Flagship AI Hub <ArrowDown className="h-4 w-4" />
+            </button>
+          </div>
         </Reveal>
       </div>
     </div>

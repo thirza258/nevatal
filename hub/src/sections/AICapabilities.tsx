@@ -4,12 +4,13 @@ import Shape from '../components/decor/Shape'
 import ShapeField from '../components/decor/ShapeField'
 import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Shuffle } from '../components/icons'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight } from '../components/icons'
 import { AI_PROJECTS, type Project } from '../data/projects'
 import { CATEGORY_SHAPE } from '../lib/categories'
 import { revealProps } from '../lib/inview'
 import { cardIn, spring } from '../lib/motion'
 import { shuffle } from '../lib/random'
+import { scrollToSection } from '../lib/scroll'
 
 const STAGES = [
   {
@@ -106,7 +107,7 @@ const AICard = ({ project, frame }: { project: Project; frame: string }) => {
 
 const AICapabilities = () => {
   const [activeId, setActiveId] = useState('reranking')
-  const [deck, setDeck] = useState(deal)
+  const [deck] = useState(deal)
   const active = STAGES.find((stage) => stage.id === activeId) ?? STAGES[0]
   const reduce = useReducedMotion()
 
@@ -121,7 +122,7 @@ const AICapabilities = () => {
     railRef.current?.scrollBy({ left: direction * 620, behavior: reduce ? 'auto' : 'smooth' })
 
   return (
-    <section className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
+    <section id="applied-ai" className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
       <ShapeField seed="applied-ai" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
         <Reveal>
@@ -231,19 +232,17 @@ const AICapabilities = () => {
               Where the models ship.
             </h3>
             <p className="mt-3 max-w-lg text-ink/65">
-              {deck.length} projects put AI or machine learning to work — dealt in a new order, in
-              new shapes, on every visit.
+              {deck.length} projects put AI or machine learning to work across production environments.
             </p>
           </div>
           <div className="flex flex-none items-center gap-2">
-            <motion.button
+            <button
               type="button"
-              onClick={() => setDeck(deal())}
-              whileTap={{ scale: 0.92, rotate: -12 }}
+              onClick={() => scrollToSection('engineering')}
               className="btn btn-ink !px-4"
             >
-              <Shuffle className="h-4 w-4" /> Shuffle
-            </motion.button>
+              Engineering stack <ArrowDown className="h-4 w-4" />
+            </button>
             <button type="button" onClick={() => nudge(-1)} className="btn btn-line !px-3" aria-label="Scroll the AI projects back">
               <ArrowLeft className="h-4 w-4" />
             </button>
@@ -269,6 +268,15 @@ const AICapabilities = () => {
       <div className="container-x">
         <div className="h-[3px] overflow-hidden rounded-full bg-ink/10">
           <motion.div className="h-full origin-left rounded-full bg-ink" style={{ scaleX: scrollXProgress }} />
+        </div>
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={() => scrollToSection('engineering')}
+            className="btn btn-line"
+          >
+            Explore engineering architecture <ArrowDown className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </section>

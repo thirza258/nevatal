@@ -6,10 +6,11 @@ import Shape from '../components/decor/Shape'
 import ShapeField from '../components/decor/ShapeField'
 import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
-import { ArrowRight } from '../components/icons'
+import { ArrowDown, ArrowRight } from '../components/icons'
 import { PROJECT_CATEGORIES, PROJECTS, type ProjectCategory } from '../data/projects'
 import { CATEGORY_SHAPE } from '../lib/categories'
 import { spring } from '../lib/motion'
+import { scrollToSection } from '../lib/scroll'
 
 type Filter = 'All' | ProjectCategory
 
@@ -24,7 +25,7 @@ const FeaturedProjects = () => {
   )
 
   return (
-    <section className="relative overflow-clip bg-paper py-28 sm:py-36">
+    <section id="featured-projects" className="relative overflow-clip bg-paper py-28 sm:py-36">
       <ShapeField seed="featured" count={6} mobileCount={2} sizes={[40, 100]} />
       <div className="container-x relative">
         <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
@@ -88,6 +89,19 @@ const FeaturedProjects = () => {
             ))}
           </AnimatePresence>
         </motion.div>
+
+        <div className="mt-14 flex flex-wrap items-center justify-center gap-3">
+          <Link to="/projects" className="btn btn-ink">
+            View full portfolio ({PROJECTS.length} projects) <ArrowRight className="h-4 w-4" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => scrollToSection('learning')}
+            className="btn btn-line"
+          >
+            Explore learning platforms <ArrowDown className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </section>
   )

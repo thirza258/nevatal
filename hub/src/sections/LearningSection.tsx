@@ -5,9 +5,10 @@ import Shape from '../components/decor/Shape'
 import ShapeField from '../components/decor/ShapeField'
 import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
-import { ArrowUpRight } from '../components/icons'
+import { ArrowDown, ArrowUpRight } from '../components/icons'
 import type { PolarShape } from '../lib/shapes'
 import { spring } from '../lib/motion'
+import { scrollToSection } from '../lib/scroll'
 
 const TOPICS: Array<{
   id: string
@@ -68,7 +69,7 @@ const LearningSection = () => {
   const active = TOPICS.find((topic) => topic.id === activeId) ?? TOPICS[0]
 
   return (
-    <section className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
+    <section id="learning" className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
       <ShapeField seed="learning" count={4} mobileCount={2} sizes={[40, 90]} />
       <div className="container-x relative grid gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <Reveal>
@@ -159,6 +160,16 @@ const LearningSection = () => {
             </div>
           </div>
         </Reveal>
+      </div>
+
+      <div className="container-x mt-14 flex flex-wrap items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={() => scrollToSection('infrastructure')}
+          className="btn btn-ink"
+        >
+          Next: Self-hosted infrastructure <ArrowDown className="h-4 w-4" />
+        </button>
       </div>
     </section>
   )

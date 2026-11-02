@@ -6,12 +6,13 @@ import ShapeField from '../components/decor/ShapeField'
 import Heading from '../components/motion/Heading'
 import Magnetic from '../components/motion/Magnetic'
 import Reveal from '../components/motion/Reveal'
-import { ArrowRight, ArrowUpRight, Pause, Play, Shuffle } from '../components/icons'
+import { ArrowDown, ArrowRight, ArrowUpRight, Pause, Play } from '../components/icons'
 import { LIVE_PROJECTS } from '../data/projects'
 import { CATEGORY_SHAPE, hostOf } from '../lib/categories'
 import { useInViewport } from '../lib/inview'
 import { easeOut, spring } from '../lib/motion'
 import { shuffle } from '../lib/random'
+import { scrollToSection } from '../lib/scroll'
 
 const AUTO_ADVANCE_MS = 5200
 
@@ -21,7 +22,7 @@ const AUTO_ADVANCE_MS = 5200
  * project hands control to the visitor, and Shuffle deals again.
  */
 const ProductEcosystem = () => {
-  const [deck, setDeck] = useState(() => shuffle(LIVE_PROJECTS))
+  const [deck] = useState(() => shuffle(LIVE_PROJECTS))
   const [activeSlug, setActiveSlug] = useState(() => deck[0].slug)
   const [autoplay, setAutoplay] = useState(true)
   const [paused, setPaused] = useState(false)
@@ -54,20 +55,13 @@ const ProductEcosystem = () => {
     })
   }, [active.slug, reduce])
 
-  const deal = () => {
-    const next = shuffle(deck)
-    setDeck(next)
-    setActiveSlug(next[0].slug)
-    setAutoplay(true)
-  }
-
   const pick = (slug: string) => {
     setActiveSlug(slug)
     setAutoplay(false)
   }
 
   return (
-    <MorphSection morph="sparkle" className="py-28 sm:py-36">
+    <MorphSection morph="sparkle" id="ecosystem" className="py-28 sm:py-36">
       <ShapeField seed="ecosystem" tone="sun" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
         <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
@@ -85,18 +79,17 @@ const ProductEcosystem = () => {
               open and use right now.
             </p>
           </Reveal>
-          <Reveal delay={0.1} className="flex items-center gap-3">
+          <Reveal delay={0.1} className="flex flex-wrap items-center gap-3">
             <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink/80">
-              All {deck.length} projects · dealt fresh each visit
+              All {deck.length} live products
             </span>
-            <motion.button
+            <button
               type="button"
-              onClick={deal}
-              whileTap={{ scale: 0.92, rotate: -12 }}
+              onClick={() => scrollToSection('ai-hub')}
               className="btn btn-ink !px-4"
             >
-              <Shuffle className="h-4 w-4" /> Shuffle
-            </motion.button>
+              Next: AI Workspace <ArrowDown className="h-4 w-4" />
+            </button>
           </Reveal>
         </div>
 
@@ -238,6 +231,13 @@ const ProductEcosystem = () => {
                     </a>
                   </Magnetic>
                 )}
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('ai-hub')}
+                  className="btn btn-line !px-4"
+                >
+                  AI workspace <ArrowDown className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
