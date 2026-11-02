@@ -1,0 +1,18 @@
+# Nevatal
+
+> Independent AI Studio building AI workspaces, grounded retrieval tools, learning platforms, and developer utilities.
+
+## Main Services
+- Nevatal Studio: https://nevatal.id
+- Nevatal Chat Workspace: https://chat.nevatal.id
+- Courses & Education: https://chat.nevatal.id/courses
+- GitHub: https://github.com/thirza258/nevatal
+
+## Agent Endpoints
+- API Catalog: https://nevatal.id/.well-known/api-catalog
+- Auth Guide: https://nevatal.id/auth.md
+- Agent Card: https://nevatal.id/.well-known/agent-card.json
+- MCP Server Card: https://nevatal.id/.well-known/mcp/server-card.json
+- Agent Skills: https://nevatal.id/.well-known/agent-skills/index.json
+- OAuth Protected Resource: https://nevatal.id/.well-known/oauth-protected-resource
+- OAuth Authorization Server: https://nevatal.id/.well-known/oauth-authorization-server

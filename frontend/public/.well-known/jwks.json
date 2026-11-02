@@ -1,3 +1,20 @@
 {
-  "keys": []
+  "keys": [
+    {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "6xq0ldTow576m3-ZROLe1jR0mwu_G7vXi3pOzaeelzA",
+      "kid": "nevatal-bot-ed25519",
+      "use": "sig",
+      "alg": "EdDSA"
+    },
+    {
+      "kty": "RSA",
+      "n": "uC2X0qe06kUK5UeBUkPqfrJ-5x_GoRmyUQ8Ump-scbZWCkhZwtBS5quRcbnBIZtg4UqXMcwcrSadPWcrfD43-ji0YlRrdbueKUD5wB9yXNMIIHYAiRwFOaIr5PY-OOIKS9655tKhUufP66gj3YrgTVNMfBYkLVh28tNE2M4_euXECmlY_W024v2RL8O-lasOo4r5yVzZDkRyRxnmhrD5ErYP8aAJvqfs2m9vW62WJRu1q-2Psjq_WgL31ei1ldjCEE3hQjLYLpBWqAsv6e7ttGQwRSha-lvIKD520tDGVUUqBO68PzV89l7q_YwP50_wRnsjflU9ulkkUU5vmSNbIw",
+      "e": "AQAB",
+      "kid": "nevatal-bot-rsa",
+      "use": "sig",
+      "alg": "RS256"
+    }
+  ]
 }
