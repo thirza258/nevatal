@@ -1,102 +1,174 @@
-import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
-import AbstractShape from '../components/decor/AbstractShape'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import MorphSection from '../components/decor/MorphSection'
+import Shape from '../components/decor/Shape'
+import ShapeField from '../components/decor/ShapeField'
+import Heading from '../components/motion/Heading'
+import Magnetic from '../components/motion/Magnetic'
 import Reveal from '../components/motion/Reveal'
-import { ArrowUpRight } from '../components/icons'
-import { PROJECTS, type Project } from '../data/projects'
-import { spring } from '../lib/motion'
+import { ArrowRight, ArrowUpRight, Pause, Play, Shuffle } from '../components/icons'
+import { LIVE_PROJECTS } from '../data/projects'
+import { CATEGORY_SHAPE, hostOf } from '../lib/categories'
+import { useInViewport } from '../lib/inview'
+import { easeOut, spring } from '../lib/motion'
+import { shuffle } from '../lib/random'
 
-const ECOSYSTEM_SLUGS = ['ai-hub', 'ragreader', 'leetbug', 'uptime-medics', 'decalove']
+const AUTO_ADVANCE_MS = 5200
 
-const ECOSYSTEM = ECOSYSTEM_SLUGS.map((slug) =>
-  PROJECTS.find((project) => project.slug === slug)
-).filter((project): project is Project => Boolean(project))
-
+/**
+ * Every live project, dealt in a fresh order on each visit. The preview walks
+ * through the deck on its own while the section is on screen; picking a
+ * project hands control to the visitor, and Shuffle deals again.
+ */
 const ProductEcosystem = () => {
-  const [activeSlug, setActiveSlug] = useState(ECOSYSTEM[0].slug)
-  const active = ECOSYSTEM.find((project) => project.slug === activeSlug) ?? ECOSYSTEM[0]
+  const [deck, setDeck] = useState(() => shuffle(LIVE_PROJECTS))
+  const [activeSlug, setActiveSlug] = useState(() => deck[0].slug)
+  const [autoplay, setAutoplay] = useState(true)
+  const [paused, setPaused] = useState(false)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+  const onScreen = useInViewport(stageRef, { margin: '-15% 0px' })
+  const reduce = useReducedMotion()
+
+  const index = Math.max(0, deck.findIndex((project) => project.slug === activeSlug))
+  const active = deck[index]
+  const running = autoplay && !paused && onScreen && !reduce
+
+  useEffect(() => {
+    if (!running) return
+    const timer = window.setTimeout(() => {
+      setActiveSlug(deck[(index + 1) % deck.length].slug)
+    }, AUTO_ADVANCE_MS)
+    return () => window.clearTimeout(timer)
+  }, [running, index, deck])
+
+  // Under `lg` the projects sit in one scrolling row; keep the current one in view.
+  useEffect(() => {
+    const list = listRef.current
+    if (!list || list.scrollWidth <= list.clientWidth) return
+    const chip = list.querySelector<HTMLElement>(`[data-slug="${active.slug}"]`)
+    if (!chip) return
+    list.scrollTo({
+      left: chip.offsetLeft - (list.clientWidth - chip.offsetWidth) / 2,
+      behavior: reduce ? 'auto' : 'smooth',
+    })
+  }, [active.slug, reduce])
+
+  const deal = () => {
+    const next = shuffle(deck)
+    setDeck(next)
+    setActiveSlug(next[0].slug)
+    setAutoplay(true)
+  }
+
+  const pick = (slug: string) => {
+    setActiveSlug(slug)
+    setAutoplay(false)
+  }
 
   return (
-    <section className="relative overflow-hidden border-t border-white/5 bg-[#0B0D10] py-24 text-paper sm:py-32">
-      <AbstractShape
-        shape="triangle-outline"
-        tone="brand"
-        className="-right-6 top-8 h-40 w-40 sm:-right-10 sm:h-56 sm:w-56"
-      />
-      <AbstractShape
-        shape="trapezoid"
-        tone="light"
-        rotate={false}
-        className="-left-6 bottom-10 h-16 w-16 sm:-left-8 sm:h-24 sm:w-24"
-      />
-      <div className="container-x relative grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-        <div>
+    <MorphSection morph="sparkle" className="py-28 sm:py-36">
+      <ShapeField seed="ecosystem" tone="sun" count={5} mobileCount={2} sizes={[40, 96]} />
+      <div className="container-x relative">
+        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
           <Reveal>
-            <p className="eyebrow text-brand">The ecosystem</p>
-            <h2 className="mt-4 font-display text-[clamp(2.2rem,4.5vw,3.5rem)] font-semibold leading-[1.05] tracking-tight">
-              One ecosystem. Many ways in.
-            </h2>
-            <p className="mt-5 max-w-md leading-relaxed text-paper/60">
+            <p className="eyebrow text-ink">
+              <Shape kind="burst" color="paper" className="h-3.5 w-3.5" /> The ecosystem
+            </p>
+            <Heading
+              text="One ecosystem. Many ways in."
+              accent="Many ways in."
+              className="h-section mt-6 max-w-3xl"
+            />
+            <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/80">
               Different products, one standard: real interfaces, real data, and something you can
               open and use right now.
             </p>
           </Reveal>
-
-          <div className="mt-8 space-y-1">
-            {ECOSYSTEM.map((project) => {
-              const isActive = project.slug === activeSlug
-              return (
-                <button
-                  key={project.slug}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => setActiveSlug(project.slug)}
-                  className={`relative w-full rounded-xl px-3 py-3 text-left transition-colors ${
-                    isActive ? 'text-paper' : 'text-paper/55 hover:text-paper'
-                  }`}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="ecosystem-active"
-                      className="absolute inset-0 rounded-xl border border-white/10 bg-white/[0.05]"
-                      transition={spring}
-                    />
-                  )}
-                  <span className="relative z-10 flex items-center justify-between gap-3">
-                    <span>
-                      <span className="block text-sm font-semibold">{project.name}</span>
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-[0.14em] text-paper/40">
-                        {project.category}
-                      </span>
-                    </span>
-                    <ArrowUpRight
-                      className={`h-4 w-4 transition ${isActive ? 'text-brand' : 'text-paper/20'}`}
-                    />
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+          <Reveal delay={0.1} className="flex items-center gap-3">
+            <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink/80">
+              All {deck.length} projects · dealt fresh each visit
+            </span>
+            <motion.button
+              type="button"
+              onClick={deal}
+              whileTap={{ scale: 0.92, rotate: -12 }}
+              className="btn btn-ink !px-4"
+            >
+              <Shuffle className="h-4 w-4" /> Shuffle
+            </motion.button>
+          </Reveal>
         </div>
 
-        <Reveal delay={0.08}>
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0F1216] shadow-[0_30px_100px_-50px_rgba(0,0,0,0.9)]">
-            <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
-              <span className="flex gap-1.5" aria-hidden="true">
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+        <div
+          ref={stageRef}
+          className="mt-14 grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onFocusCapture={() => setPaused(true)}
+          onBlurCapture={() => setPaused(false)}
+        >
+          <motion.ul
+            ref={listRef}
+            layout
+            className="no-scrollbar relative -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0"
+            aria-label="Projects in the ecosystem"
+          >
+            {deck.map((project) => {
+              const isActive = project.slug === active.slug
+              const glyph = CATEGORY_SHAPE[project.category]
+              return (
+                <motion.li key={project.slug} data-slug={project.slug} layout transition={spring} className="flex-none">
+                  <button
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => pick(project.slug)}
+                    className={`relative flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+                      isActive ? 'text-paper' : 'bg-paper text-ink hover:bg-sun-soft'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="ecosystem-active"
+                        className="absolute inset-0 rounded-full bg-ink"
+                        transition={spring}
+                      />
+                    )}
+                    <Shape
+                      kind={glyph.kind}
+                      color={isActive && glyph.color === 'ink' ? 'paper' : glyph.color}
+                      className="relative h-3.5 w-3.5"
+                    />
+                    <span className="relative">{project.name}</span>
+                  </button>
+                </motion.li>
+              )
+            })}
+          </motion.ul>
+
+          <div className="overflow-hidden rounded-[32px] bg-paper shadow-[0_40px_90px_-50px_rgba(11,11,13,0.55)]">
+            <div className="flex items-center gap-3 px-5 py-4">
+              <span className="truncate rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
+                {active.url ? hostOf(active.url) : 'internal'}
               </span>
-              <span className="truncate rounded-full bg-white/5 px-3 py-0.5 text-[10px] text-paper/40">
-                {active.url ? new URL(active.url).hostname : 'internal'}
+              <span className="ml-auto flex flex-none items-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live
               </span>
-              <span className="ml-auto flex flex-none items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
+              <span className="flex-none font-mono text-[11px] tabular-nums text-ink/60">
+                {String(index + 1).padStart(2, '0')} / {deck.length}
               </span>
+              <button
+                type="button"
+                onClick={() => setAutoplay((value) => !value)}
+                aria-label={autoplay ? 'Pause the project slideshow' : 'Play the project slideshow'}
+                className="grid h-8 w-8 flex-none place-items-center rounded-full border border-ink/15 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+              >
+                {autoplay ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+              </button>
             </div>
 
-            <div className="relative aspect-[16/10] overflow-hidden bg-[#141820]">
-              <AnimatePresence mode="wait" initial={false}>
+            <div className="relative mx-3 aspect-[16/10] overflow-hidden rounded-[22px] bg-paper-2">
+              <AnimatePresence initial={false}>
                 <motion.img
                   key={active.slug}
                   src={`/previews/${active.slug}.jpg`}
@@ -105,40 +177,73 @@ const ProductEcosystem = () => {
                   height={800}
                   loading="lazy"
                   decoding="async"
-                  initial={{ opacity: 0, scale: 1.02 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="h-full w-full object-cover object-top"
+                  initial={{ clipPath: 'circle(0% at 50% 50%)', zIndex: 1 }}
+                  animate={{ clipPath: 'circle(75% at 50% 50%)', zIndex: 1 }}
+                  exit={{ zIndex: 0, transition: { duration: 0.7 } }}
+                  transition={{ duration: 0.7, ease: easeOut }}
+                  className="absolute inset-0 h-full w-full object-cover object-top"
                 />
               </AnimatePresence>
-            </div>
-
-            <div className="flex flex-col gap-4 border-t border-white/10 p-5 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">
-                  {active.category}
-                </p>
-                <h3 className="mt-1 font-display text-xl font-semibold">{active.name}</h3>
-                <p className="mt-1 max-w-md text-sm leading-relaxed text-paper/55">
-                  {active.tagline}
-                </p>
-              </div>
-              {active.url && (
-                <a
-                  href={active.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary flex-none"
-                >
-                  Open {active.name} <ArrowUpRight className="h-4 w-4" />
-                </a>
+              {running && (
+                <motion.span
+                  key={`${active.slug}-timer`}
+                  aria-hidden="true"
+                  className="absolute inset-x-0 bottom-0 z-10 h-1 origin-left bg-sun"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: AUTO_ADVANCE_MS / 1000, ease: 'linear' }}
+                />
               )}
             </div>
+
+            <div className="flex flex-col gap-5 p-6">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={active.slug}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25 }}
+                  className="min-w-0"
+                  // Announce picks the visitor makes, not the autoplay every five seconds.
+                  aria-live={autoplay ? 'off' : 'polite'}
+                >
+                  <p className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-ink/60">
+                    <Shape
+                      kind={CATEGORY_SHAPE[active.category].kind}
+                      color={CATEGORY_SHAPE[active.category].color}
+                      className="h-3 w-3"
+                    />
+                    {active.category}
+                  </p>
+                  <h3 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em]">
+                    {active.name}
+                  </h3>
+                  <p className="mt-1 max-w-md text-sm leading-relaxed text-ink/65">{active.tagline}</p>
+                </motion.div>
+              </AnimatePresence>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => pick(deck[(index + 1) % deck.length].slug)}
+                  className="btn btn-line !px-4"
+                  aria-label="Show the next project"
+                >
+                  Next <ArrowRight className="h-4 w-4" />
+                </button>
+                {active.url && (
+                  <Magnetic>
+                    <a href={active.url} target="_blank" rel="noopener noreferrer" className="btn btn-ink">
+                      Open {active.name} <ArrowUpRight className="h-4 w-4" />
+                    </a>
+                  </Magnetic>
+                )}
+              </div>
+            </div>
           </div>
-        </Reveal>
+        </div>
       </div>
-    </section>
+    </MorphSection>
   )
 }
 

@@ -1,12 +1,8 @@
-import { motion, type Variants } from 'framer-motion'
-import AbstractShape from '../components/decor/AbstractShape'
+import PillPile from '../components/decor/PillPile'
+import Shape from '../components/decor/Shape'
+import ShapeField from '../components/decor/ShapeField'
 import Reveal from '../components/motion/Reveal'
-import { easeOut, stagger } from '../lib/motion'
-
-const disciplineItem: Variants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: easeOut } },
-}
+import ScrollWords from '../components/motion/ScrollWords'
 
 const DISCIPLINES = [
   'Applied AI',
@@ -17,55 +13,29 @@ const DISCIPLINES = [
 ]
 
 const StudioIntroduction = () => (
-  <section className="relative overflow-hidden bg-paper py-24 sm:py-32">
-    <AbstractShape
-      shape="triangle"
-      tone="maroon"
-      className="-right-6 top-8 h-40 w-40 sm:-right-10 sm:h-64 sm:w-64"
-    />
-    <AbstractShape
-      shape="trapezoid-outline"
-      tone="blue"
-      className="-left-8 bottom-2 h-32 w-32 sm:-left-12 sm:h-44 sm:w-44"
-    />
+  <section className="relative overflow-clip bg-paper py-28 sm:py-40">
+    <ShapeField seed="studio" count={5} mobileCount={2} sizes={[40, 96]} />
     <div className="container-x relative">
       <Reveal>
-        <p className="eyebrow text-maroon">A small studio. A wide technical scope.</p>
+        <p className="eyebrow text-ink">
+          <Shape kind="circle" color="plum" className="h-2.5 w-2.5" /> A small studio. A wide technical scope.
+        </p>
       </Reveal>
 
-      <Reveal delay={0.08}>
-        <h2 className="mt-6 max-w-4xl font-display text-[clamp(2.2rem,5vw,4.2rem)] font-semibold leading-[1.05] tracking-tight">
-          From intelligent systems to products people can actually use.
-        </h2>
-      </Reveal>
+      <h2 className="mt-8 max-w-5xl font-display text-[clamp(2.3rem,5.4vw,4.8rem)] font-semibold leading-[1.02] tracking-[-0.045em]">
+        <ScrollWords text="From intelligent systems to products people can actually use." />
+      </h2>
 
-      <div className="mt-10 flex justify-end">
-        <Reveal delay={0.14}>
-          <p className="max-w-md leading-relaxed text-ink/60">
+      <div className="mt-16 grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+        <PillPile items={DISCIPLINES} seed="disciplines" size="lg" className="min-h-[220px] max-w-2xl" />
+        <Reveal delay={0.1}>
+          <p className="max-w-md text-lg leading-relaxed text-ink/65">
             Nevatal explores the intersection of artificial intelligence, software engineering, and
             accessible technology. The focus is turning technical ideas into practical products,
             tools, and learning experiences.
           </p>
         </Reveal>
       </div>
-
-      <motion.ul
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: '-10% 0px' }}
-        variants={stagger}
-        className="mt-14 flex flex-wrap gap-x-8 gap-y-3 border-t border-ink/10 pt-6"
-      >
-        {DISCIPLINES.map((discipline) => (
-          <motion.li
-            key={discipline}
-            variants={disciplineItem}
-            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/45"
-          >
-            {discipline}
-          </motion.li>
-        ))}
-      </motion.ul>
     </div>
   </section>
 )

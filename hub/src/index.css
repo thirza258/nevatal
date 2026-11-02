@@ -3,20 +3,32 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Where sticky bars sit below the floating header. The header updates it
+       as it hides and shows, so a bar never leaves a gap or slides under it. */
+    --header-offset: 80px;
+  }
+
   html {
     scroll-behavior: smooth;
+    /* Shapes bleed off the edges on purpose. `clip` trims them without
+       creating a scroll container, so position: sticky keeps working. */
+    overflow-x: clip;
   }
 
   body {
     @apply bg-paper font-sans text-ink antialiased;
+    overflow-x: clip;
   }
 
+  /* Ink selection reads on both the white and the yellow sections. */
   ::selection {
-    @apply bg-brand text-ink;
+    @apply bg-ink text-sun;
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-paper;
+    outline: 2px solid #0b0b0d;
+    outline-offset: 3px;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -40,59 +52,66 @@
   }
 
   .eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.22em];
+    @apply inline-flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.18em];
+  }
+
+  .h-display {
+    @apply font-display font-semibold;
+    font-size: clamp(3.1rem, 10vw, 9rem);
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+  }
+
+  .h-section {
+    @apply font-display font-semibold;
+    font-size: clamp(2.4rem, 5.6vw, 4.6rem);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .h-page {
+    @apply font-display font-semibold;
+    font-size: clamp(2.9rem, 8.4vw, 7rem);
+    line-height: 0.92;
+    letter-spacing: -0.05em;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition duration-200;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors duration-200;
   }
 
-  .btn-primary {
-    @apply bg-brand text-ink hover:-translate-y-0.5 hover:bg-[#ffd166];
+  .btn-ink {
+    @apply bg-ink text-paper hover:bg-cobalt;
   }
 
-  .btn-dark {
-    @apply bg-ink text-paper hover:-translate-y-0.5 hover:bg-ink-2;
+  .btn-sun {
+    @apply bg-sun text-ink hover:bg-ink hover:text-sun;
   }
 
-  .btn-ghost {
-    @apply border border-ink/15 text-ink hover:border-ink/40 hover:bg-ink/5;
+  .btn-paper {
+    @apply bg-paper text-ink hover:bg-ink hover:text-paper;
   }
 
-  .btn-ghost-light {
-    @apply border border-white/20 text-paper hover:border-white/45 hover:bg-white/5;
+  .btn-line {
+    @apply border border-ink/20 text-ink hover:border-ink hover:bg-ink hover:text-paper;
   }
 
   .tag {
-    @apply rounded-full border border-ink/10 bg-ink/[0.03] px-2.5 py-1 text-[11px] font-medium text-ink/70;
+    @apply rounded-full border border-ink/10 px-2.5 py-1 text-[11px] font-medium text-ink/65;
+  }
+
+  .link-underline {
+    @apply bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 transition-[background-size] duration-300 hover:bg-[length:100%_1px];
   }
 }
 
-.hero-surface {
-  background-color: #08090b;
-  background-image:
-    radial-gradient(56% 56% at 84% 4%, rgba(47, 107, 255, 0.16) 0%, transparent 64%),
-    radial-gradient(48% 48% at 4% 96%, rgba(255, 197, 61, 0.1) 0%, transparent 62%),
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: auto, auto, 56px 56px, 56px 56px;
-}
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
 
-.marquee-mask {
-  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-}
-
-.marquee-track {
-  animation: marquee 64s linear infinite;
-}
-
-.marquee-mask:hover .marquee-track {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .marquee-track {
-    animation: none;
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -109,8 +128,8 @@
 }
 
 .article-body img {
-  border-radius: 0.9rem;
-  border: 1px solid rgba(10, 13, 18, 0.1);
+  border-radius: 1.25rem;
+  border: 1px solid rgba(11, 11, 13, 0.08);
 }
 
 .article-body figure {
@@ -121,15 +140,15 @@
   margin-top: 0.5rem;
   text-align: center;
   font-size: 0.8rem;
-  color: rgba(10, 13, 18, 0.55);
+  color: rgba(11, 11, 13, 0.55);
 }
 
 .article-body .callout {
   margin: 1.75rem 0 !important;
-  border-radius: 0.9rem !important;
-  border: 1px solid rgba(47, 107, 255, 0.2) !important;
-  border-left: 4px solid #2f6bff !important;
-  background: rgba(47, 107, 255, 0.06) !important;
+  border-radius: 1.25rem !important;
+  border: 1px solid rgba(255, 199, 0, 0.45) !important;
+  border-left: 4px solid #ffc700 !important;
+  background: #fff8dc !important;
   padding: 1.25rem 1.4rem !important;
 }
 
@@ -140,8 +159,8 @@
 
 .article-body .project-access-box {
   margin: 1.75rem 0 !important;
-  border-radius: 0.9rem !important;
-  border: 1px solid rgba(10, 13, 18, 0.12) !important;
+  border-radius: 1.25rem !important;
+  border: 1px solid rgba(11, 11, 13, 0.12) !important;
   background: #ffffff !important;
   padding: 1.25rem 1.4rem !important;
 }
@@ -150,8 +169,8 @@
 .article-body video {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 0.9rem;
-  border: 1px solid rgba(10, 13, 18, 0.1);
+  border-radius: 1.25rem;
+  border: 1px solid rgba(11, 11, 13, 0.08);
 }
 
 .article-body table {

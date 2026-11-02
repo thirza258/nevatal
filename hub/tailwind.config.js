@@ -5,32 +5,34 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Taken from the logo: Nevatal yellow, the wordmark blue and the plum
+      // dots. Sections are only ever white (`paper`) or yellow (`sun`); ink is
+      // for type and small UI. `blue` is deliberately not overridden, so
+      // Tailwind's own blue scale keeps working.
       colors: {
-        ink: '#0A0D12',
-        'ink-2': '#121722',
-        paper: '#F6F3EB',
-        'paper-2': '#EDE8DC',
-        brand: '#FFC53D',
-        blue: '#2F6BFF',
-        maroon: '#9F1239',
+        ink: '#0B0B0D',
+        'ink-2': '#1B1B20',
+        paper: '#FFFFFF',
+        'paper-2': '#F6F5F1',
+        sun: '#FFC700',
+        'sun-soft': '#FFF3C2',
+        cobalt: '#0069D6',
+        plum: '#600061',
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['"Instrument Serif"', 'ui-serif', 'Georgia', 'serif'],
+        mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       keyframes: {
-        'fade-up': {
-          '0%': { opacity: '0', transform: 'translateY(14px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        marquee: {
-          '0%': { transform: 'translateX(0)' },
-          '100%': { transform: 'translateX(-50%)' },
+        blink: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0' },
         },
       },
       animation: {
-        'fade-up': 'fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both',
-        marquee: 'marquee 48s linear infinite',
+        blink: 'blink 1s steps(1) infinite',
       },
     },
   },

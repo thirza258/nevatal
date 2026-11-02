@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
-import { animate, useInView, useReducedMotion } from 'framer-motion'
+import { animate, useReducedMotion } from 'framer-motion'
+import { canObserve, useInViewport } from '../../lib/inview'
 import { easeOut } from '../../lib/motion'
 
 const AnimatedCounter = ({
   value,
   suffix = '',
-  duration = 1.1,
+  duration = 1.4,
 }: {
   value: number
   suffix?: string
   duration?: number
 }) => {
   const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-10% 0px' })
+  const inView = useInViewport(ref, { once: true, margin: '-10% 0px' })
   const reduceMotion = useReducedMotion()
-  const [display, setDisplay] = useState(0)
-  const current = useRef(0)
+  // Without an observer (server, tests) there is nothing to count up from.
+  const [display, setDisplay] = useState(canObserve ? 0 : value)
+  const current = useRef(canObserve ? 0 : value)
 
   useEffect(() => {
     if (!inView) return

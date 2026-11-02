@@ -2,10 +2,13 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import ProjectCard from '../components/ProjectCard'
-import AbstractShape from '../components/decor/AbstractShape'
+import Shape from '../components/decor/Shape'
+import ShapeField from '../components/decor/ShapeField'
+import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
 import { ArrowRight } from '../components/icons'
 import { PROJECT_CATEGORIES, PROJECTS, type ProjectCategory } from '../data/projects'
+import { CATEGORY_SHAPE } from '../lib/categories'
 import { spring } from '../lib/motion'
 
 type Filter = 'All' | ProjectCategory
@@ -21,39 +24,27 @@ const FeaturedProjects = () => {
   )
 
   return (
-    <section className="relative overflow-hidden bg-paper py-20 sm:py-28">
-      <AbstractShape
-        shape="trapezoid-outline"
-        tone="blue"
-        className="-right-8 top-10 h-36 w-36 sm:-right-12 sm:h-52 sm:w-52"
-      />
-      <AbstractShape
-        shape="triangle"
-        tone="maroon"
-        className="-left-8 bottom-8 h-32 w-32 sm:-left-12 sm:h-48 sm:w-48"
-      />
+    <section className="relative overflow-clip bg-paper py-28 sm:py-36">
+      <ShapeField seed="featured" count={6} mobileCount={2} sizes={[40, 100]} />
       <div className="container-x relative">
         <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <p className="eyebrow text-maroon">Selected projects</p>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-              Made to be explored.
-            </h2>
-            <p className="mt-4 max-w-2xl leading-relaxed text-ink/60">
+            <p className="eyebrow text-ink">
+              <Shape kind="burst" color="plum" className="h-3.5 w-3.5" /> Selected projects
+            </p>
+            <Heading text="Made to be explored." accent="explored." squiggle className="h-section mt-6" />
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/65">
               Every project below is live, maintained and openable — filter by discipline, preview
               the interface, or jump straight into the product.
             </p>
           </div>
-          <Link
-            to="/projects"
-            className="inline-flex flex-none items-center gap-2 text-sm font-semibold text-ink transition hover:text-blue"
-          >
+          <Link to="/projects" className="btn btn-line flex-none">
             All {PROJECTS.length} projects <ArrowRight className="h-4 w-4" />
           </Link>
         </Reveal>
 
         <Reveal delay={0.06}>
-          <div className="mt-8 flex gap-2 overflow-x-auto pb-1">
+          <div className="no-scrollbar mt-10 flex gap-2 overflow-x-auto pb-1">
             {FILTERS.map((option) => {
               const active = filter === option
               return (
@@ -61,10 +52,8 @@ const FeaturedProjects = () => {
                   key={option}
                   type="button"
                   onClick={() => setFilter(option)}
-                  className={`relative flex-none whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                    active
-                      ? 'border-ink text-paper'
-                      : 'border-ink/15 bg-white text-ink/55 hover:border-ink/35 hover:text-ink'
+                  className={`relative flex flex-none items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
+                    active ? 'border-ink text-paper' : 'border-ink/15 text-ink/70 hover:border-ink hover:text-ink'
                   }`}
                 >
                   {active && (
@@ -74,14 +63,21 @@ const FeaturedProjects = () => {
                       transition={spring}
                     />
                   )}
-                  <span className="relative z-10">{option}</span>
+                  {option !== 'All' && (
+                    <Shape
+                      kind={CATEGORY_SHAPE[option].kind}
+                      color={active && CATEGORY_SHAPE[option].color === 'ink' ? 'sun' : CATEGORY_SHAPE[option].color}
+                      className="relative h-3.5 w-3.5"
+                    />
+                  )}
+                  <span className="relative">{option}</span>
                 </button>
               )
             })}
           </div>
         </Reveal>
 
-        <p className="mt-5 text-xs uppercase tracking-[0.16em] text-ink/45">
+        <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-ink/60">
           Showing {visible.length} of {PROJECTS.length} projects
         </p>
 

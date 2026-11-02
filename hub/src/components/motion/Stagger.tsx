@@ -1,41 +1,53 @@
 import type { ReactNode } from 'react'
-import { motion } from 'framer-motion'
-import { fadeUp } from '../../lib/motion'
+import { motion, type Variants } from 'framer-motion'
+import { revealProps } from '../../lib/inview'
+import { cardIn, fadeUp } from '../../lib/motion'
 
-const group = (delay: number) => ({
+const group = (delay: number, gap: number): Variants => ({
   hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: delay } },
+  show: { transition: { staggerChildren: gap, delayChildren: delay } },
 })
 
 export const Stagger = ({
   children,
   className,
   delay = 0,
+  gap = 0.08,
   trigger = 'viewport',
+  as = 'div',
 }: {
   children: ReactNode
   className?: string
   delay?: number
+  gap?: number
   trigger?: 'mount' | 'viewport'
-}) =>
-  trigger === 'mount' ? (
-    <motion.div className={className} initial="hidden" animate="show" variants={group(delay)}>
+  as?: 'div' | 'ul' | 'ol'
+}) => {
+  const Component = motion[as]
+  const props = trigger === 'mount' ? ({ initial: 'hidden', animate: 'show' } as const) : revealProps()
+  return (
+    <Component className={className} variants={group(delay, gap)} {...props}>
       {children}
-    </motion.div>
-  ) : (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: '-12% 0px -8% 0px' }}
-      variants={group(delay)}
-    >
-      {children}
-    </motion.div>
+    </Component>
   )
+}
 
-export const StaggerItem = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <motion.div className={className} variants={fadeUp}>
-    {children}
-  </motion.div>
-)
+export const StaggerItem = ({
+  children,
+  className,
+  as = 'div',
+  pop = false,
+}: {
+  children: ReactNode
+  className?: string
+  as?: 'div' | 'li'
+  /** Cards drop in with a spring and a slight tilt instead of a plain rise. */
+  pop?: boolean
+}) => {
+  const Component = motion[as]
+  return (
+    <Component className={className} variants={pop ? cardIn : fadeUp}>
+      {children}
+    </Component>
+  )
+}

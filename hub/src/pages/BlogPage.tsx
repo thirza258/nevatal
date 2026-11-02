@@ -1,23 +1,17 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import PostCard from '../components/PostCard'
-import { ArrowRight, ArrowUpRight, Search } from '../components/icons'
+import { motion } from 'framer-motion'
+import PageHero from '../components/PageHero'
+import PostCard, { PostSkeleton } from '../components/PostCard'
+import Shape from '../components/decor/Shape'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Search } from '../components/icons'
 import { WP_SITE_URL } from '../lib/constants'
+import { easeOut, spring } from '../lib/motion'
 import { usePageMeta } from '../lib/seo'
 import { decodeHtml, formatNumber } from '../lib/text'
 import { getCategories, getPosts, WpError, type WPCategory, type WPPost } from '../lib/wp'
 
 const PER_PAGE = 9
-
-const PostSkeleton = () => (
-  <div className="h-72 animate-pulse rounded-2xl border border-ink/10 bg-white p-6">
-    <div className="h-5 w-24 rounded-full bg-ink/10" />
-    <div className="mt-6 h-5 w-4/5 rounded bg-ink/10" />
-    <div className="mt-3 h-4 w-3/5 rounded bg-ink/5" />
-    <div className="mt-8 h-3 w-full rounded bg-ink/5" />
-    <div className="mt-2 h-3 w-2/3 rounded bg-ink/5" />
-  </div>
-)
 
 const BlogPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -133,113 +127,114 @@ const BlogPage = () => {
     resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const activeCategory = categorySlug !== ''
+  const chips = [{ slug: '', label: 'All writing' }].concat(
+    (categories ?? []).slice(0, 8).map((category) => ({ slug: category.slug, label: decodeHtml(category.name) }))
+  )
 
   return (
     <>
-      <section className="hero-surface text-paper">
-        <div className="container-x py-16 sm:py-20">
-          <p className="eyebrow text-brand">Writing</p>
-          <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-            Notes from the workshop.
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-paper/65">
+      <PageHero
+        eyebrow="Writing"
+        shape="squiggle"
+        shapeColor="cobalt"
+        title="Notes from the workshop."
+        accent="workshop."
+        seed="blog-hero"
+        lead={
+          <p>
             Architecture notes, build logs and lessons from the products in the portfolio —
             published from WordPress, read right here.
           </p>
+        }
+      >
+        <motion.form
+          onSubmit={submitSearch}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: easeOut, delay: 0.5 }}
+          className="mt-10 flex max-w-xl items-center gap-2 rounded-full border border-ink/15 bg-paper p-1.5 shadow-[0_24px_50px_-34px_rgba(11,11,13,0.45)] transition-colors focus-within:border-ink"
+        >
+          <Search className="ml-3 h-5 w-5 flex-none text-ink/60" />
+          <input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search the archive…"
+            aria-label="Search articles"
+            className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-ink placeholder:text-ink/45 focus:outline-none"
+          />
+          <button type="submit" className="btn btn-ink !px-5 !py-2.5">
+            Search
+          </button>
+        </motion.form>
+      </PageHero>
 
-          <form
-            onSubmit={submitSearch}
-            className="mt-8 flex max-w-xl items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] p-1.5 transition focus-within:border-brand/60"
-          >
-            <Search className="ml-3 h-5 w-5 flex-none text-paper/40" />
-            <input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search the archive…"
-              aria-label="Search articles"
-              className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-paper placeholder:text-paper/35 focus:outline-none"
-            />
-            <button type="submit" className="btn btn-primary !px-4 !py-2">
-              Search
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <section className="bg-paper py-12 sm:py-16">
-        <div className="container-x" ref={resultsRef}>
-          <div className="flex flex-col gap-3 border-b border-ink/10 pb-6">
-            <p className="text-xs uppercase tracking-[0.16em] text-ink/55">
+      <section className="bg-paper pb-24">
+        <div className="container-x scroll-mt-28" ref={resultsRef}>
+          <div className="flex flex-col gap-4 border-y border-ink/10 py-6">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink/60">
               {status === 'ready'
                 ? `${formatNumber(total)} article${total === 1 ? '' : 's'}`
                 : 'Loading the archive'}
               {query && status === 'ready' ? ` for “${query}”` : ''}
             </p>
 
-            <div className="chips-scroll -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:flex-wrap lg:overflow-visible">
-              <button
-                type="button"
-                onClick={() => selectCategory('')}
-                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition sm:px-4 sm:py-2 sm:text-sm ${
-                  !activeCategory
-                    ? 'border-ink bg-ink text-paper'
-                    : 'border-ink/15 bg-white text-ink/60 hover:border-ink/35 hover:text-ink'
-                }`}
-              >
-                All writing
-              </button>
-              {(categories ?? []).slice(0, 8).map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => selectCategory(category.slug)}
-                  className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition sm:px-4 sm:py-2 sm:text-sm ${
-                    categorySlug === category.slug
-                      ? 'border-ink bg-ink text-paper'
-                      : 'border-ink/15 bg-white text-ink/60 hover:border-ink/35 hover:text-ink'
-                  }`}
-                >
-                  {decodeHtml(category.name)}
-                </button>
-              ))}
+            <div className="chips-scroll no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:flex-wrap lg:overflow-visible">
+              {chips.map((chip) => {
+                const active = chip.slug === categorySlug
+                return (
+                  <button
+                    key={chip.slug || 'all'}
+                    type="button"
+                    onClick={() => selectCategory(chip.slug)}
+                    className={`relative whitespace-nowrap rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:text-sm ${
+                      active ? 'border-ink text-paper' : 'border-ink/15 text-ink/70 hover:border-ink hover:text-ink'
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="blog-category"
+                        className="absolute inset-0 rounded-full bg-ink"
+                        transition={spring}
+                      />
+                    )}
+                    <span className="relative">{chip.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {status === 'loading' &&
-              Array.from({ length: 6 }, (_, index) => <PostSkeleton key={index} />)}
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {status === 'loading' && Array.from({ length: 6 }, (_, index) => <PostSkeleton key={index} />)}
 
             {status === 'ready' &&
-              posts.map((post) => (
-                <PostCard
+              posts.map((post, index) => (
+                <motion.div
                   key={post.id}
-                  post={post}
-                  categoryName={categoryNames[String(post.categories[0])]}
-                />
+                  className="h-full"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: easeOut, delay: Math.min(index, 8) * 0.05 }}
+                >
+                  <PostCard post={post} categoryName={categoryNames[String(post.categories[0])]} />
+                </motion.div>
               ))}
 
             {status === 'error' && (
-              <div className="rounded-2xl border border-ink/10 bg-white p-8 text-center sm:col-span-2 lg:col-span-3">
-                <p className="font-display text-xl font-semibold">The archive is taking a break.</p>
-                <p className="mx-auto mt-2 max-w-lg text-sm text-ink/55">
+              <div className="rounded-[30px] border border-ink/10 p-10 text-center sm:col-span-2 lg:col-span-3">
+                <Shape kind="flower" color="sun" className="mx-auto h-12 w-12" />
+                <p className="mt-5 font-display text-2xl font-semibold tracking-[-0.03em]">
+                  The archive is taking a break.
+                </p>
+                <p className="mx-auto mt-2 max-w-lg text-sm text-ink/60">
                   WordPress could not be reached from this browser. The posts are still online at
                   wordpress.nevatal.id.
                 </p>
-                <div className="mt-5 flex flex-wrap justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRetryToken((token) => token + 1)}
-                    className="btn btn-dark"
-                  >
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <button type="button" onClick={() => setRetryToken((token) => token + 1)} className="btn btn-ink">
                     Try again
                   </button>
-                  <a
-                    href={WP_SITE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-ghost"
-                  >
+                  <a href={WP_SITE_URL} target="_blank" rel="noopener noreferrer" className="btn btn-line">
                     Open WordPress <ArrowUpRight className="h-4 w-4" />
                   </a>
                 </div>
@@ -247,11 +242,10 @@ const BlogPage = () => {
             )}
 
             {status === 'ready' && posts.length === 0 && (
-              <div className="rounded-2xl border border-ink/10 bg-white p-8 text-center sm:col-span-2 lg:col-span-3">
-                <p className="font-display text-xl font-semibold">No articles found.</p>
-                <p className="mt-2 text-sm text-ink/55">
-                  Try a different search term or browse every category.
-                </p>
+              <div className="rounded-[30px] border border-ink/10 p-10 text-center sm:col-span-2 lg:col-span-3">
+                <Shape kind="squiggle" color="cobalt" className="mx-auto h-12 w-16" />
+                <p className="mt-5 font-display text-2xl font-semibold tracking-[-0.03em]">No articles found.</p>
+                <p className="mt-2 text-sm text-ink/60">Try a different search term or browse every category.</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -259,7 +253,7 @@ const BlogPage = () => {
                     setSearchParams(next)
                     setSearchInput('')
                   }}
-                  className="btn btn-dark mt-5"
+                  className="btn btn-ink mt-6"
                 >
                   Clear search and filters
                 </button>
@@ -268,23 +262,23 @@ const BlogPage = () => {
           </div>
 
           {status === 'ready' && totalPages > 1 && (
-            <div className="mt-10 flex items-center justify-between border-t border-ink/10 pt-6">
+            <div className="mt-12 flex items-center justify-between border-t border-ink/10 pt-6">
               <button
                 type="button"
                 onClick={() => goToPage(page - 1)}
                 disabled={page <= 1}
-                className="btn btn-ghost disabled:cursor-not-allowed disabled:opacity-40"
+                className="btn btn-line disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Previous
+                <ArrowLeft className="h-4 w-4" /> Previous
               </button>
-              <p className="text-sm text-ink/50">
+              <p className="font-mono text-xs text-ink/60">
                 Page {page} of {totalPages}
               </p>
               <button
                 type="button"
                 onClick={() => goToPage(page + 1)}
                 disabled={page >= totalPages}
-                className="btn btn-ghost disabled:cursor-not-allowed disabled:opacity-40"
+                className="btn btn-line disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next <ArrowRight className="h-4 w-4" />
               </button>

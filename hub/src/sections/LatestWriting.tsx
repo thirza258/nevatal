@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
-import PostCard from '../components/PostCard'
-import AbstractShape from '../components/decor/AbstractShape'
+import PostCard, { PostSkeleton } from '../components/PostCard'
+import Shape from '../components/decor/Shape'
+import ShapeField from '../components/decor/ShapeField'
+import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
 import { Stagger, StaggerItem } from '../components/motion/Stagger'
 import { ArrowRight } from '../components/icons'
@@ -13,70 +15,51 @@ interface LatestWritingProps {
 }
 
 const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
-  <section className="relative overflow-hidden bg-paper-2/50 py-20 sm:py-28">
-    <AbstractShape
-      shape="trapezoid"
-      tone="brand"
-      rotate={false}
-      className="-right-8 top-12 h-28 w-28 sm:-right-12 sm:h-40 sm:w-40"
-    />
-    <AbstractShape
-      shape="triangle-outline"
-      tone="blue"
-      className="-left-8 bottom-6 h-32 w-32 sm:-left-12 sm:h-44 sm:w-44"
-    />
+  <section className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
+    <ShapeField seed="writing" count={4} mobileCount={2} sizes={[40, 90]} />
     <div className="container-x relative">
       <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div>
-          <p className="eyebrow text-blue">Writing</p>
-          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-            Notes from the workshop.
-          </h2>
-          <p className="mt-4 max-w-2xl leading-relaxed text-ink/60">
+          <p className="eyebrow text-ink">
+            <Shape kind="squiggle" color="cobalt" className="h-4 w-5" /> Writing
+          </p>
+          <Heading text="Notes from the workshop." accent="workshop." className="h-section mt-6" />
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/65">
             Architecture notes, build logs and the occasional post-mortem — published from
             WordPress and read right here.
           </p>
         </div>
-        <Link
-          to="/blog"
-          className="inline-flex flex-none items-center gap-2 text-sm font-semibold text-ink transition hover:text-blue"
-        >
+        <Link to="/blog" className="btn btn-line flex-none">
           All writing <ArrowRight className="h-4 w-4" />
         </Link>
       </Reveal>
 
-      <Stagger className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <Stagger className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {state === 'loading' &&
           [0, 1, 2].map((item) => (
-            <StaggerItem key={item} className="h-full">
-              <div className="h-72 animate-pulse rounded-2xl border border-ink/10 bg-white p-6">
-                <div className="h-5 w-24 rounded-full bg-ink/10" />
-                <div className="mt-6 h-5 w-4/5 rounded bg-ink/10" />
-                <div className="mt-3 h-4 w-3/5 rounded bg-ink/5" />
-                <div className="mt-8 h-3 w-full rounded bg-ink/5" />
-                <div className="mt-2 h-3 w-2/3 rounded bg-ink/5" />
-              </div>
+            <StaggerItem key={item} className="h-full" pop>
+              <PostSkeleton />
             </StaggerItem>
           ))}
 
         {state === 'ready' &&
           posts.map((post) => (
-            <StaggerItem key={post.id} className="h-full">
-              <PostCard
-                post={post}
-                categoryName={categories[String(post.categories[0])]}
-              />
+            <StaggerItem key={post.id} className="h-full" pop>
+              <PostCard post={post} categoryName={categories[String(post.categories[0])]} />
             </StaggerItem>
           ))}
       </Stagger>
 
       {state === 'error' && (
-        <Reveal className="mt-10 rounded-2xl border border-ink/10 bg-white p-8 text-center">
-          <p className="font-display text-xl font-semibold">The archive is taking a break.</p>
-          <p className="mt-2 text-sm text-ink/55">
+        <Reveal className="mt-12 rounded-[30px] border border-ink/10 bg-paper p-10 text-center">
+          <Shape kind="flower" color="sun" className="mx-auto h-12 w-12" />
+          <p className="mt-5 font-display text-2xl font-semibold tracking-[-0.03em]">
+            The archive is taking a break.
+          </p>
+          <p className="mt-2 text-sm text-ink/60">
             WordPress could not be reached from this browser. The posts are still online.
           </p>
-          <Link to="/blog" className="btn btn-dark mt-5">
+          <Link to="/blog" className="btn btn-ink mt-6">
             Go to the blog <ArrowRight className="h-4 w-4" />
           </Link>
         </Reveal>

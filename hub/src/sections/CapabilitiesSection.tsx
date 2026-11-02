@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import AbstractShape from '../components/decor/AbstractShape'
+import { AnimatePresence, motion } from 'framer-motion'
+import MorphShape from '../components/decor/MorphShape'
+import Shape, { type ShapeColor } from '../components/decor/Shape'
+import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
 import { ArrowRight, ArrowUpRight } from '../components/icons'
+import type { PolarShape } from '../lib/shapes'
 import { spring } from '../lib/motion'
 
 interface CapabilityLink {
@@ -18,6 +21,8 @@ interface Capability {
   title: string
   body: string
   links: CapabilityLink[]
+  shape: Exclude<PolarShape, 'rect'>
+  color: ShapeColor
 }
 
 const CAPABILITIES: Capability[] = [
@@ -30,6 +35,8 @@ const CAPABILITIES: Capability[] = [
       { label: 'RAGReader', href: 'https://rag.nevatal.id' },
       { label: 'Recommendica', href: 'https://recommendica.nevatal.id' },
     ],
+    shape: 'sparkle',
+    color: 'sun',
   },
   {
     id: 'product',
@@ -37,6 +44,8 @@ const CAPABILITIES: Capability[] = [
     title: 'Product engineering',
     body: 'Frontend interfaces, backend APIs, data systems and integrations — shipped as complete products rather than prototypes.',
     links: [{ label: 'The portfolio', href: '/projects', internal: true }],
+    shape: 'square',
+    color: 'cobalt',
   },
   {
     id: 'learning',
@@ -47,6 +56,8 @@ const CAPABILITIES: Capability[] = [
       { label: 'LeetBug', href: 'https://leetbug.nevatal.id' },
       { label: 'Gemini Japanese', href: 'https://hira.nevatal.id' },
     ],
+    shape: 'flower',
+    color: 'plum',
   },
   {
     id: 'infrastructure',
@@ -57,6 +68,8 @@ const CAPABILITIES: Capability[] = [
       { label: 'Uptime Medics', href: 'https://uptime.nevatal.id' },
       { label: 'VideoTex', href: 'https://video.nevatal.id' },
     ],
+    shape: 'burst',
+    color: 'sun',
   },
 ]
 
@@ -65,25 +78,20 @@ const CapabilitiesSection = () => {
   const active = CAPABILITIES.find((capability) => capability.id === activeId) ?? CAPABILITIES[0]
 
   return (
-    <section className="relative overflow-hidden bg-paper-2/40 py-20 sm:py-28">
-      <AbstractShape
-        shape="trapezoid-outline"
-        tone="blue"
-        className="-right-8 top-10 h-36 w-36 sm:-right-12 sm:h-52 sm:w-52"
-      />
-      <AbstractShape
-        shape="triangle-outline"
-        tone="maroon"
-        className="-left-8 bottom-6 h-32 w-32 sm:-left-12 sm:h-44 sm:w-44"
-      />
-      <div className="container-x relative grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+    <section className="relative overflow-clip bg-paper py-28 sm:py-36">
+      <div className="container-x relative grid gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <Reveal>
-          <p className="eyebrow text-blue">How we work</p>
-          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            A studio built across disciplines.
-          </h2>
+          <p className="eyebrow text-ink">
+            <Shape kind="half" color="cobalt" className="h-3.5 w-3.5" /> How we work
+          </p>
+          <Heading
+            text="A studio built across disciplines."
+            accent="disciplines."
+            squiggle
+            className="h-section mt-6"
+          />
 
-          <div className="mt-8 space-y-1">
+          <div className="mt-10 border-t border-ink/10">
             {CAPABILITIES.map((capability) => {
               const isActive = capability.id === activeId
               return (
@@ -92,73 +100,68 @@ const CapabilitiesSection = () => {
                   type="button"
                   aria-pressed={isActive}
                   onClick={() => setActiveId(capability.id)}
-                  className={`relative w-full border-t border-ink/10 px-3 py-4 text-left transition-colors ${
-                    isActive ? 'text-ink' : 'text-ink/40 hover:text-ink/75'
+                  className={`group relative flex w-full items-center justify-between gap-4 border-b border-ink/10 py-5 text-left transition-colors ${
+                    isActive ? 'text-ink' : 'text-ink/45 hover:text-ink'
                   }`}
                 >
-                  {isActive && (
-                    <motion.span
-                      layoutId="capability-active"
-                      className="absolute inset-0 bg-white/60"
-                      transition={spring}
-                    />
-                  )}
-                  <span className="relative z-10 flex items-baseline gap-4">
-                    <span className={`font-mono text-xs ${isActive ? 'text-blue' : 'text-ink/30'}`}>
-                      {capability.number}
-                    </span>
-                    <span className="font-display text-xl font-semibold tracking-tight sm:text-2xl">
+                  <span className="flex items-baseline gap-5">
+                    <span className="font-mono text-xs">{capability.number}</span>
+                    <span className="font-display text-[clamp(1.6rem,3.2vw,2.5rem)] font-semibold tracking-[-0.04em]">
                       {capability.title}
                     </span>
                   </span>
+                  {isActive && (
+                    <motion.span layoutId="capability-dot" transition={spring} className="flex-none">
+                      <Shape kind={capability.shape} color={capability.color === 'sun' ? 'cobalt' : capability.color} className="h-5 w-5" />
+                    </motion.span>
+                  )}
                 </button>
               )
             })}
           </div>
 
-          <Link
-            to="/about"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-ink transition hover:text-blue"
-          >
+          <Link to="/about" className="btn btn-line mt-10">
             Inside the studio <ArrowRight className="h-4 w-4" />
           </Link>
         </Reveal>
 
         <Reveal delay={0.08}>
-          <motion.div
-            key={active.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22 }}
-            className="rounded-2xl border border-ink/10 bg-white p-6 shadow-[0_20px_60px_-40px_rgba(10,13,18,0.4)]"
-          >
-            <p className="font-mono text-xs font-semibold text-blue">{active.number}</p>
-            <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight">{active.title}</h3>
-            <p className="mt-3 leading-relaxed text-ink/60">{active.body}</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {active.links.map((link) =>
-                link.internal ? (
-                  <Link
-                    key={link.label}
-                    to={link.href}
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-ink underline underline-offset-4 hover:text-blue"
-                  >
-                    {link.label} <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                ) : (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-ink underline underline-offset-4 hover:text-blue"
-                  >
-                    {link.label} <ArrowUpRight className="h-3.5 w-3.5" />
-                  </a>
-                )
-              )}
-            </div>
-          </motion.div>
+          <div className="relative mx-auto grid aspect-square w-full max-w-[520px] place-items-center">
+            <MorphShape shape={active.shape} color={active.color} className="absolute inset-0" />
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={active.id}
+                initial={{ opacity: 0, y: 14, rotate: -2 }}
+                animate={{ opacity: 1, y: 0, rotate: 0 }}
+                exit={{ opacity: 0, y: -10, rotate: 2 }}
+                transition={{ duration: 0.28 }}
+                className="relative w-[78%] rounded-[28px] bg-paper p-6 shadow-[0_40px_90px_-40px_rgba(11,11,13,0.5)] sm:w-[70%]"
+              >
+                <p className="font-mono text-xs font-medium text-ink/60">{active.number}</p>
+                <h3 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em]">{active.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink/70">{active.body}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {active.links.map((link) =>
+                    link.internal ? (
+                      <Link key={link.label} to={link.href} className="btn btn-ink !px-4 !py-2 text-xs">
+                        {link.label} <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    ) : (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-line !px-4 !py-2 text-xs"
+                      >
+                        {link.label} <ArrowUpRight className="h-3.5 w-3.5" />
+                      </a>
+                    )
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </Reveal>
       </div>
     </section>

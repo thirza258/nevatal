@@ -82,3 +82,21 @@ export const Spark = (props: IconProps) => (
     <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M17.7 6.3l-2.8 2.8M9.1 14.9l-2.8 2.8" />
   </svg>
 )
+
+export const Shuffle = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <path d="M3 7h3.5c2 0 3.2 1 4.3 2.7l2.4 4.6C14.3 16 15.5 17 17.5 17H21m0 0-3-3m3 3-3 3M3 17h3.5c1.2 0 2.1-.4 2.9-1.1M21 7h-3.5c-1.2 0-2.1.4-2.9 1.1M21 7l-3-3m3 3-3 3" />
+  </svg>
+)
+
+export const Pause = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <path d="M9 5v14M15 5v14" />
+  </svg>
+)
+
+export const Play = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <path d="M7 5.5v13l11-6.5-11-6.5Z" />
+  </svg>
+)

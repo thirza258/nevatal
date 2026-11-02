@@ -1,11 +1,25 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import AbstractShape from '../components/decor/AbstractShape'
+import MorphShape from '../components/decor/MorphShape'
+import Shape from '../components/decor/Shape'
+import ShapeField from '../components/decor/ShapeField'
+import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
 import { ArrowUpRight } from '../components/icons'
+import type { PolarShape } from '../lib/shapes'
 import { spring } from '../lib/motion'
 
-const TOPICS = [
+const TOPICS: Array<{
+  id: string
+  label: string
+  project: string
+  course: string
+  title: string
+  code: string
+  output: string
+  url: string
+  shape: Exclude<PolarShape, 'rect'>
+}> = [
   {
     id: 'voltquest',
     label: 'VoltQuest',
@@ -19,6 +33,7 @@ const TOPICS = [
 1 1 | 1`,
     output: 'Y = A · B — this is an AND gate.',
     url: 'https://pcb.nevatal.id',
+    shape: 'square',
   },
   {
     id: 'leetbug',
@@ -31,6 +46,7 @@ const TOPICS = [
     return sum(coins)`,
     output: '3 tests · 2 pass · 1 failing → total([25, 10])',
     url: 'https://leetbug.nevatal.id',
+    shape: 'burst',
   },
   {
     id: 'japanese',
@@ -43,6 +59,7 @@ const TOPICS = [
 洪水 (kōzui) — flood`,
     output: '3 readings · 1 listening passage',
     url: 'https://hira.nevatal.id',
+    shape: 'flower',
   },
 ]
 
@@ -51,31 +68,21 @@ const LearningSection = () => {
   const active = TOPICS.find((topic) => topic.id === activeId) ?? TOPICS[0]
 
   return (
-    <section className="relative overflow-hidden bg-paper py-20 sm:py-28">
-      <AbstractShape
-        shape="trapezoid"
-        tone="maroon"
-        className="-right-6 bottom-0 h-32 w-32 sm:-right-10 sm:h-44 sm:w-44"
-      />
-      <AbstractShape
-        shape="triangle"
-        tone="brand"
-        rotate={false}
-        className="left-4 top-6 h-14 w-14 sm:left-8 sm:top-10 sm:h-20 sm:w-20"
-      />
-      <div className="container-x relative grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+    <section className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
+      <ShapeField seed="learning" count={4} mobileCount={2} sizes={[40, 90]} />
+      <div className="container-x relative grid gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <Reveal>
-          <p className="eyebrow text-maroon">Learning</p>
-          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            Learn by building.
-          </h2>
-          <p className="mt-4 max-w-md leading-relaxed text-ink/60">
+          <p className="eyebrow text-ink">
+            <Shape kind="flower" color="sun" className="h-4 w-4" /> Learning
+          </p>
+          <Heading text="Learn by building." accent="building." className="h-section mt-6" />
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/65">
             Technical concepts explained through working examples — courses, labs and practice that
             stay useful even when you do not have an API key.
           </p>
 
-          <div className="mt-7 space-y-1">
-            {TOPICS.map((topic) => {
+          <div className="mt-10 border-t border-ink/10">
+            {TOPICS.map((topic, index) => {
               const isActive = topic.id === activeId
               return (
                 <button
@@ -83,22 +90,23 @@ const LearningSection = () => {
                   type="button"
                   aria-pressed={isActive}
                   onClick={() => setActiveId(topic.id)}
-                  className={`relative w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-colors ${
-                    isActive ? 'text-ink' : 'text-ink/45 hover:text-ink'
+                  className={`relative flex w-full items-center justify-between gap-3 border-b border-ink/10 px-4 py-5 text-left transition-colors ${
+                    isActive ? 'text-ink' : 'text-ink/60 hover:text-ink'
                   }`}
                 >
                   {isActive && (
                     <motion.span
                       layoutId="learning-topic"
-                      className="absolute inset-0 rounded-xl border border-ink/10 bg-white shadow-sm"
+                      className="absolute inset-0 rounded-2xl bg-sun"
                       transition={spring}
                     />
                   )}
-                  <span className="relative z-10 flex items-center justify-between gap-3">
-                    {topic.label}
-                    <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-ink/35">
-                      {topic.project}
-                    </span>
+                  <span className="relative flex items-baseline gap-4">
+                    <span className="font-mono text-xs">0{index + 1}</span>
+                    <span className="font-display text-2xl font-semibold tracking-[-0.03em]">{topic.label}</span>
+                  </span>
+                  <span className="relative font-mono text-[10px] uppercase tracking-[0.14em]">
+                    {topic.course.split(' · ')[0]}
                   </span>
                 </button>
               )
@@ -106,47 +114,49 @@ const LearningSection = () => {
           </div>
         </Reveal>
 
-        <Reveal delay={0.08}>
-          <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-[0_24px_70px_-40px_rgba(10,13,18,0.4)]">
-            <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/45">
-                {active.course}
-              </span>
-              <span className="rounded-full bg-brand/30 px-2.5 py-0.5 text-[10px] font-semibold text-ink/70">
-                Sample lesson
-              </span>
-            </div>
+        <Reveal delay={0.08} y={60} rotate={2}>
+          <div className="relative">
+            <MorphShape
+              shape={active.shape}
+              color="sun"
+              className="absolute -right-10 -top-12 h-56 w-56 sm:-right-16 sm:-top-16 sm:h-72 sm:w-72"
+            />
+            <div className="relative overflow-hidden rounded-[32px] border border-ink/10 bg-paper shadow-[0_50px_100px_-60px_rgba(11,11,13,0.5)]">
+              <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-6 py-4">
+                <span className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-ink/60">
+                  {active.course}
+                </span>
+                <span className="rounded-full bg-sun-soft px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink">
+                  Sample lesson
+                </span>
+              </div>
 
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={active.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2 }}
-                className="p-5"
-              >
-                <h3 className="font-display text-xl font-semibold tracking-tight">{active.title}</h3>
-                <pre className="mt-4 overflow-x-auto rounded-xl bg-ink p-4 font-mono text-[12px] leading-relaxed text-paper/80">
-                  {active.code}
-                </pre>
-                <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-600/20 bg-emerald-50 px-3 py-2 font-mono text-[11px] text-emerald-800">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  {active.output}
-                </div>
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <p className="text-[11px] text-ink/40">Sample content from the live curriculum.</p>
-                  <a
-                    href={active.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-ink underline underline-offset-4 hover:text-blue"
-                  >
-                    Open {active.project} <ArrowUpRight className="h-3.5 w-3.5" />
-                  </a>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={active.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.22 }}
+                  className="p-6"
+                >
+                  <h3 className="font-display text-2xl font-semibold tracking-[-0.03em]">{active.title}</h3>
+                  <pre className="mt-5 overflow-x-auto rounded-[20px] bg-ink p-5 font-mono text-[13px] leading-relaxed text-paper/85">
+                    {active.code}
+                  </pre>
+                  <div className="mt-3 flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2.5 font-mono text-[11px] text-emerald-800">
+                    <span className="h-1.5 w-1.5 flex-none rounded-full bg-emerald-500" />
+                    {active.output}
+                  </div>
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs text-ink/60">Sample content from the live curriculum.</p>
+                    <a href={active.url} target="_blank" rel="noopener noreferrer" className="btn btn-ink !py-2.5">
+                      Open {active.project} <ArrowUpRight className="h-4 w-4" />
+                    </a>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </Reveal>
       </div>

@@ -1,10 +1,22 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import AbstractShape from '../components/decor/AbstractShape'
+import MorphSection from '../components/decor/MorphSection'
+import Shape, { type ShapeColor, type ShapeKind } from '../components/decor/Shape'
+import ShapeField from '../components/decor/ShapeField'
+import Heading from '../components/motion/Heading'
 import Reveal from '../components/motion/Reveal'
+import Typewriter from '../components/motion/Typewriter'
 import { spring } from '../lib/motion'
 
-const LAYERS = [
+const LAYERS: Array<{
+  id: string
+  label: string
+  tech: string
+  detail: string
+  code: string
+  shape: ShapeKind
+  color: ShapeColor
+}> = [
   {
     id: 'interface',
     label: 'Interface',
@@ -18,6 +30,8 @@ const LAYERS = [
   })
   setRun(await res.json())
 }`,
+    shape: 'circle',
+    color: 'cobalt',
   },
   {
     id: 'logic',
@@ -29,6 +43,8 @@ const LAYERS = [
 def create_run(payload: RunIn, user: User = Depends(current)):
     job = queue.enqueue(payload, owner=user.id)
     return {"id": job.id, "status": job.status}`,
+    shape: 'square',
+    color: 'ink',
   },
   {
     id: 'api',
@@ -42,6 +58,8 @@ def create_run(payload: RunIn, user: User = Depends(current)):
   "tool": "prompt",
   "created_at": "2026-10-30T08:00:00Z"
 }`,
+    shape: 'pill',
+    color: 'plum',
   },
   {
     id: 'data',
@@ -54,6 +72,8 @@ FROM runs
 WHERE owner_id = $1
 ORDER BY created_at DESC
 LIMIT 20;`,
+    shape: 'quarter',
+    color: 'cobalt',
   },
   {
     id: 'deploy',
@@ -67,6 +87,8 @@ LIMIT 20;`,
     restart: unless-stopped
     ports:
       - "8080:80"`,
+    shape: 'arch',
+    color: 'paper',
   },
 ]
 
@@ -75,45 +97,32 @@ const EngineeringShowcase = () => {
   const active = LAYERS.find((layer) => layer.id === activeId) ?? LAYERS[0]
 
   return (
-    <section className="relative overflow-hidden border-t border-white/5 bg-ink py-20 text-paper sm:py-28">
-      <AbstractShape
-        shape="trapezoid"
-        tone="brand"
-        rotate={false}
-        className="right-4 top-8 h-24 w-24 sm:right-8 sm:top-10 sm:h-28 sm:w-28"
-      />
-      <AbstractShape
-        shape="triangle-outline"
-        tone="light"
-        className="-left-8 bottom-8 h-36 w-36 sm:-left-12 sm:h-52 sm:w-52"
-      />
+    <MorphSection morph="arch" className="py-28 sm:py-36">
+      <ShapeField seed="engineering" tone="sun" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
-        <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-          <div>
-            <p className="eyebrow text-brand">Product engineering</p>
-            <h2 className="mt-4 max-w-2xl font-display text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-              From an idea to a working product.
-            </h2>
-            <p className="mt-4 max-w-2xl leading-relaxed text-paper/55">
-              Interfaces, application logic, APIs, data and deployment — the layers that turn a
-              model capability into something you can open in a browser.
-            </p>
-          </div>
+        <Reveal>
+          <p className="eyebrow text-ink">
+            <Shape kind="square" color="ink" className="h-3 w-3" /> Product engineering
+          </p>
+          <Heading
+            text="From an idea to a working product."
+            accent="working product."
+            className="h-section mt-6 max-w-4xl"
+          />
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/80">
+            Interfaces, application logic, APIs, data and deployment — the layers that turn a
+            model capability into something you can open in a browser.
+          </p>
         </Reveal>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <Reveal delay={0.06}>
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0F1216]">
-              <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-                <span className="flex gap-1.5" aria-hidden="true">
-                  <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                </span>
-                <span className="rounded-full bg-white/5 px-3 py-0.5 text-[10px] text-paper/40">
+        <div className="mt-14 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+          <Reveal delay={0.06} y={60} rotate={-2}>
+            <div className="overflow-hidden rounded-[32px] bg-paper p-2.5 shadow-[0_40px_90px_-50px_rgba(11,11,13,0.55)]">
+              <div className="flex items-center gap-2 px-3 pb-3 pt-1.5">
+                <span className="rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
                   chat.nevatal.id
                 </span>
-                <span className="ml-auto text-[9px] font-semibold uppercase tracking-[0.12em] text-paper/30">
+                <span className="ml-auto font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/60">
                   Interface layer
                 </span>
               </div>
@@ -124,16 +133,16 @@ const EngineeringShowcase = () => {
                 height={800}
                 loading="lazy"
                 decoding="async"
-                className="aspect-[16/10] w-full object-cover object-top"
+                className="aspect-[16/10] w-full rounded-[22px] object-cover object-top"
               />
-              <p className="border-t border-white/10 px-4 py-2.5 text-[11px] text-paper/35">
+              <p className="px-3 pb-2 pt-3 text-xs text-ink/60">
                 The same product shown in the ecosystem above — here as an engineering surface.
               </p>
             </div>
           </Reveal>
 
-          <Reveal delay={0.1}>
-            <div className="flex flex-wrap gap-1.5">
+          <Reveal delay={0.12}>
+            <div className="flex flex-wrap gap-2">
               {LAYERS.map((layer) => {
                 const isActive = layer.id === activeId
                 return (
@@ -142,20 +151,23 @@ const EngineeringShowcase = () => {
                     type="button"
                     aria-pressed={isActive}
                     onClick={() => setActiveId(layer.id)}
-                    className={`relative rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors ${
-                      isActive
-                        ? 'text-ink'
-                        : 'border border-white/15 text-paper/50 hover:border-white/30 hover:text-paper'
+                    className={`relative flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+                      isActive ? 'text-paper' : 'bg-paper text-ink hover:bg-sun-soft'
                     }`}
                   >
                     {isActive && (
                       <motion.span
                         layoutId="engineering-layer"
-                        className="absolute inset-0 rounded-full bg-brand"
+                        className="absolute inset-0 rounded-full bg-ink"
                         transition={spring}
                       />
                     )}
-                    <span className="relative z-10">{layer.label}</span>
+                    <Shape
+                      kind={layer.shape}
+                      color={isActive && layer.color === 'ink' ? 'sun' : layer.color === 'paper' && !isActive ? 'ink' : layer.color}
+                      className="relative h-3.5 w-3.5"
+                    />
+                    <span className="relative">{layer.label}</span>
                   </button>
                 )
               })}
@@ -164,26 +176,32 @@ const EngineeringShowcase = () => {
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={active.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 16, rotate: 1 }}
+                animate={{ opacity: 1, y: 0, rotate: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="mt-4 rounded-2xl border border-white/10 bg-[#0F1216] p-5"
+                transition={{ duration: 0.25 }}
+                className="mt-5 rounded-[28px] bg-paper p-6"
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">
+                <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink/60">
                   {active.tech}
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-paper/60">{active.detail}</p>
-                <pre className="mt-4 overflow-x-auto rounded-lg border border-white/10 bg-black/30 p-3 font-mono text-[11px] leading-relaxed text-emerald-200/85">
-                  {active.code}
-                </pre>
-                <p className="mt-2 text-[10px] text-paper/30">Illustrative sample code.</p>
+                <p className="mt-3 leading-relaxed text-ink/80">{active.detail}</p>
+                <div className="mt-5 rounded-[20px] bg-ink p-4">
+                  <Typewriter
+                    text={active.code}
+                    charsPerSecond={220}
+                    className="overflow-x-auto whitespace-pre font-mono text-[12px] leading-relaxed text-sun"
+                  />
+                </div>
+                <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-ink/60">
+                  Illustrative sample code.
+                </p>
               </motion.div>
             </AnimatePresence>
           </Reveal>
         </div>
       </div>
-    </section>
+    </MorphSection>
   )
 }
 

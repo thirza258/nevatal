@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ArrowUpRight } from '../components/icons'
+import PageHero from '../components/PageHero'
+import Reveal from '../components/motion/Reveal'
 import { usePageMeta } from '../lib/seo'
 
 const TermsPage = () => {
@@ -12,21 +14,23 @@ const TermsPage = () => {
 
   return (
     <>
-      <section className="hero-surface text-paper">
-        <div className="container-x py-16 sm:py-24">
-          <p className="eyebrow text-brand">Legal &amp; Terms</p>
-          <h1 className="mt-4 max-w-4xl font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-            Terms of Service
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm text-paper/60">
+      <PageHero
+        eyebrow="Legal & Terms"
+        shape="arch"
+        shapeColor="plum"
+        title="Terms of Service"
+        accent="of Service"
+        seed="terms-hero"
+        lead={
+          <p className="font-mono text-sm uppercase tracking-[0.08em] text-ink/60">
             Effective Date: November 1, 2026 &bull; MIT License &bull; Personal &amp; Educational Use
           </p>
-        </div>
-      </section>
+        }
+      />
 
-      <section className="bg-paper py-16 text-ink sm:py-20">
+      <section className="border-t border-ink/10 bg-paper py-16 text-ink sm:py-24">
         <div className="container-x max-w-4xl space-y-10">
-          <div className="rounded-2xl border border-blue-600/20 bg-blue-500/5 p-6 sm:p-8 text-sm leading-relaxed text-ink/85">
+          <Reveal className="rounded-[28px] bg-sun-soft p-6 text-sm leading-relaxed text-ink/85 sm:p-8">
             <h2 className="font-display text-lg font-semibold text-ink flex items-center gap-2 mb-3">
               <span>📢</span> Independent Personal Project &amp; Non-Affiliation Disclaimer
             </h2>
@@ -43,28 +47,28 @@ const TermsPage = () => {
               Any similarity in name is pure coincidence, as the name was sourced from an automated business
               name generator for hackathon projects and personal developer experiments.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="space-y-4 border-b border-ink/10 pb-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">1. Agreement to Terms</h2>
+          <Reveal className="space-y-4 border-b border-ink/10 pb-8">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">1. Agreement to Terms</h2>
             <p className="leading-relaxed text-ink/75">
               By accessing or using Nevatal and its hosted tools, you agree to comply with and be bound by
               these Terms of Service. If you do not agree with any portion of these terms, you should cease
               accessing or utilizing the platform.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="space-y-4 border-b border-ink/10 pb-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">2. Self-Hosted &amp; Educational Purpose</h2>
+          <Reveal className="space-y-4 border-b border-ink/10 pb-8">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">2. Self-Hosted &amp; Educational Purpose</h2>
             <p className="leading-relaxed text-ink/75">
               Nevatal provides self-hosted productivity utilities, educational articles, and open AI tools.
               All applications are developed and offered on an independent, non-commercial basis for learning,
               experimentation, and personal development.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="space-y-4 border-b border-ink/10 pb-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">3. Acceptable Use Guidelines</h2>
+          <Reveal className="space-y-4 border-b border-ink/10 pb-8">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">3. Acceptable Use Guidelines</h2>
             <p className="leading-relaxed text-ink/75">When utilizing Nevatal, you agree not to:</p>
             <ul className="list-disc pl-6 space-y-1.5 text-ink/75">
               <li>Deploy automated denial-of-service scripts, spamming, or abuse against public instances.</li>
@@ -72,10 +76,10 @@ const TermsPage = () => {
               <li>Generate malicious software, disinformation campaigns, phishing, or unlawful material.</li>
               <li>Infringe upon the intellectual property or copyright of third parties.</li>
             </ul>
-          </div>
+          </Reveal>
 
-          <div className="space-y-4 border-b border-ink/10 pb-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">4. AI Provider Compliance (OpenRouter)</h2>
+          <Reveal className="space-y-4 border-b border-ink/10 pb-8">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">4. AI Provider Compliance (OpenRouter)</h2>
             <p className="leading-relaxed text-ink/75">
               When utilizing AI generation, chat, and retrieval services powered by OpenRouter or external
               language model providers, you are also bound by the provider&apos;s acceptable use and terms of service:
@@ -85,44 +89,44 @@ const TermsPage = () => {
                 href="https://openrouter.ai/terms"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
+                className="inline-flex items-center gap-1 font-semibold text-cobalt hover:underline"
               >
                 OpenRouter Terms of Service <ArrowUpRight className="h-4 w-4" />
               </a>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="space-y-4 border-b border-ink/10 pb-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">5. Disclaimer of Warranties &amp; MIT License</h2>
+          <Reveal className="space-y-4 border-b border-ink/10 pb-8">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">5. Disclaimer of Warranties &amp; MIT License</h2>
             <p className="leading-relaxed text-ink/75">
               Nevatal is provided on an &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE&rdquo; basis under the MIT License,
               without warranties of any kind, express or implied. The developers and maintainers make no guarantees
               regarding availability, uptime, or fitness for specific commercial, clinical, or financial applications.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="space-y-4 border-b border-ink/10 pb-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">6. Contact &amp; Legal Notices</h2>
+          <Reveal className="space-y-4 border-b border-ink/10 pb-8">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">6. Contact &amp; Legal Notices</h2>
             <p className="leading-relaxed text-ink/75">
               For legal inquiries, terms clarification, or takedown notices, reach us directly at:{' '}
               <a
                 href="mailto:nevatalapp@gmail.com"
-                className="font-semibold text-blue-600 underline underline-offset-4 hover:text-blue-700"
+                className="font-semibold text-cobalt underline underline-offset-4 hover:text-ink"
               >
                 nevatalapp@gmail.com
               </a>
               .
             </p>
-          </div>
+          </Reveal>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 text-sm font-semibold">
+          <Reveal className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 text-sm font-semibold">
             <Link to="/" className="inline-flex items-center gap-2 text-ink/70 hover:text-ink">
               <ArrowLeft className="h-4 w-4" /> Back to Home
             </Link>
-            <Link to="/privacy" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700">
+            <Link to="/privacy" className="inline-flex items-center gap-2 text-cobalt hover:text-ink">
               Privacy Policy <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
     </>

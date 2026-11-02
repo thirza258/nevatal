@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Project } from '../data/projects'
+import { hostOf } from '../lib/categories'
 import { spring } from '../lib/motion'
 import { ArrowUpRight, Close, ImageIcon, Monitor } from './icons'
 
@@ -11,14 +12,6 @@ const SHOT_MAX_ATTEMPTS = 8
 const SHOT_READY_WIDTH = 1000
 
 type Tab = 'live' | 'screenshot'
-
-const hostOf = (url: string) => {
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
-}
 
 const shotSource = (url: string, seed: string, attempt: number) =>
   `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280&h=800&v=${seed}${attempt}`
@@ -113,7 +106,7 @@ const ProjectPreview = ({
 
   return createPortal(
     <motion.div
-      className="fixed inset-0 z-[80] flex bg-ink/70 backdrop-blur-sm sm:items-center sm:justify-center sm:p-6"
+      className="fixed inset-0 z-[80] flex bg-ink/60 backdrop-blur-md sm:items-center sm:justify-center sm:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -127,16 +120,16 @@ const ProjectPreview = ({
         role="dialog"
         aria-modal="true"
         aria-label={`${project.name} preview`}
-        initial={{ opacity: 0, scale: 0.96, y: 24 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 16 }}
+        initial={{ opacity: 0, scale: 0.92, y: 40, clipPath: 'inset(8% 8% 8% 8% round 48px)' }}
+        animate={{ opacity: 1, scale: 1, y: 0, clipPath: 'inset(0% 0% 0% 0% round 28px)' }}
+        exit={{ opacity: 0, scale: 0.96, y: 20 }}
         transition={spring}
-        className="flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-[82vh] sm:max-w-6xl sm:rounded-2xl"
+        className="flex h-full w-full flex-col overflow-hidden bg-paper shadow-2xl sm:h-[82vh] sm:max-w-6xl sm:rounded-[28px]"
       >
-        <header className="flex items-center gap-2 border-b border-ink/10 px-3 py-2.5 sm:gap-3 sm:px-4">
+        <header className="flex items-center gap-2 border-b border-ink/10 px-3 py-3 sm:gap-3 sm:px-5">
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-sm font-semibold">{project.name}</p>
-            <p className="truncate text-xs text-ink/50">{host}</p>
+            <p className="truncate font-display text-[15px] font-semibold tracking-[-0.02em]">{project.name}</p>
+            <p className="truncate font-mono text-[11px] text-ink/60">{host}</p>
           </div>
 
           <div className="flex flex-none rounded-full border border-ink/15 bg-ink/[0.04] p-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]">
@@ -149,7 +142,7 @@ const ProjectPreview = ({
                   aria-pressed={active}
                   onClick={() => setTab(id)}
                   className={`relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-colors ${
-                    active ? 'text-paper' : 'text-ink/55 hover:text-ink'
+                    active ? 'text-paper' : 'text-ink/60 hover:text-ink'
                   }`}
                 >
                   {active && (
@@ -170,7 +163,7 @@ const ProjectPreview = ({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-none items-center gap-1 rounded-full border border-ink/10 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink/55 transition hover:border-ink/30 hover:bg-ink hover:text-paper"
+            className="flex flex-none items-center gap-1 rounded-full bg-sun px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink transition hover:bg-ink hover:text-sun"
           >
             <span className="hidden sm:inline">Open site</span>
             <ArrowUpRight className="h-3.5 w-3.5" />
@@ -184,7 +177,7 @@ const ProjectPreview = ({
             whileHover={{ rotate: 90 }}
             whileTap={{ scale: 0.92 }}
             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            className="flex-none rounded-full border border-ink/10 p-1.5 text-ink/55 transition-colors hover:border-ink/30 hover:bg-ink hover:text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+            className="flex-none rounded-full border border-ink/15 p-1.5 text-ink/70 transition-colors hover:border-ink hover:bg-ink hover:text-paper"
           >
             <Close className="h-4 w-4" />
           </motion.button>
@@ -197,7 +190,7 @@ const ProjectPreview = ({
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              className="border-b border-amber-200/70 bg-amber-50 px-4 py-2 text-xs leading-relaxed text-amber-900"
+              className="border-b border-sun bg-sun-soft px-4 py-2 text-xs leading-relaxed text-ink"
             >
               The live view didn’t load in time, so a screenshot is shown instead. You can switch
               back to Live anytime.
@@ -219,16 +212,16 @@ const ProjectPreview = ({
                 <iframe
                   src={url}
                   title={`${project.name} live preview`}
-                  className="h-full w-full border-0 bg-white"
+                  className="h-full w-full border-0 bg-paper"
                   onLoad={() => setLiveReady(true)}
                   allow="fullscreen"
                   referrerPolicy="strict-origin-when-cross-origin"
                   sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
                 />
                 {!liveReady && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white">
-                    <span className="h-6 w-6 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
-                    <p className="text-xs font-medium text-ink/55">Loading live preview…</p>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-paper">
+                    <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-sun border-t-ink" />
+                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink/60">Loading live preview…</p>
                   </div>
                 )}
               </motion.div>
@@ -265,22 +258,22 @@ const ProjectPreview = ({
                     {shotExhausted ? (
                       <>
                         <p className="text-sm font-semibold">The screenshot is still rendering.</p>
-                        <p className="max-w-sm text-xs leading-relaxed text-ink/55">
+                        <p className="max-w-sm text-xs leading-relaxed text-ink/60">
                           A fresh capture can take a minute. Try again, or open the site directly.
                         </p>
                         <motion.button
                           type="button"
                           onClick={retryScreenshot}
                           whileTap={{ scale: 0.96 }}
-                          className="btn btn-dark mt-1 !px-4 !py-2 text-xs"
+                          className="btn btn-ink mt-1 !px-4 !py-2 text-xs"
                         >
                           Retry screenshot
                         </motion.button>
                       </>
                     ) : (
                       <>
-                        <span className="h-6 w-6 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
-                        <p className="text-xs font-medium text-ink/55">
+                        <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-sun border-t-ink" />
+                        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink/60">
                           {shotMode === 'local'
                             ? 'Loading preview…'
                             : `Generating screenshot… ${
@@ -298,8 +291,8 @@ const ProjectPreview = ({
           </AnimatePresence>
         </div>
 
-        <footer className="flex items-center justify-between gap-3 border-t border-ink/10 px-4 py-2.5">
-          <p className="text-[11px] leading-relaxed text-ink/45">
+        <footer className="flex items-center justify-between gap-3 border-t border-ink/10 px-5 py-3">
+          <p className="text-[11px] leading-relaxed text-ink/60">
             {tab === 'live'
               ? 'Blank frame? The site may block embedding — switch to Screenshot.'
               : shotMode === 'local'
@@ -310,7 +303,7 @@ const ProjectPreview = ({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-none text-xs font-semibold text-ink/60 underline underline-offset-4 hover:text-ink"
+            className="flex-none text-xs font-medium text-ink/70 underline underline-offset-4 hover:text-ink"
           >
             Open {host}
           </a>

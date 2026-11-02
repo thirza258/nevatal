@@ -17,6 +17,8 @@ export interface Project {
   tags: string[]
   url?: string
   featured?: boolean
+  /** Uses AI or ML in the product itself — these headline the Applied AI section. */
+  ai?: boolean
 }
 
 export const PROJECTS: Project[] = [
@@ -27,6 +29,7 @@ export const PROJECTS: Project[] = [
     description:
       'Prompting, writing, translation, document Q&A, image generation, data analysis and batch runs — each with a purpose-built form, and every request billed to the key you bring.',
     category: 'AI & Research',
+    ai: true,
     tags: ['React', 'Django', 'Bring your own key'],
     url: 'https://chat.nevatal.id',
   },
@@ -37,6 +40,7 @@ export const PROJECTS: Project[] = [
     description:
       'A single desk for the models you use — keep conversations together and move between providers without changing tools.',
     category: 'AI & Research',
+    ai: true,
     tags: ['Multi-model', 'Chat'],
     url: 'https://chatty.nevatal.id',
     featured: true,
@@ -48,6 +52,7 @@ export const PROJECTS: Project[] = [
     description:
       'A recommendation API and RAG pipeline that finds relevant papers, grounded in the literature rather than in a model’s memory.',
     category: 'AI & Research',
+    ai: true,
     tags: ['Django', 'RAG', 'Search'],
     url: 'https://recommendica.nevatal.id',
     featured: true,
@@ -59,6 +64,7 @@ export const PROJECTS: Project[] = [
     description:
       'Document Q&A where dense, sparse and hybrid retrieval meet multi-LLM consensus — built for readers who want to see how an answer was reached.',
     category: 'AI & Research',
+    ai: true,
     tags: ['RAG', 'Multi-LLM'],
     url: 'https://rag.nevatal.id',
   },
@@ -69,6 +75,7 @@ export const PROJECTS: Project[] = [
     description:
       'Dense and BM25 retrieval, self-grading, query correction and reranking — followed by an evaluation of faithfulness and answer relevancy.',
     category: 'AI & Research',
+    ai: true,
     tags: ['FastAPI', 'Chroma', 'Reranking'],
     url: 'https://crag.nevatal.id',
   },
@@ -79,6 +86,7 @@ export const PROJECTS: Project[] = [
     description:
       'A retrieval system that refuses to guess: every answer cites a verifiable verse or narration, and says so when the corpus is not enough.',
     category: 'AI & Research',
+    ai: true,
     tags: ['RAG', 'Ollama', 'Citations'],
     url: 'https://muslim.nevatal.id',
   },
@@ -89,6 +97,7 @@ export const PROJECTS: Project[] = [
     description:
       'Upload a CSV, profile and clean it, choose a model, tune it and live-predict — with every evaluation number coming from a real fitted model.',
     category: 'AI & Research',
+    ai: true,
     tags: ['scikit-learn', 'FastAPI', 'React'],
     url: 'https://furina.nevatal.id',
     featured: true,
@@ -100,6 +109,7 @@ export const PROJECTS: Project[] = [
     description:
       'Generate a tailored interview from your CV and a job description, get scored answers, or reverse the roles and interview an AI candidate. Includes a 90-lesson interview academy.',
     category: 'AI & Research',
+    ai: true,
     tags: ['React', 'FastAPI', 'LLM'],
     url: 'https://interview.nevatal.id',
   },
@@ -141,6 +151,7 @@ export const PROJECTS: Project[] = [
     description:
       'An AI-directed story engine that keeps character memory straight, generates scenes behind the scenes, and ships with a rich-text writing studio and courses.',
     category: 'Creative',
+    ai: true,
     tags: ['AI storytelling', "Ren'Py", 'React'],
     url: 'https://decalove.nevatal.id',
     featured: true,
@@ -233,6 +244,7 @@ export const PROJECTS: Project[] = [
     description:
       'Pick a city, get a fresh story beat, choices and painted scenery — every model call routed through OpenRouter so the storyteller can be swapped.',
     category: 'Creative',
+    ai: true,
     tags: ['OpenRouter', 'Games'],
     url: 'https://story.nevatal.id',
   },
@@ -252,10 +264,4 @@ export const FEATURED_PROJECTS = PROJECTS.filter((project) => project.featured)
 
 export const LIVE_PROJECTS = PROJECTS.filter((project) => Boolean(project.url))
 
-export const PROJECT_CATEGORY_TONE: Record<ProjectCategory, string> = {
-  'AI & Research': 'bg-blue',
-  Learning: 'bg-brand',
-  Creative: 'bg-maroon',
-  Data: 'bg-emerald-600',
-  'Tools & Ops': 'bg-ink',
-}
+export const AI_PROJECTS = PROJECTS.filter((project) => project.ai)

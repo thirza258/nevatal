@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import AbstractShape from '../components/decor/AbstractShape'
+import Shape, { type ShapeColor, type ShapeKind } from '../components/decor/Shape'
+import ShapeField from '../components/decor/ShapeField'
+import Heading from '../components/motion/Heading'
+import Magnetic from '../components/motion/Magnetic'
 import Reveal from '../components/motion/Reveal'
 import { Stagger, StaggerItem } from '../components/motion/Stagger'
-import { ArrowUpRight, Check } from '../components/icons'
+import Typewriter from '../components/motion/Typewriter'
+import { ArrowUpRight } from '../components/icons'
 import { AI_HUB_COURSES_URL, AI_HUB_URL } from '../lib/constants'
 import { spring } from '../lib/motion'
 
@@ -66,22 +70,30 @@ const DEMO_TOOLS: DemoTool[] = [
   },
 ]
 
-const FEATURES = [
+const FEATURES: Array<{ title: string; body: string; shape: ShapeKind; color: ShapeColor }> = [
   {
     title: 'A form per job',
     body: 'Task-specific inputs for prompting, writing, translation, documents and data.',
+    shape: 'square',
+    color: 'sun',
   },
   {
     title: 'Your key, your bill',
     body: 'OpenAI, Gemini or OpenRouter — no markup, no subscription.',
+    shape: 'circle',
+    color: 'cobalt',
   },
   {
     title: 'Seventeen tools, one history',
     body: 'Every result lands in a session history you can revisit, reply to or delete.',
+    shape: 'sparkle',
+    color: 'plum',
   },
   {
     title: 'Learn while you use it',
     body: 'Free courses with worked examples, readable without an API key.',
+    shape: 'half',
+    color: 'ink',
   },
 ]
 
@@ -90,146 +102,130 @@ const AIHubSection = () => {
   const active = DEMO_TOOLS.find((tool) => tool.id === activeId) ?? DEMO_TOOLS[0]
 
   return (
-    <section className="relative overflow-hidden border-t border-white/5 bg-ink py-24 text-paper sm:py-32">
-      <AbstractShape
-        shape="ring"
-        tone="brand"
-        className="-right-8 bottom-8 h-36 w-36 sm:-right-14 sm:h-56 sm:w-56"
-      />
-      <AbstractShape
-        shape="trapezoid-outline"
-        tone="light"
-        className="-left-8 top-12 h-32 w-32 sm:-left-12 sm:h-52 sm:w-52"
-      />
-      <div className="container-x relative grid items-center gap-14 lg:grid-cols-[0.95fr_1.05fr]">
+    <section className="relative overflow-clip bg-paper py-28 sm:py-36">
+      <ShapeField seed="ai-hub" count={5} mobileCount={2} sizes={[40, 100]} />
+      <div className="container-x relative grid items-center gap-16 lg:grid-cols-[0.92fr_1.08fr]">
         <div>
           <Reveal>
-            <p className="eyebrow text-brand">The flagship</p>
-            <h2 className="mt-4 font-display text-[clamp(2.2rem,4.5vw,3.5rem)] font-semibold leading-[1.05] tracking-tight">
-              One hub. More ways to work with AI.
-            </h2>
-            <p className="mt-5 max-w-lg leading-relaxed text-paper/60">
+            <p className="eyebrow text-ink">
+              <Shape kind="sparkle" color="sun" className="h-4 w-4" /> The flagship
+            </p>
+            <Heading
+              text="One hub. More ways to work with AI."
+              accent="More ways"
+              squiggle
+              className="h-section mt-6"
+            />
+            <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink/65">
               A single workspace for prompting, writing, translation, documents and data — each
               tool asks for exactly what it needs, on the key you bring.
             </p>
           </Reveal>
 
-          <Stagger className="mt-8 space-y-5">
+          <Stagger as="ul" className="mt-10 grid gap-6 sm:grid-cols-2">
             {FEATURES.map((feature) => (
-              <StaggerItem key={feature.title} className="flex gap-3">
-                <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-brand text-ink">
-                  <Check className="h-3 w-3" />
-                </span>
+              <StaggerItem as="li" key={feature.title} className="flex gap-3.5">
+                <motion.span whileHover={{ rotate: 180, scale: 1.2 }} transition={spring} className="mt-0.5 flex-none">
+                  <Shape kind={feature.shape} color={feature.color} className="h-6 w-6" />
+                </motion.span>
                 <div>
-                  <p className="text-sm font-semibold">{feature.title}</p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-paper/55">{feature.body}</p>
+                  <p className="font-semibold tracking-[-0.01em]">{feature.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink/60">{feature.body}</p>
                 </div>
               </StaggerItem>
             ))}
           </Stagger>
 
-          <Reveal delay={0.1} className="mt-9 flex flex-wrap gap-3">
-            <a
-              href={AI_HUB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-            >
-              Open the AI Hub <ArrowUpRight className="h-4 w-4" />
-            </a>
-            <a href={AI_HUB_COURSES_URL} className="btn btn-ghost-light">
-              Browse free courses
-            </a>
+          <Reveal delay={0.1} className="mt-10 flex flex-wrap gap-3">
+            <Magnetic>
+              <a href={AI_HUB_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ink">
+                Open the AI Hub <ArrowUpRight className="h-4 w-4" />
+              </a>
+            </Magnetic>
+            <Magnetic>
+              <a href={AI_HUB_COURSES_URL} className="btn btn-line">
+                Browse free courses
+              </a>
+            </Magnetic>
           </Reveal>
         </div>
 
-        <Reveal delay={0.08}>
+        <Reveal delay={0.08} y={60} rotate={2}>
           <div
             role="region"
             aria-label="Interactive AI Hub sample"
-            className="overflow-hidden rounded-3xl border border-white/10 bg-[#0F1216] shadow-[0_40px_120px_-60px_rgba(0,0,0,0.9)]"
+            className="relative overflow-hidden rounded-[32px] border border-ink/10 bg-paper shadow-[0_50px_100px_-60px_rgba(11,11,13,0.5)]"
           >
-            <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
+            <div className="flex items-center gap-3 border-b border-ink/10 px-5 py-4">
               <span className="flex gap-1.5" aria-hidden="true">
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                <span className="h-2.5 w-2.5 rounded-full bg-sun" />
+                <span className="h-2.5 w-2.5 rounded-full bg-cobalt" />
+                <span className="h-2.5 w-2.5 rounded-full bg-plum" />
               </span>
-              <span className="rounded-full bg-white/5 px-3 py-0.5 text-[10px] text-paper/40">
+              <span className="rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
                 chat.nevatal.id
               </span>
-              <span className="ml-auto rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-paper/35">
+              <span className="ml-auto font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/60">
                 Local sample
               </span>
             </div>
 
-            <div className="grid sm:grid-cols-[180px_1fr]">
-              <div className="border-b border-white/10 p-3 sm:border-b-0 sm:border-r">
-                <p className="px-2 pb-2 pt-1 text-[10px] uppercase tracking-[0.16em] text-paper/40">
-                  Tools
-                </p>
-                <div className="flex gap-1 overflow-x-auto pb-1 sm:flex-col sm:overflow-visible">
-                  {DEMO_TOOLS.map((tool) => {
-                    const isActive = tool.id === activeId
-                    return (
-                      <button
-                        key={tool.id}
-                        type="button"
-                        aria-pressed={isActive}
-                        onClick={() => setActiveId(tool.id)}
-                        className={`relative flex-none rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors sm:w-full ${
-                          isActive ? 'text-ink' : 'text-paper/55 hover:text-paper'
-                        }`}
-                      >
-                        {isActive && (
-                          <motion.span
-                            layoutId="aihub-active-tool"
-                            className="absolute inset-0 rounded-lg bg-brand"
-                            transition={spring}
-                          />
-                        )}
-                        <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-ink' : 'bg-white/20'}`}
-                          />
-                          {tool.label}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="flex min-h-[300px] flex-col p-4 sm:p-5">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={activeId}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex flex-1 flex-col"
+            <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-4 pt-4">
+              {DEMO_TOOLS.map((tool) => {
+                const isActive = tool.id === activeId
+                return (
+                  <button
+                    key={tool.id}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setActiveId(tool.id)}
+                    className={`relative flex-none whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                      isActive ? 'text-paper' : 'text-ink/65 hover:text-ink'
+                    }`}
                   >
-                    <div className="ml-auto max-w-[92%] rounded-xl rounded-br-sm bg-blue px-3.5 py-2.5 text-xs leading-relaxed text-white">
-                      {active.prompt}
-                    </div>
-                    <div className="mt-3 max-w-[95%] rounded-xl rounded-bl-sm bg-white/[0.06] px-3.5 py-3 text-xs text-paper/70">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-paper/40">
-                        {active.label} · sample response
-                      </p>
-                      <p className="mt-2 whitespace-pre-line leading-relaxed">{active.reply}</p>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
+                    {isActive && (
+                      <motion.span
+                        layoutId="aihub-active-tool"
+                        className="absolute inset-0 rounded-full bg-ink"
+                        transition={spring}
+                      />
+                    )}
+                    <span className="relative">{tool.label}</span>
+                  </button>
+                )
+              })}
+            </div>
 
-                <div className="mt-4 flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[10px] text-paper/35">
-                  <span>{active.meta}</span>
-                  <span className="rounded bg-brand px-2 py-0.5 font-semibold text-ink">Run</span>
-                </div>
+            <div className="flex min-h-[320px] flex-col p-5 sm:p-6">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={activeId}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.22 }}
+                  className="flex flex-1 flex-col"
+                >
+                  <div className="ml-auto max-w-[88%] rounded-[22px] rounded-br-md bg-ink px-4 py-3 text-sm leading-relaxed text-paper">
+                    {active.prompt}
+                  </div>
+                  <div className="mt-4 max-w-[94%] rounded-[22px] rounded-bl-md bg-sun-soft px-4 py-3.5 text-sm text-ink/85">
+                    <p className="flex items-center gap-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/70">
+                      <Shape kind="sparkle" color="ink" className="h-3 w-3" />
+                      {active.label} · sample response
+                    </p>
+                    <Typewriter text={active.reply} className="mt-2 whitespace-pre-line leading-relaxed" />
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="mt-5 flex items-center justify-between rounded-full border border-ink/10 py-1.5 pl-4 pr-1.5 font-mono text-[11px] text-ink/60">
+                <span>{active.meta}</span>
+                <span className="rounded-full bg-sun px-3 py-1 font-medium text-ink">Run</span>
               </div>
             </div>
           </div>
-          <p className="mt-3 text-center text-[11px] text-paper/35">
+          <p className="mt-4 text-center font-mono text-[11px] text-ink/60">
             Interactive sample with local data — nothing is sent to a model from this page.
           </p>
         </Reveal>
