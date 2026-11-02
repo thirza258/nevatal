@@ -1,0 +1,103 @@
+# Nevatal — Full Documentation
+
+> Nevatal is an independent AI studio building focused AI workspaces, grounded retrieval tools, learning platforms, developer utilities, and engineering projects.
+
+---
+
+## 1. Studio Overview
+
+Nevatal (https://nevatal.id) is an independent AI engineering studio dedicated to building high-performance, focused software without subscription paywalls or vendor lock-in.
+
+Key values:
+- **Bring Your Own Key (BYOK)**: Privacy-first architecture where API keys and user prompts remain on the client or in ephemeral execution runtimes.
+- **Craft and Performance**: Lightweight bundles, fast page loads, responsive interfaces, zero unnecessary dependencies.
+- **Agent Interoperability**: First-class discovery endpoints for LLMs, autonomous web agents, and tool protocols (MCP, A2A).
+
+---
+
+## 2. Core Products & Services
+
+### Nevatal Chat Workspace
+- **URL**: https://chat.nevatal.id
+- **Description**: An open-source AI tools hub featuring seventeen specialized utilities:
+  1. Prompt Engineer: Refine and structure prompt templates.
+  2. Writer & Editor: Structured copywriting and prose editing.
+  3. Translator: Context-aware multi-language translation.
+  4. Summarizer: Concise synthesis of lengthy articles and reports.
+  5. Document Q&A: Grounded retrieval answering against uploaded PDFs and documents.
+  6. Image Generation: Text-to-image prompting and visualization.
+  7. Data Analysis: Code and spreadsheet evaluation.
+  8. Batch Workflows: Parallel multi-item transformations.
+  9. Additional reasoning, extraction, and utility modes.
+- **Supported Providers**: OpenAI, Google Gemini, OpenRouter.
+- **Storage Model**: Local browser storage; zero server-side credential retention.
+
+### Courses & Education
+- **URL**: https://chat.nevatal.id/courses
+- **Description**: Free, practical AI education designed for engineers, creators, and analysts:
+  - Prompting Fundamentals
+  - Writing and Editing Workflows
+  - Business Content Generation
+  - Translation and Feedback Loops
+  - Documents and Images with Multimodal Models
+  - Data and Batch Processing Workflows
+
+### Engineering Blog & Technical Writing
+- **URL**: https://nevatal.id/blog
+- **Description**: Deep-dive technical articles covering retrieval-augmented generation (RAG), vector similarity search, agent orchestration, and modern frontend engineering.
+
+---
+
+## 3. Machine-Readable Agent Endpoints & Discovery
+
+Nevatal implements established and emerging web standards for autonomous agent discovery:
+
+### Discovery Catalog
+- **API Catalog (RFC 9727)**: `https://nevatal.id/.well-known/api-catalog`
+- **Agent Card (A2A)**: `https://nevatal.id/.well-known/agent-card.json`
+- **MCP Server Card**: `https://nevatal.id/.well-known/mcp/server-card.json`
+- **Agent Skills Index**: `https://nevatal.id/.well-known/agent-skills/index.json`
+- **Poppy Manifest**: `https://nevatal.id/.well-known/poppy.json`
+- **AI Resource Directory**: `https://nevatal.id/.well-known/ai-catalog.json`
+
+### Authentication & Authorization
+- **OAuth 2.0 Protected Resource (RFC 9728)**: `https://nevatal.id/.well-known/oauth-protected-resource`
+- **OAuth 2.0 Authorization Server (RFC 8414)**: `https://nevatal.id/.well-known/oauth-authorization-server`
+- **OpenID Connect Configuration**: `https://nevatal.id/.well-known/openid-configuration`
+- **Authentication Guide**: `https://nevatal.id/auth.md`
+
+### Web Verification
+- **HTTP Signatures Directory**: `https://nevatal.id/.well-known/http-message-signatures-directory`
+- **Robots Policy**: `https://nevatal.id/robots.txt`
+- **XML Sitemap**: `https://nevatal.id/sitemap.xml`
+
+---
+
+## 4. Agent Registration & API Invocation
+
+Agents may register dynamically or provision credentials via the endpoints described in `https://nevatal.id/auth.md`:
+
+```http
+POST /api/v1/agent/register HTTP/1.1
+Host: chat.nevatal.id
+Content-Type: application/json
+
+{
+  "client_name": "AutonomousResearchAgent",
+  "identity_type": "anonymous"
+}
+```
+
+Authorized requests include the bearer token:
+```http
+Authorization: Bearer <access_token>
+```
+
+---
+
+## 5. Contact & Repository
+
+- **Studio Website**: https://nevatal.id
+- **Web App**: https://chat.nevatal.id
+- **Source Code**: https://github.com/thirza258/nevatal
+- **Inquiries**: nevatalapp@gmail.com

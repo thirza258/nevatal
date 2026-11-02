@@ -24,3 +24,8 @@
 ## Source
 
 - [GitHub repository](https://github.com/thirza258/nevatal)
+
+## Optional
+
+- [Full Documentation](https://chat.nevatal.id/llms-full.txt): Complete documentation and guide
+- [Index Document](https://chat.nevatal.id/index.md): Markdown overview of Nevatal Chat

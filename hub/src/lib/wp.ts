@@ -40,10 +40,19 @@ export interface PostQuery {
   search?: string
 }
 
-const CACHE_TTL = 5 * 60 * 1000
-const REQUEST_TIMEOUT = 12000
+interface CacheEntry<T> {
+  expiresAt: number
+  data: T
+  headers: Record<string, string>
+}
 
-const cache = new Map<string, { expiresAt: number; data: unknown }>()
+const DEFAULT_POSTS_TTL = 10 * 60 * 1000 // 10 minutes
+const CATEGORIES_TTL = 30 * 60 * 1000 // 30 minutes
+const SINGLE_POST_TTL = 20 * 60 * 1000 // 20 minutes
+const REQUEST_TIMEOUT = 12000
+const STORAGE_PREFIX = 'nv_wp_v1_'
+
+const memoryCache = new Map<string, CacheEntry<unknown>>()
 let activeBase: string | null = null
 
 export class WpError extends Error {
@@ -56,16 +65,66 @@ export class WpError extends Error {
   }
 }
 
+const createHeadersWrapper = (record: Record<string, string>): Headers => {
+  if (typeof Headers !== 'undefined') {
+    try {
+      return new Headers(record)
+    } catch {
+      // Fall through to object wrapper
+    }
+  }
+  return {
+    get: (name: string) => record[name.toLowerCase()] ?? null,
+  } as unknown as Headers
+}
+
+const readStorage = <T>(key: string): CacheEntry<T> | null => {
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return null
+    const raw = window.sessionStorage.getItem(`${STORAGE_PREFIX}${key}`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as CacheEntry<T>
+    if (!parsed || typeof parsed.expiresAt !== 'number' || parsed.expiresAt <= Date.now()) {
+      window.sessionStorage.removeItem(`${STORAGE_PREFIX}${key}`)
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+const writeStorage = <T>(key: string, entry: CacheEntry<T>): void => {
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return
+    window.sessionStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(entry))
+  } catch {
+    // sessionStorage quota exceeded or restricted; gracefully ignore
+  }
+}
+
 const basesInOrder = (): string[] => {
   if (!activeBase) return WP_API_BASES
   return [activeBase, ...WP_API_BASES.filter((base) => base !== activeBase)]
 }
 
-const getJson = async <T>(path: string): Promise<{ data: T; headers: Headers }> => {
+const getJson = async <T>(
+  path: string,
+  ttl: number = DEFAULT_POSTS_TTL
+): Promise<{ data: T; headers: Headers }> => {
   const cacheKey = path
-  const cached = cache.get(cacheKey)
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.data as { data: T; headers: Headers }
+
+  // Tier 1: In-memory cache
+  const memoryHit = memoryCache.get(cacheKey) as CacheEntry<T> | undefined
+  if (memoryHit && memoryHit.expiresAt > Date.now()) {
+    return { data: memoryHit.data, headers: createHeadersWrapper(memoryHit.headers) }
+  }
+
+  // Tier 2: Persistent sessionStorage cache
+  const storageHit = readStorage<T>(cacheKey)
+  if (storageHit) {
+    memoryCache.set(cacheKey, storageHit as CacheEntry<unknown>)
+    return { data: storageHit.data, headers: createHeadersWrapper(storageHit.headers) }
   }
 
   let lastError: unknown = null
@@ -84,9 +143,31 @@ const getJson = async <T>(path: string): Promise<{ data: T; headers: Headers }> 
       }
       const data = (await response.json()) as T
       activeBase = base
-      const result = { data, headers: response.headers }
-      cache.set(cacheKey, { expiresAt: Date.now() + CACHE_TTL, data: result })
-      return result
+
+      const headersRecord: Record<string, string> = {}
+      if (response.headers) {
+        if (typeof response.headers.forEach === 'function') {
+          response.headers.forEach((value, name) => {
+            headersRecord[name.toLowerCase()] = value
+          })
+        } else if (typeof response.headers.get === 'function') {
+          for (const key of ['x-wp-total', 'x-wp-totalpages']) {
+            const val = response.headers.get(key)
+            if (val !== null) headersRecord[key] = val
+          }
+        }
+      }
+
+      const entry: CacheEntry<T> = {
+        expiresAt: Date.now() + ttl,
+        data,
+        headers: headersRecord,
+      }
+
+      memoryCache.set(cacheKey, entry as CacheEntry<unknown>)
+      writeStorage(cacheKey, entry)
+
+      return { data, headers: response.headers }
     } catch (error) {
       lastError = error
     } finally {
@@ -106,7 +187,7 @@ export const getPosts = async (query: PostQuery = {}): Promise<PostPage> => {
   if (query.category) params.set('categories', String(query.category))
   if (query.search) params.set('search', query.search)
 
-  const { data, headers } = await getJson<WPPost[]>(`/posts?${params.toString()}`)
+  const { data, headers } = await getJson<WPPost[]>(`/posts?${params.toString()}`, DEFAULT_POSTS_TTL)
   return {
     posts: data,
     total: Number(headers.get('x-wp-total') ?? data.length),
@@ -121,7 +202,7 @@ export const getCategories = async (): Promise<WPCategory[]> => {
     order: 'desc',
     _fields: 'id,name,slug,count',
   })
-  const { data } = await getJson<WPCategory[]>(`/categories?${params.toString()}`)
+  const { data } = await getJson<WPCategory[]>(`/categories?${params.toString()}`, CATEGORIES_TTL)
   return data.filter((category) => category.count > 0 && category.slug !== 'uncategorized')
 }
 
@@ -130,7 +211,7 @@ export const getPostBySlug = async (slug: string): Promise<WPPost | null> => {
     slug,
     _embed: 'wp:featuredmedia,author',
   })
-  const { data } = await getJson<WPPost[]>(`/posts?${params.toString()}`)
+  const { data } = await getJson<WPPost[]>(`/posts?${params.toString()}`, SINGLE_POST_TTL)
   return data[0] ?? null
 }
 

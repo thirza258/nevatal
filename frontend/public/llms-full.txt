@@ -1,0 +1,60 @@
+# Nevatal Chat — Full Documentation
+
+> An open-source AI tools hub: seventeen focused AI tools for writing,
+> translation, summarising, document Q&A, image generation and data analysis,
+> running on the visitor's own OpenAI, Gemini or OpenRouter API key.
+
+---
+
+## 1. Introduction
+
+Nevatal Chat (https://chat.nevatal.id) is a free, privacy-first AI productivity workspace.
+It eliminates recurring SaaS subscriptions by adopting a Bring Your Own Key (BYOK) architecture:
+users supply their personal API keys from OpenAI, Google Gemini, or OpenRouter.
+All keys and conversation histories are persisted directly in the user's browser (IndexedDB / localStorage)
+and never saved to any central database.
+
+---
+
+## 2. Tools & Capabilities
+
+1. **Prompt**: Test, compare, and refine system prompts and instructions.
+2. **Writer**: Generate long-form essays, documentation, and technical outlines.
+3. **Translator**: Context-sensitive translation preserving markdown structures.
+4. **Summarizer**: Condense lengthy articles, meeting transcripts, and research papers.
+5. **Document Q&A**: Ingest PDFs and text files for grounded retrieval question answering.
+6. **Image Generation**: Synthesize visuals with prompt enhancements.
+7. **Data Analysis**: Parse CSV/JSON structured data and produce insights.
+8. **Batch**: Apply prompt transformations across multiple data inputs simultaneously.
+9. **Additional Specialized Tools**: Specialized workflows for code assistance, tone transformation, and creative exploration.
+
+---
+
+## 3. Practical AI Courses
+
+Free interactive courses with practical exercises:
+- [Prompting Fundamentals](https://chat.nevatal.id/courses/prompting-fundamentals)
+- [Writing and Editing](https://chat.nevatal.id/courses/writing-and-editing)
+- [Business Content](https://chat.nevatal.id/courses/business-content)
+- [Translation and Feedback](https://chat.nevatal.id/courses/translation-and-feedback)
+- [Documents and Images](https://chat.nevatal.id/courses/documents-and-images)
+- [Data and Batch Workflows](https://chat.nevatal.id/courses/data-and-batch-workflows)
+
+---
+
+## 4. Discovery & Agent Protocols
+
+- **API Catalog (RFC 9727)**: `https://chat.nevatal.id/.well-known/api-catalog`
+- **A2A Agent Card**: `https://chat.nevatal.id/.well-known/agent-card.json`
+- **MCP Server Card**: `https://chat.nevatal.id/.well-known/mcp/server-card.json`
+- **Agent Skills Index**: `https://chat.nevatal.id/.well-known/agent-skills/index.json`
+- **Authentication Guide**: `https://chat.nevatal.id/auth.md`
+- **Poppy Manifest**: `https://chat.nevatal.id/.well-known/poppy.json`
+- **AI Catalog**: `https://chat.nevatal.id/.well-known/ai-catalog.json`
+
+---
+
+## 5. Source Code & License
+
+- **GitHub Repository**: https://github.com/thirza258/nevatal
+- **Studio Home**: https://nevatal.id

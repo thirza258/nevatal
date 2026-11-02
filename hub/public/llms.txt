@@ -1,18 +1,34 @@
 # Nevatal
 
-> Independent AI Studio building AI workspaces, grounded retrieval tools, learning platforms, and developer utilities.
+> Nevatal is an independent AI studio building focused AI workspaces, grounded retrieval tools, learning platforms, developer utilities, and engineering projects.
 
-## Main Services
-- Nevatal Studio: https://nevatal.id
-- Nevatal Chat Workspace: https://chat.nevatal.id
-- Courses & Education: https://chat.nevatal.id/courses
-- GitHub: https://github.com/thirza258/nevatal
+Nevatal designs and builds production AI applications, grounded RAG research systems, developer tools, and practical learning resources with zero required user subscriptions and full Bring-Your-Own-Key (BYOK) privacy.
 
-## Agent Endpoints
-- API Catalog: https://nevatal.id/.well-known/api-catalog
-- Auth Guide: https://nevatal.id/auth.md
-- Agent Card: https://nevatal.id/.well-known/agent-card.json
-- MCP Server Card: https://nevatal.id/.well-known/mcp/server-card.json
-- Agent Skills: https://nevatal.id/.well-known/agent-skills/index.json
-- OAuth Protected Resource: https://nevatal.id/.well-known/oauth-protected-resource
-- OAuth Authorization Server: https://nevatal.id/.well-known/oauth-authorization-server
+## Core Products & Platforms
+
+- [Nevatal Studio](https://nevatal.id): Independent AI studio showcase, engineering architecture, and technical writing.
+- [Projects](https://nevatal.id/projects): Directory of featured AI systems, RAG platforms, and open-source utilities.
+- [About Nevatal](https://nevatal.id/about): Studio mission, design philosophy, and technical stack overview.
+- [Writing & Engineering Blog](https://nevatal.id/blog): In-depth articles covering LLMs, vector search, retrieval evaluation, and AI engineering.
+- [Nevatal Chat Workspace](https://chat.nevatal.id): Free open-source AI workspace with 17 specialized tools for writing, translation, document Q&A, and data analysis.
+- [AI Courses & Education](https://chat.nevatal.id/courses): Free practical AI courses covering prompt engineering, document workflows, and batch processing.
+- [GitHub Repository](https://github.com/thirza258/nevatal): Open-source repository, full codebase, and deployment guides.
+
+## Machine-Readable Agent Endpoints
+
+- [API Catalog](https://nevatal.id/.well-known/api-catalog): RFC 9727 API discovery document listing public endpoints.
+- [Authentication Guide](https://nevatal.id/auth.md): Agent authentication, key management, and security documentation.
+- [A2A Agent Card](https://nevatal.id/.well-known/agent-card.json): Agent-to-Agent discovery manifest and capability metadata.
+- [MCP Server Card](https://nevatal.id/.well-known/mcp/server-card.json): Model Context Protocol server configuration card.
+- [Agent Skills Index](https://nevatal.id/.well-known/agent-skills/index.json): Discovery index for agent skills and function schemas.
+- [OAuth Protected Resource](https://nevatal.id/.well-known/oauth-protected-resource): RFC 9728 OAuth 2.0 protected resource metadata.
+- [OAuth Authorization Server](https://nevatal.id/.well-known/oauth-authorization-server): RFC 8414 Authorization server discovery metadata.
+- [Web Bot Directory](https://nevatal.id/.well-known/http-message-signatures-directory): HTTP message signatures directory for bot validation.
+- [Poppy Manifest](https://nevatal.id/.well-known/poppy.json): Discovery metadata for autonomous web agents.
+- [AI Catalog](https://nevatal.id/.well-known/ai-catalog.json): Machine-readable catalog of AI tools and capabilities.
+- [Sitemap](https://nevatal.id/sitemap.xml): Public XML sitemap for search engines and crawlers.
+
+## Optional
+
+- [Full Documentation](https://nevatal.id/llms-full.txt): Complete comprehensive documentation including full architecture, API guides, and tool specifications.
+- [Studio Overview](https://nevatal.id/index.md): Markdown rendering of the studio catalog and architecture overview.
