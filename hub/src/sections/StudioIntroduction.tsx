@@ -15,7 +15,7 @@ const DISCIPLINES = [
 ]
 
 const StudioIntroduction = () => (
-  <section id="studio" className="relative overflow-clip bg-paper py-28 sm:py-40">
+  <section id="studio" className="relative scroll-mt-24 overflow-clip bg-paper py-20 sm:scroll-mt-28 sm:py-40">
     <ShapeField seed="studio" count={5} mobileCount={2} sizes={[40, 96]} />
     <div className="container-x relative">
       <Reveal>
@@ -28,7 +28,7 @@ const StudioIntroduction = () => (
         <ScrollWords text="From intelligent systems to products people can actually use." />
       </h2>
 
-      <div className="mt-16 grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+      <div className="mt-16 grid grid-cols-1 gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
         <PillPile items={DISCIPLINES} seed="disciplines" size="lg" className="min-h-[220px] max-w-2xl" />
         <Reveal delay={0.1}>
           <p className="max-w-md text-lg leading-relaxed text-ink/65">

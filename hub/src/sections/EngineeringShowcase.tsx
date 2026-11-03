@@ -99,7 +99,7 @@ const EngineeringShowcase = () => {
   const active = LAYERS.find((layer) => layer.id === activeId) ?? LAYERS[0]
 
   return (
-    <MorphSection morph="arch" id="engineering" className="py-28 sm:py-36">
+    <MorphSection morph="arch" id="engineering" className="scroll-mt-24 py-20 sm:scroll-mt-28 sm:py-36">
       <ShapeField seed="engineering" tone="sun" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
         <Reveal>
@@ -117,14 +117,14 @@ const EngineeringShowcase = () => {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="mt-14 grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <Reveal delay={0.06} y={60} rotate={-2}>
             <div className="overflow-hidden rounded-[32px] bg-paper p-2.5 shadow-[0_40px_90px_-50px_rgba(11,11,13,0.55)]">
               <div className="flex items-center gap-2 px-3 pb-3 pt-1.5">
                 <span className="rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
                   chat.nevatal.id
                 </span>
-                <span className="ml-auto font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/60">
+                <span className="ml-auto hidden font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/60 sm:inline">
                   Interface layer
                 </span>
               </div>

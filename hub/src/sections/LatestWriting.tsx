@@ -16,7 +16,7 @@ interface LatestWritingProps {
 }
 
 const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
-  <section id="writing" className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
+  <section id="writing" className="relative scroll-mt-24 overflow-clip border-t border-ink/10 bg-paper py-20 sm:scroll-mt-28 sm:py-36">
     <ShapeField seed="writing" count={4} mobileCount={2} sizes={[40, 90]} />
     <div className="container-x relative">
       <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
@@ -35,7 +35,7 @@ const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
         </Link>
       </Reveal>
 
-      <Stagger className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <Stagger className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {state === 'loading' &&
           [0, 1, 2].map((item) => (
             <StaggerItem key={item} className="h-full" pop>
@@ -45,7 +45,7 @@ const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
 
         {state === 'ready' &&
           posts.map((post) => (
-            <StaggerItem key={post.id} className="h-full" pop>
+            <StaggerItem key={post.id} className="h-full min-w-0" pop>
               <PostCard post={post} categoryName={categories[String(post.categories[0])]} />
             </StaggerItem>
           ))}

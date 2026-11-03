@@ -122,7 +122,7 @@ const AICapabilities = () => {
     railRef.current?.scrollBy({ left: direction * 620, behavior: reduce ? 'auto' : 'smooth' })
 
   return (
-    <section id="applied-ai" className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
+    <section id="applied-ai" className="relative scroll-mt-24 overflow-clip border-t border-ink/10 bg-paper py-20 sm:scroll-mt-28 sm:py-36">
       <ShapeField seed="applied-ai" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
         <Reveal>
@@ -175,7 +175,7 @@ const AICapabilities = () => {
           </div>
         </div>
 
-        <div className="mt-12 grid gap-4 rounded-[32px] border border-ink/10 bg-paper p-4 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="mt-12 grid grid-cols-1 gap-4 rounded-[32px] border border-ink/10 bg-paper p-4 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="p-2">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -235,7 +235,7 @@ const AICapabilities = () => {
               {deck.length} projects put AI or machine learning to work across production environments.
             </p>
           </div>
-          <div className="flex flex-none items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => scrollToSection('engineering')}

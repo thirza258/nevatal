@@ -204,14 +204,14 @@ const BlogPage = () => {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {status === 'loading' && Array.from({ length: 6 }, (_, index) => <PostSkeleton key={index} />)}
 
             {status === 'ready' &&
               posts.map((post, index) => (
                 <motion.div
                   key={post.id}
-                  className="h-full"
+                  className="h-full min-w-0"
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, ease: easeOut, delay: Math.min(index, 8) * 0.05 }}
@@ -262,25 +262,27 @@ const BlogPage = () => {
           </div>
 
           {status === 'ready' && totalPages > 1 && (
-            <div className="mt-12 flex items-center justify-between border-t border-ink/10 pt-6">
+            <div className="mt-12 flex items-center justify-between gap-2 border-t border-ink/10 pt-6">
               <button
                 type="button"
                 onClick={() => goToPage(page - 1)}
                 disabled={page <= 1}
-                className="btn btn-line disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Previous page"
+                className="btn btn-line !px-3 disabled:cursor-not-allowed disabled:opacity-40 sm:!px-5"
               >
-                <ArrowLeft className="h-4 w-4" /> Previous
+                <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Previous</span>
               </button>
-              <p className="font-mono text-xs text-ink/60">
+              <p className="font-mono text-[11px] text-ink/60 sm:text-xs">
                 Page {page} of {totalPages}
               </p>
               <button
                 type="button"
                 onClick={() => goToPage(page + 1)}
                 disabled={page >= totalPages}
-                className="btn btn-line disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Next page"
+                className="btn btn-line !px-3 disabled:cursor-not-allowed disabled:opacity-40 sm:!px-5"
               >
-                Next <ArrowRight className="h-4 w-4" />
+                <span className="hidden sm:inline">Next</span> <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           )}

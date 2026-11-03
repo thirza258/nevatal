@@ -11,6 +11,9 @@
 
   html {
     scroll-behavior: smooth;
+    /* Stop iOS from inflating type in landscape. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     /* Shapes bleed off the edges on purpose. `clip` trims them without
        creating a scroll container, so position: sticky keeps working. */
     overflow-x: clip;
@@ -108,6 +111,8 @@
 @layer utilities {
   .no-scrollbar {
     scrollbar-width: none;
+    /* Keep a sideways swipe inside the chips/rail instead of navigating back. */
+    overscroll-behavior-x: contain;
   }
 
   .no-scrollbar::-webkit-scrollbar {

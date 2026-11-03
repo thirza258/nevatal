@@ -271,15 +271,15 @@ const PostPage = () => {
       {related.length > 0 && (
         <section className="border-t border-ink/10 bg-paper py-20">
           <div className="container-x">
-            <Reveal className="flex items-end justify-between gap-4">
-              <h2 className="font-display text-3xl font-semibold tracking-[-0.04em]">
+            <Reveal className="flex flex-wrap items-end justify-between gap-4">
+              <h2 className="min-w-0 break-words font-display text-3xl font-semibold tracking-[-0.04em]">
                 More from the <span className="font-serif font-normal italic tracking-[-0.02em]">workshop</span>
               </h2>
               <Link to="/blog" className="btn btn-line !py-2.5">
                 All writing
               </Link>
             </Reveal>
-            <div className="mt-10 grid gap-5 md:grid-cols-2">
+            <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
               {related.map((item) => (
                 <PostCard key={item.id} post={item} categoryName={categoryNames[String(item.categories[0])]} />
               ))}

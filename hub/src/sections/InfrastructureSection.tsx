@@ -78,7 +78,7 @@ const InfrastructureSection = () => {
   const active = COMPONENTS.find((component) => component.id === activeId) ?? COMPONENTS[0]
 
   return (
-    <MorphSection morph="blob" id="infrastructure" className="py-28 sm:py-36">
+    <MorphSection morph="blob" id="infrastructure" className="scroll-mt-24 py-20 sm:scroll-mt-28 sm:py-36">
       <ShapeField seed="infrastructure" tone="sun" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
         <Reveal>
@@ -96,7 +96,7 @@ const InfrastructureSection = () => {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="mt-14 grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <Reveal delay={0.06}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {COMPONENTS.map((component) => {
@@ -107,19 +107,19 @@ const InfrastructureSection = () => {
                     type="button"
                     aria-pressed={isActive}
                     onClick={() => setActiveId(component.id)}
-                    className={`group relative flex min-h-[150px] flex-col justify-between rounded-[26px] border p-4 text-left transition-colors ${
+                    className={`group relative flex min-h-[132px] flex-col justify-between rounded-[22px] border p-3 text-left transition-colors sm:min-h-[150px] sm:rounded-[26px] sm:p-4 ${
                       isActive ? 'border-ink' : 'border-ink/20 hover:border-ink'
                     }`}
                   >
                     {isActive && (
                       <motion.span
                         layoutId="infra-active"
-                        className="absolute inset-0 rounded-[26px] bg-paper"
+                        className="absolute inset-0 rounded-[22px] bg-paper sm:rounded-[26px]"
                         transition={spring}
                       />
                     )}
                     <motion.span
-                      className="relative block h-9 w-9"
+                      className="relative block h-8 w-8 sm:h-9 sm:w-9"
                       animate={{ rotate: isActive ? 180 : 0, scale: isActive ? 1.1 : 1 }}
                       transition={spring}
                     >
@@ -152,7 +152,7 @@ const InfrastructureSection = () => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
-                className="relative overflow-hidden rounded-[32px] bg-paper p-7 text-ink shadow-[0_40px_90px_-50px_rgba(11,11,13,0.55)]"
+                className="relative overflow-hidden rounded-[28px] bg-paper p-5 text-ink shadow-[0_40px_90px_-50px_rgba(11,11,13,0.55)] sm:rounded-[32px] sm:p-7"
               >
                 <Shape
                   kind={active.shape}

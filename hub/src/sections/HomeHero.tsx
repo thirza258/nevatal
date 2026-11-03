@@ -150,23 +150,23 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
       <ShapeField seed="hero" count={8} mobileCount={3} sizes={[46, 124]} />
 
       <div className="container-x relative pt-12 sm:pt-16 lg:pt-20">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <motion.p
-            className="eyebrow text-ink"
+            className="eyebrow min-w-0 text-ink"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: easeOut }}
           >
-            <Shape kind="sparkle" color="sun" className="h-4 w-4" /> Independent AI studio
+            <Shape kind="sparkle" color="sun" className="h-4 w-4 flex-none" /> Independent AI studio
           </motion.p>
           <motion.button
             type="button"
             onClick={() => scrollToSection('studio')}
             whileTap={{ scale: 0.95 }}
-            className="eyebrow rounded-full border border-ink/15 px-3 py-2 text-ink/75 transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+            className="eyebrow flex-none rounded-full border border-ink/15 px-2.5 py-1.5 text-[10px] text-ink/75 transition-colors hover:border-ink hover:bg-ink hover:text-paper sm:px-3 sm:py-2 sm:text-[11px]"
             aria-label="Scroll to studio section"
           >
-            <span>Explore studio</span>
+            <span className="whitespace-nowrap">Explore studio</span>
             <ArrowDown className="h-3.5 w-3.5" />
           </motion.button>
         </div>
@@ -196,7 +196,7 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
           </span>
         </motion.h1>
 
-        <div className="mt-12 grid gap-14 pb-16 lg:mt-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-start lg:gap-12">
+        <div className="mt-12 grid grid-cols-1 gap-14 pb-16 lg:mt-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-start lg:gap-12">
           <motion.div initial="hidden" animate="show" variants={group}>
             <motion.p variants={fadeUp} className="max-w-md text-lg leading-relaxed text-ink/65 sm:text-xl">
               Nevatal builds practical AI products, developer tools, and intelligent experiences
@@ -225,15 +225,18 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
               </Magnetic>
             </motion.div>
 
-            <motion.dl variants={fadeUp} className="mt-14 grid max-w-lg grid-cols-3 border-t border-ink/10">
+            <motion.dl variants={fadeUp} className="mt-12 grid max-w-lg grid-cols-3 border-t border-ink/10 sm:mt-14">
               {stats.map((stat, index) => (
-                <div key={stat.label} className={`pt-6 ${index > 0 ? 'border-l border-ink/10 pl-5' : 'pr-5'}`}>
+                <div
+                  key={stat.label}
+                  className={`min-w-0 pt-5 sm:pt-6 ${index > 0 ? 'border-l border-ink/10 pl-3 sm:pl-5' : 'pr-3 sm:pr-5'}`}
+                >
                   <dt className="sr-only">{stat.label}</dt>
-                  <dd className="flex items-center gap-2 font-display text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
+                  <dd className="flex items-center gap-1.5 font-display text-3xl font-semibold tracking-[-0.04em] sm:gap-2 sm:text-5xl">
                     <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-                    <Shape kind={stat.shape} color={stat.color} className="h-4 w-4 flex-none" />
+                    <Shape kind={stat.shape} color={stat.color} className="h-3.5 w-3.5 flex-none sm:h-4 sm:w-4" />
                   </dd>
-                  <dd className="mt-2 text-xs leading-snug text-ink/60">{stat.label}</dd>
+                  <dd className="mt-2 text-[11px] leading-snug text-ink/60 sm:text-xs">{stat.label}</dd>
                 </div>
               ))}
             </motion.dl>

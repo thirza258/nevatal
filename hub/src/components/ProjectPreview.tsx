@@ -291,7 +291,7 @@ const ProjectPreview = ({
           </AnimatePresence>
         </div>
 
-        <footer className="flex items-center justify-between gap-3 border-t border-ink/10 px-5 py-3">
+        <footer className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-ink/10 px-5 py-3">
           <p className="text-[11px] leading-relaxed text-ink/60">
             {tab === 'live'
               ? 'Blank frame? The site may block embedding — switch to Screenshot.'

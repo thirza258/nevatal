@@ -25,7 +25,7 @@ const FeaturedProjects = () => {
   )
 
   return (
-    <section id="featured-projects" className="relative overflow-clip bg-paper py-28 sm:py-36">
+    <section id="featured-projects" className="relative scroll-mt-24 overflow-clip bg-paper py-20 sm:scroll-mt-28 sm:py-36">
       <ShapeField seed="featured" count={6} mobileCount={2} sizes={[40, 100]} />
       <div className="container-x relative">
         <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
@@ -82,7 +82,7 @@ const FeaturedProjects = () => {
           Showing {visible.length} of {PROJECTS.length} projects
         </p>
 
-        <motion.div layout className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div layout className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence initial={false}>
             {visible.map((project) => (
               <ProjectCard key={project.slug} project={project} showScreenshot />
