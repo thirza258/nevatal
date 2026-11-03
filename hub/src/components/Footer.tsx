@@ -67,7 +67,7 @@ const Wordmark = () => {
       <motion.p
         aria-hidden="true"
         className="relative flex justify-center font-display font-bold leading-[0.8] tracking-[-0.06em] text-cobalt"
-        style={{ fontSize: 'clamp(4.4rem, 21vw, 19rem)' }}
+        style={{ fontSize: 'clamp(3.8rem, 21vw, 19rem)' }}
         variants={word}
         {...revealProps()}
       >
@@ -106,7 +106,7 @@ const Wordmark = () => {
 const Footer = () => (
   <footer className="relative overflow-clip rounded-t-[36px] bg-sun text-ink sm:rounded-t-[64px]">
     <div className="container-x pt-20 sm:pt-24">
-      <div className="grid gap-12 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+      <div className="grid grid-cols-1 gap-12 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2.5">
             <LogoMark tone="paper" />

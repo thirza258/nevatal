@@ -26,11 +26,11 @@ const FinalCTA = () => {
   const rotate = useTransform(scrollYProgress, [0, 1], [-25, 0])
 
   return (
-    <section id="final-cta" className="relative overflow-clip bg-paper pb-24 pt-10 sm:pb-32">
+    <section id="final-cta" className="relative scroll-mt-24 overflow-clip bg-paper pb-20 pt-8 sm:scroll-mt-28 sm:pb-32 sm:pt-10">
       <div ref={ref} className="container-x">
         <motion.div
           style={reduce ? undefined : { scale, rotate }}
-          className="relative mx-auto grid w-full max-w-[860px] place-items-center py-16 sm:aspect-square sm:py-0"
+          className="relative mx-auto grid w-full max-w-[860px] grid-cols-1 place-items-center py-16 sm:aspect-square sm:py-0"
         >
           {wide ? (
             <MorphShape shape={shape} color="sun" className="absolute inset-0" />

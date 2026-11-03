@@ -105,7 +105,7 @@ const AboutPage = () => {
       </PageHero>
 
       <section className="border-t border-ink/10 bg-paper py-24 sm:py-32">
-        <div className="container-x grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+        <div className="container-x grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <Reveal>
             <p className="eyebrow text-ink">
               <Shape kind="circle" color="cobalt" className="h-3 w-3" /> The work
@@ -145,7 +145,7 @@ const AboutPage = () => {
             <Heading text="How the work gets built." accent="gets built." className="h-section mt-6" />
           </Reveal>
 
-          <Stagger className="mt-14 grid gap-4 sm:grid-cols-2">
+          <Stagger className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {PRINCIPLES.map((principle, index) => (
               <StaggerItem key={principle.title} pop>
                 <motion.div
@@ -173,7 +173,7 @@ const AboutPage = () => {
       </MorphSection>
 
       <section className="bg-paper py-24 sm:py-32">
-        <div className="container-x grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
+        <div className="container-x grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
           <Reveal>
             <p className="eyebrow text-ink">
               <Shape kind="dots" color="plum" className="h-3.5 w-3.5" /> The stack

@@ -169,7 +169,7 @@ const ProjectsPage = () => {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search the portfolio…"
-                className="w-full bg-transparent text-sm text-ink placeholder:text-ink/45 focus:outline-none"
+                className="w-full min-w-0 bg-transparent text-sm text-ink placeholder:text-ink/45 focus:outline-none"
               />
             </label>
           </div>
@@ -194,7 +194,7 @@ const ProjectsPage = () => {
 
           <motion.div
             layout
-            className={visible.length > 0 ? 'mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3' : 'hidden'}
+            className={visible.length > 0 ? 'mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3' : 'hidden'}
           >
             <AnimatePresence initial={false}>
               {visible.map((project) => (
@@ -211,7 +211,7 @@ const ProjectsPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.25 }}
-                className="mt-10 rounded-[30px] border border-ink/10 p-12 text-center"
+                className="mt-10 rounded-[30px] border border-ink/10 p-8 text-center sm:p-12"
               >
                 <Shape kind="squiggle" color="cobalt" className="mx-auto h-12 w-16" />
                 <p className="mt-5 font-display text-2xl font-semibold tracking-[-0.03em]">

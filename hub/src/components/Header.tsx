@@ -53,14 +53,14 @@ const Header = () => {
   return (
     <>
       <div className="relative z-[60] bg-sun text-ink">
-        <div className="container-x flex h-9 items-center justify-center gap-3 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] sm:justify-between">
-          <span className="flex items-center gap-2.5">
-            <span className="relative flex h-2 w-2" aria-hidden="true">
+        <div className="container-x flex h-9 min-w-0 items-center justify-center gap-3 font-mono text-[10px] font-medium uppercase tracking-[0.14em] sm:justify-between sm:text-[10.5px] sm:tracking-[0.16em]">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <span className="relative flex h-2 w-2 flex-none" aria-hidden="true">
               <span className="absolute inset-0 animate-ping rounded-full bg-ink/40" />
               <span className="relative h-2 w-2 rounded-full bg-ink" />
             </span>
-            <span className="sm:hidden">Nevatal AI Hub is live — 17 tools</span>
-            <span className="hidden sm:inline">Nevatal AI Hub is live — seventeen tools, your own key</span>
+            <span className="truncate sm:hidden">Nevatal AI Hub is live — 17 tools</span>
+            <span className="hidden truncate sm:inline">Nevatal AI Hub is live — seventeen tools, your own key</span>
           </span>
           <a
             href={AI_HUB_URL}
@@ -74,7 +74,7 @@ const Header = () => {
       </div>
 
       <motion.header
-        className="pointer-events-none sticky top-0 z-50 px-3 pt-3"
+        className="pointer-events-none sticky top-0 z-50 px-3 pt-[max(0.75rem,env(safe-area-inset-top))]"
         initial={false}
         animate={{ y: concealed ? -96 : 0 }}
         transition={{ duration: 0.4, ease: easeOut }}
@@ -170,14 +170,17 @@ const Header = () => {
           <motion.div
             id="mobile-nav"
             key="mobile-nav"
-            className="fixed inset-0 z-40 overflow-y-auto bg-sun md:hidden"
+            className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-sun md:hidden"
             initial={{ clipPath: 'circle(0% at 90% 8%)' }}
             animate={{ clipPath: 'circle(150% at 90% 8%)' }}
             exit={{ clipPath: 'circle(0% at 90% 8%)' }}
             transition={{ duration: 0.6, ease: easeOut }}
           >
             <ShapeField seed="mobile-menu" tone="sun" count={6} mobileCount={6} sizes={[56, 110]} interactive={false} />
-            <nav aria-label="Mobile" className="relative flex min-h-full flex-col justify-between px-6 pb-10 pt-32">
+            <nav
+              aria-label="Mobile"
+              className="relative flex min-h-full flex-col justify-between px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-32 sm:px-6"
+            >
               <ul>
                 {NAV_LINKS.map((link, index) => (
                   <motion.li
@@ -188,7 +191,7 @@ const Header = () => {
                   >
                     <NavLink
                       to={link.to}
-                      className="flex items-baseline justify-between border-b border-ink/15 py-5 font-display text-5xl font-semibold tracking-[-0.045em] text-ink"
+                      className="flex items-baseline justify-between gap-4 border-b border-ink/15 py-4 font-display text-[clamp(2.5rem,11vw,3.25rem)] font-semibold tracking-[-0.045em] text-ink sm:py-5"
                     >
                       {({ isActive }) => (
                         <>

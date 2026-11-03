@@ -41,7 +41,7 @@ const PostCard = ({ post, categoryName }: { post: WPPost; categoryName?: string 
   return (
     <Link
       to={`/blog/${post.slug}`}
-      className="group relative flex h-full flex-col overflow-hidden rounded-[30px] border border-ink/10 bg-paper p-6 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1.5 hover:border-ink/20 hover:shadow-[0_34px_70px_-40px_rgba(11,11,13,0.45)]"
+      className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-[30px] border border-ink/10 bg-paper p-6 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1.5 hover:border-ink/20 hover:shadow-[0_34px_70px_-40px_rgba(11,11,13,0.45)]"
     >
       <Shape
         kind={tone.kind}
@@ -50,18 +50,20 @@ const PostCard = ({ post, categoryName }: { post: WPPost; categoryName?: string 
       />
       <div className="relative flex items-center justify-between gap-3">
         <span
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] ${tone.pill}`}
+          className={`inline-flex min-w-0 items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] ${tone.pill}`}
         >
-          <Shape kind={tone.kind} color={tone.color} className="h-3 w-3" />
-          {category}
+          <Shape kind={tone.kind} color={tone.color} className="h-3 w-3 flex-none" />
+          <span className="truncate">{category}</span>
         </span>
         <span className="grid h-9 w-9 flex-none place-items-center rounded-full border border-ink/10 transition-colors duration-300 group-hover:border-sun group-hover:bg-sun">
           <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:rotate-45" />
         </span>
       </div>
 
-      <h3 className="relative mt-6 font-display text-[22px] font-semibold leading-snug tracking-[-0.03em]">{title}</h3>
-      <p className="relative mt-3 line-clamp-3 text-sm leading-relaxed text-ink/60">
+      <h3 className="relative mt-6 break-words font-display text-[22px] font-semibold leading-snug tracking-[-0.03em]">
+        {title}
+      </h3>
+      <p className="relative mt-3 line-clamp-3 break-words text-sm leading-relaxed text-ink/60">
         {excerptText(post.excerpt.rendered)}
       </p>
 

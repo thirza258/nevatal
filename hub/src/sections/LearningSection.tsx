@@ -69,9 +69,9 @@ const LearningSection = () => {
   const active = TOPICS.find((topic) => topic.id === activeId) ?? TOPICS[0]
 
   return (
-    <section id="learning" className="relative overflow-clip border-t border-ink/10 bg-paper py-28 sm:py-36">
+    <section id="learning" className="relative scroll-mt-24 overflow-clip border-t border-ink/10 bg-paper py-20 sm:scroll-mt-28 sm:py-36">
       <ShapeField seed="learning" count={4} mobileCount={2} sizes={[40, 90]} />
-      <div className="container-x relative grid gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+      <div className="container-x relative grid grid-cols-1 gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <Reveal>
           <p className="eyebrow text-ink">
             <Shape kind="flower" color="sun" className="h-4 w-4" /> Learning
@@ -102,11 +102,13 @@ const LearningSection = () => {
                       transition={spring}
                     />
                   )}
-                  <span className="relative flex items-baseline gap-4">
+                  <span className="relative flex min-w-0 items-baseline gap-3 sm:gap-4">
                     <span className="font-mono text-xs">0{index + 1}</span>
-                    <span className="font-display text-2xl font-semibold tracking-[-0.03em]">{topic.label}</span>
+                    <span className="truncate font-display text-xl font-semibold tracking-[-0.03em] sm:text-2xl">
+                      {topic.label}
+                    </span>
                   </span>
-                  <span className="relative font-mono text-[10px] uppercase tracking-[0.14em]">
+                  <span className="relative hidden font-mono text-[10px] uppercase tracking-[0.14em] sm:block">
                     {topic.course.split(' · ')[0]}
                   </span>
                 </button>
@@ -120,14 +122,14 @@ const LearningSection = () => {
             <MorphShape
               shape={active.shape}
               color="sun"
-              className="absolute -right-10 -top-12 h-56 w-56 sm:-right-16 sm:-top-16 sm:h-72 sm:w-72"
+              className="absolute -right-6 -top-10 h-40 w-40 sm:-right-16 sm:-top-16 sm:h-72 sm:w-72"
             />
             <div className="relative overflow-hidden rounded-[32px] border border-ink/10 bg-paper shadow-[0_50px_100px_-60px_rgba(11,11,13,0.5)]">
-              <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-6 py-4">
-                <span className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-ink/60">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-ink/10 px-5 py-3.5 sm:px-6 sm:py-4">
+                <span className="min-w-0 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink/60 sm:text-[11px] sm:tracking-[0.14em]">
                   {active.course}
                 </span>
-                <span className="rounded-full bg-sun-soft px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink">
+                <span className="flex-none rounded-full bg-sun-soft px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink">
                   Sample lesson
                 </span>
               </div>
@@ -139,14 +141,14 @@ const LearningSection = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.22 }}
-                  className="p-6"
+                  className="p-5 sm:p-6"
                 >
                   <h3 className="font-display text-2xl font-semibold tracking-[-0.03em]">{active.title}</h3>
                   <pre className="mt-5 overflow-x-auto rounded-[20px] bg-ink p-5 font-mono text-[13px] leading-relaxed text-paper/85">
                     {active.code}
                   </pre>
-                  <div className="mt-3 flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2.5 font-mono text-[11px] text-emerald-800">
-                    <span className="h-1.5 w-1.5 flex-none rounded-full bg-emerald-500" />
+                  <div className="mt-3 flex items-start gap-2 rounded-[18px] bg-emerald-50 px-4 py-2.5 font-mono text-[11px] leading-relaxed text-emerald-800">
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-emerald-500" />
                     {active.output}
                   </div>
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-3">

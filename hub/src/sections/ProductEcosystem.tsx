@@ -61,7 +61,7 @@ const ProductEcosystem = () => {
   }
 
   return (
-    <MorphSection morph="sparkle" id="ecosystem" className="py-28 sm:py-36">
+    <MorphSection morph="sparkle" id="ecosystem" className="scroll-mt-24 py-20 sm:scroll-mt-28 sm:py-36">
       <ShapeField seed="ecosystem" tone="sun" count={5} mobileCount={2} sizes={[40, 96]} />
       <div className="container-x relative">
         <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
@@ -95,7 +95,7 @@ const ProductEcosystem = () => {
 
         <div
           ref={stageRef}
-          className="mt-14 grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start"
+          className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onFocusCapture={() => setPaused(true)}
@@ -140,7 +140,7 @@ const ProductEcosystem = () => {
           </motion.ul>
 
           <div className="overflow-hidden rounded-[32px] bg-paper shadow-[0_40px_90px_-50px_rgba(11,11,13,0.55)]">
-            <div className="flex items-center gap-3 px-5 py-4">
+            <div className="flex items-center gap-2 px-4 py-3.5 sm:gap-3 sm:px-5 sm:py-4">
               <span className="truncate rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
                 {active.url ? hostOf(active.url) : 'internal'}
               </span>
@@ -154,7 +154,7 @@ const ProductEcosystem = () => {
                 type="button"
                 onClick={() => setAutoplay((value) => !value)}
                 aria-label={autoplay ? 'Pause the project slideshow' : 'Play the project slideshow'}
-                className="grid h-8 w-8 flex-none place-items-center rounded-full border border-ink/15 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+                className="grid h-9 w-9 flex-none place-items-center rounded-full border border-ink/15 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper sm:h-8 sm:w-8"
               >
                 {autoplay ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
               </button>

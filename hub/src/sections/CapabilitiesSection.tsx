@@ -79,8 +79,8 @@ const CapabilitiesSection = () => {
   const active = CAPABILITIES.find((capability) => capability.id === activeId) ?? CAPABILITIES[0]
 
   return (
-    <section id="capabilities" className="relative overflow-clip bg-paper py-28 sm:py-36">
-      <div className="container-x relative grid gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+    <section id="capabilities" className="relative scroll-mt-24 overflow-clip bg-paper py-20 sm:scroll-mt-28 sm:py-36">
+      <div className="container-x relative grid grid-cols-1 gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <Reveal>
           <p className="eyebrow text-ink">
             <Shape kind="half" color="cobalt" className="h-3.5 w-3.5" /> How we work
@@ -105,7 +105,7 @@ const CapabilitiesSection = () => {
                     isActive ? 'text-ink' : 'text-ink/45 hover:text-ink'
                   }`}
                 >
-                  <span className="flex items-baseline gap-5">
+                  <span className="flex min-w-0 flex-1 items-baseline gap-3 sm:gap-5">
                     <span className="font-mono text-xs">{capability.number}</span>
                     <span className="font-display text-[clamp(1.6rem,3.2vw,2.5rem)] font-semibold tracking-[-0.04em]">
                       {capability.title}

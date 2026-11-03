@@ -103,9 +103,9 @@ const AIHubSection = () => {
   const active = DEMO_TOOLS.find((tool) => tool.id === activeId) ?? DEMO_TOOLS[0]
 
   return (
-    <section id="ai-hub" className="relative overflow-clip bg-paper py-28 sm:py-36">
+    <section id="ai-hub" className="relative scroll-mt-24 overflow-clip bg-paper py-20 sm:scroll-mt-28 sm:py-36">
       <ShapeField seed="ai-hub" count={5} mobileCount={2} sizes={[40, 100]} />
-      <div className="container-x relative grid items-center gap-16 lg:grid-cols-[0.92fr_1.08fr]">
+      <div className="container-x relative grid grid-cols-1 items-center gap-16 lg:grid-cols-[0.92fr_1.08fr]">
         <div>
           <Reveal>
             <p className="eyebrow text-ink">
@@ -123,7 +123,7 @@ const AIHubSection = () => {
             </p>
           </Reveal>
 
-          <Stagger as="ul" className="mt-10 grid gap-6 sm:grid-cols-2">
+          <Stagger as="ul" className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
             {FEATURES.map((feature) => (
               <StaggerItem as="li" key={feature.title} className="flex gap-3.5">
                 <motion.span whileHover={{ rotate: 180, scale: 1.2 }} transition={spring} className="mt-0.5 flex-none">
@@ -166,7 +166,7 @@ const AIHubSection = () => {
               <span className="rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
                 chat.nevatal.id
               </span>
-              <span className="ml-auto font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/60">
+              <span className="ml-auto hidden font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/60 sm:inline">
                 Local sample
               </span>
             </div>
@@ -220,9 +220,11 @@ const AIHubSection = () => {
                 </motion.div>
               </AnimatePresence>
 
-              <div className="mt-5 flex items-center justify-between rounded-full border border-ink/10 py-1.5 pl-4 pr-1.5 font-mono text-[11px] text-ink/60">
-                <span>{active.meta}</span>
-                <span className="rounded-full bg-sun px-3 py-1 font-medium text-ink">Run</span>
+              <div className="mt-5 flex min-w-0 items-center justify-between rounded-full border border-ink/10 py-1.5 pl-4 pr-1.5 font-mono text-[11px] text-ink/60">
+                <span className="min-w-0 truncate">{active.meta}</span>
+                <span className="ml-2 flex-none whitespace-nowrap rounded-full bg-sun px-3 py-1 font-medium text-ink">
+                  Run
+                </span>
               </div>
             </div>
           </div>
