@@ -7,6 +7,7 @@ export const AI_TOOL_COUNT = 17
 export const BLOG_TOTAL_FALLBACK = 400
 export const GITHUB_URL = 'https://github.com/thirza258/nevatal'
 export const GITHUB_PROFILE_URL = 'https://github.com/thirza258'
+export const PORTFOLIO_URL = 'https://thirza258.github.io'
 
 export const WP_SITE_URL = 'https://wordpress.nevatal.id'
 

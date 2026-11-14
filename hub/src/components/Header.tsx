@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'framer-motion'
-import { AI_HUB_URL, NAV_LINKS } from '../lib/constants'
+import { AI_HUB_URL, NAV_LINKS, PORTFOLIO_URL } from '../lib/constants'
 import { easeOut, spring } from '../lib/motion'
 import ShapeField from './decor/ShapeField'
 import LogoMark from './LogoMark'
@@ -131,6 +131,16 @@ const Header = () => {
           </ul>
 
           <div className="flex items-center gap-1.5">
+            <Magnetic className="hidden lg:inline-flex">
+              <a
+                href={PORTFOLIO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-paper !py-2.5 !text-xs !px-3.5 border border-ink/10"
+              >
+                Portfolio <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            </Magnetic>
             <Magnetic className="hidden sm:inline-flex">
               <a
                 href={AI_HUB_URL}
@@ -207,13 +217,24 @@ const Header = () => {
                 ))}
               </ul>
               <motion.a
+                href={PORTFOLIO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ y: 24, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.35, duration: 0.6, ease: easeOut }}
+                className="mt-8 flex items-center justify-between rounded-full border border-ink/20 px-6 py-3.5 font-medium text-ink hover:border-ink"
+              >
+                Creator Portfolio <ArrowUpRight className="h-5 w-5" />
+              </motion.a>
+              <motion.a
                 href={AI_HUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 initial={{ y: 24, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.6, ease: easeOut }}
-                className="mt-12 flex items-center justify-between rounded-full bg-ink px-6 py-4 font-medium text-paper"
+                className="mt-3 flex items-center justify-between rounded-full bg-ink px-6 py-4 font-medium text-paper"
               >
                 Open the AI Hub <ArrowUpRight className="h-5 w-5" />
               </motion.a>

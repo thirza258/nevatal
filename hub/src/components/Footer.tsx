@@ -5,6 +5,7 @@ import {
   AI_HUB_URL,
   GITHUB_PROFILE_URL,
   GITHUB_URL,
+  PORTFOLIO_URL,
   WP_SITE_URL,
 } from '../lib/constants'
 import { revealProps } from '../lib/inview'
@@ -114,16 +115,34 @@ const Footer = () => (
           </div>
           <p className="mt-6 max-w-xs text-[15px] leading-relaxed text-ink/80">
             An independent AI studio building products that earn their place — and keeping them
-            running on hardware we control.
+            running on hardware we control. Built by{' '}
+            <a
+              href={PORTFOLIO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-ink underline underline-offset-2 hover:text-cobalt"
+            >
+              Thirza Ahmad
+            </a>.
           </p>
-          <a
-            href={GITHUB_PROFILE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-ink mt-7"
-          >
-            Follow the work on GitHub <ArrowUpRight className="h-4 w-4" />
-          </a>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <a
+              href={GITHUB_PROFILE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-ink"
+            >
+              GitHub <ArrowUpRight className="h-4 w-4" />
+            </a>
+            <a
+              href={PORTFOLIO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-paper border border-ink/20"
+            >
+              Portfolio <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </div>
         </div>
 
         <FooterColumn
@@ -151,6 +170,7 @@ const Footer = () => (
         <FooterColumn
           title="Elsewhere"
           links={[
+            { label: 'Portfolio', href: PORTFOLIO_URL, external: true },
             { label: 'GitHub profile', href: GITHUB_PROFILE_URL, external: true },
             { label: 'Nevatal source', href: GITHUB_URL, external: true },
             { label: 'WordPress archive', href: WP_SITE_URL, external: true },
@@ -177,6 +197,14 @@ const Footer = () => (
           <Link to="/about" className="hover:text-ink hover:underline">
             About
           </Link>
+          <a
+            href={PORTFOLIO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-ink hover:underline"
+          >
+            Portfolio
+          </a>
           <Link to="/privacy" className="hover:text-ink hover:underline">
             Privacy Policy
           </Link>

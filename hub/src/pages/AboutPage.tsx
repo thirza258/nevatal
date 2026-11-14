@@ -11,7 +11,7 @@ import Reveal from '../components/motion/Reveal'
 import { Stagger, StaggerItem } from '../components/motion/Stagger'
 import { ArrowRight, ArrowUpRight } from '../components/icons'
 import { LIVE_PROJECTS, PROJECTS } from '../data/projects'
-import { AI_HUB_URL, GITHUB_PROFILE_URL } from '../lib/constants'
+import { AI_HUB_URL, GITHUB_PROFILE_URL, PORTFOLIO_URL } from '../lib/constants'
 import { easeOut, spring } from '../lib/motion'
 import { usePageMeta } from '../lib/seo'
 
@@ -81,7 +81,15 @@ const AboutPage = () => {
         seed="about-hero"
         lead={
           <p>
-            Nevatal is an independent, personal open-source software project developed in Indonesia. We design, build and operate AI products end
+            Nevatal is an independent, personal open-source software project developed in Indonesia by{' '}
+            <a
+              href={PORTFOLIO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-cobalt underline underline-offset-2 hover:text-ink"
+            >
+              Thirza Ahmad
+            </a>. We design, build and operate AI products end
             to end — the model layer, the retrieval, the interface and the server it runs on.
           </p>
         }
@@ -247,6 +255,11 @@ const AboutPage = () => {
                 <Magnetic>
                   <a href={AI_HUB_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ink">
                     Open the AI Hub <ArrowUpRight className="h-4 w-4" />
+                  </a>
+                </Magnetic>
+                <Magnetic>
+                  <a href={PORTFOLIO_URL} target="_blank" rel="noopener noreferrer" className="btn btn-paper">
+                    Portfolio <ArrowUpRight className="h-4 w-4" />
                   </a>
                 </Magnetic>
                 <Magnetic>
