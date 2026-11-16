@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build && node scripts/build-sitemap.mjs",
+    "indexnow": "node scripts/submit-indexnow.mjs",
     "preview": "vite preview",
     "test": "vitest run"
   },
