@@ -63,11 +63,11 @@ const PostCard = ({ post, categoryName }: { post: WPPost; categoryName?: string 
       <h3 className="relative mt-6 break-words font-display text-[22px] font-semibold leading-snug tracking-[-0.03em]">
         {title}
       </h3>
-      <p className="relative mt-3 line-clamp-3 break-words text-sm leading-relaxed text-ink/60">
+      <p className="relative mt-3 line-clamp-3 break-words text-sm leading-relaxed text-ink/75">
         {excerptText(post.excerpt.rendered)}
       </p>
 
-      <div className="relative mt-auto flex items-center justify-between gap-3 pt-7 font-mono text-[11px] uppercase tracking-[0.1em] text-ink/60">
+      <div className="relative mt-auto flex items-center justify-between gap-3 pt-7 font-mono text-[11px] uppercase tracking-[0.1em] text-ink/75">
         <time dateTime={post.date}>{formatDate(post.date)}</time>
         <span className="font-medium text-ink">Read the note</span>
       </div>

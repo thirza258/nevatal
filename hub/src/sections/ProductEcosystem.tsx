@@ -141,13 +141,13 @@ const ProductEcosystem = () => {
 
           <div className="overflow-hidden rounded-[32px] bg-paper shadow-[0_40px_90px_-50px_rgba(11,11,13,0.55)]">
             <div className="flex items-center gap-2 px-4 py-3.5 sm:gap-3 sm:px-5 sm:py-4">
-              <span className="truncate rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
+              <span className="truncate rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/75">
                 {active.url ? hostOf(active.url) : 'internal'}
               </span>
               <span className="ml-auto flex flex-none items-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live
               </span>
-              <span className="flex-none font-mono text-[11px] tabular-nums text-ink/60">
+              <span className="flex-none font-mono text-[11px] tabular-nums text-ink/75">
                 {String(index + 1).padStart(2, '0')} / {deck.length}
               </span>
               <button
@@ -162,20 +162,25 @@ const ProductEcosystem = () => {
 
             <div className="relative mx-3 aspect-[16/10] overflow-hidden rounded-[22px] bg-paper-2">
               <AnimatePresence initial={false}>
-                <motion.img
+                <motion.picture
                   key={active.slug}
-                  src={`/previews/${active.slug}.jpg`}
-                  alt={`${active.name} interface`}
-                  width={1280}
-                  height={800}
-                  loading="lazy"
-                  decoding="async"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.35, ease: easeOut }}
-                  className="absolute inset-0 h-full w-full object-cover object-top will-change-[opacity]"
-                />
+                  className="absolute inset-0 h-full w-full will-change-[opacity]"
+                >
+                  <source srcSet={`/previews/${active.slug}.webp`} type="image/webp" />
+                  <img
+                    src={`/previews/${active.slug}.jpg`}
+                    alt={`${active.name} interface`}
+                    width={1280}
+                    height={800}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover object-top"
+                  />
+                </motion.picture>
               </AnimatePresence>
               {running && (
                 <motion.span
@@ -201,7 +206,7 @@ const ProductEcosystem = () => {
                   // Announce picks the visitor makes, not the autoplay every five seconds.
                   aria-live={autoplay ? 'off' : 'polite'}
                 >
-                  <p className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-ink/60">
+                  <p className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-ink/75">
                     <Shape
                       kind={CATEGORY_SHAPE[active.category].kind}
                       color={CATEGORY_SHAPE[active.category].color}
@@ -212,7 +217,7 @@ const ProductEcosystem = () => {
                   <h3 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em]">
                     {active.name}
                   </h3>
-                  <p className="mt-1 max-w-md text-sm leading-relaxed text-ink/65">{active.tagline}</p>
+                  <p className="mt-1 max-w-md text-sm leading-relaxed text-ink/80">{active.tagline}</p>
                 </motion.div>
               </AnimatePresence>
               <div className="flex flex-wrap items-center gap-2">

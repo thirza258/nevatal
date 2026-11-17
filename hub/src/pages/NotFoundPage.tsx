@@ -56,7 +56,7 @@ const NotFoundPage = () => {
           <h1 className="mt-6 font-display text-[clamp(2rem,4.6vw,3.4rem)] font-semibold leading-[1.02] tracking-[-0.04em]">
             This page hasn&apos;t been built yet.
           </h1>
-          <p className="mx-auto mt-5 max-w-lg text-lg text-ink/65">
+          <p className="mx-auto mt-5 max-w-lg text-lg text-ink/80">
             The link may be old, or the page may have moved. The portfolio and the writing archive
             are both one click away.
           </p>

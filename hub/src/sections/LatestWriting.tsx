@@ -25,7 +25,7 @@ const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
             <Shape kind="squiggle" color="cobalt" className="h-4 w-5" /> Writing
           </p>
           <Heading text="Notes from the workshop." accent="workshop." className="h-section mt-6" />
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/65">
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/80">
             Architecture notes, build logs and the occasional post-mortem — published from
             WordPress and read right here.
           </p>
@@ -57,7 +57,7 @@ const LatestWriting = ({ posts, categories, state }: LatestWritingProps) => (
           <p className="mt-5 font-display text-2xl font-semibold tracking-[-0.03em]">
             The archive is taking a break.
           </p>
-          <p className="mt-2 text-sm text-ink/60">
+          <p className="mt-2 text-sm text-ink/75">
             WordPress could not be reached from this browser. The posts are still online.
           </p>
           <Link to="/blog" className="btn btn-ink mt-6">

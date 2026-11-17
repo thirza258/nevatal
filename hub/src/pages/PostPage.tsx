@@ -211,7 +211,7 @@ const PostPage = () => {
               transition={{ duration: 0.8, ease: easeOut }}
               className="mx-auto max-w-4xl"
             >
-              <nav className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink/60" aria-label="Breadcrumb">
+              <nav className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink/75" aria-label="Breadcrumb">
                 <Link to="/blog" className="link-underline transition hover:text-ink">
                   Writing
                 </Link>
@@ -219,7 +219,7 @@ const PostPage = () => {
                 <span>Article</span>
               </nav>
 
-              <div className="mt-7 flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.12em] text-ink/60">
+              <div className="mt-7 flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.12em] text-ink/75">
                 {categoryName && (
                   <span className="rounded-full bg-sun px-3 py-1.5 font-medium text-ink">{categoryName}</span>
                 )}
@@ -232,9 +232,9 @@ const PostPage = () => {
                 {title}
               </h1>
 
-              {summary && <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/65">{summary}</p>}
+              {summary && <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/80">{summary}</p>}
               {author && (
-                <p className="mt-7 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-ink/60">
+                <p className="mt-7 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-ink/75">
                   <Shape kind="circle" color="sun" className="h-3 w-3" /> By {author}
                 </p>
               )}

@@ -22,7 +22,7 @@ const TermsPage = () => {
         accent="of Service"
         seed="terms-hero"
         lead={
-          <p className="font-mono text-sm uppercase tracking-[0.08em] text-ink/60">
+          <p className="font-mono text-sm uppercase tracking-[0.08em] text-ink/75">
             Effective Date: November 1, 2026 &bull; MIT License &bull; Personal &amp; Educational Use
           </p>
         }

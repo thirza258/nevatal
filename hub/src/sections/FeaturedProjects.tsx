@@ -78,7 +78,7 @@ const FeaturedProjects = () => {
           </div>
         </Reveal>
 
-        <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-ink/60">
+        <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-ink/75">
           Showing {visible.length} of {PROJECTS.length} projects
         </p>
 

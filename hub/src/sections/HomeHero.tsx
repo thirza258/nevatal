@@ -95,16 +95,19 @@ const ShapeCard = ({
         }}
       >
         <div className={`relative overflow-hidden bg-paper-2 ${frame} ${imageClassName}`}>
-          <img
-            src={`/previews/${slug}.jpg`}
-            alt={`${name} interface`}
-            width={1280}
-            height={800}
-            loading={eager ? 'eager' : 'lazy'}
-            fetchPriority={eager ? 'high' : undefined}
-            decoding="async"
-            className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.07]"
-          />
+          <picture>
+            <source srcSet={`/previews/${slug}.webp`} type="image/webp" />
+            <img
+              src={`/previews/${slug}.jpg`}
+              alt={`${name} interface`}
+              width={1280}
+              height={800}
+              loading={eager ? 'eager' : 'lazy'}
+              fetchPriority={eager ? 'high' : 'low'}
+              decoding="async"
+              className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.07]"
+            />
+          </picture>
           {tint && (
             <span
               aria-hidden="true"
@@ -121,7 +124,7 @@ const ShapeCard = ({
           )}
         </div>
         <p className="mt-3 text-sm font-semibold tracking-[-0.01em]">{name}</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-ink/60">{tagline}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-ink/75">{tagline}</p>
       </motion.a>
     </motion.div>
   )
@@ -198,7 +201,7 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
 
         <div className="mt-12 grid grid-cols-1 gap-14 pb-16 lg:mt-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-start lg:gap-12">
           <motion.div initial="hidden" animate="show" variants={group}>
-            <motion.p variants={fadeUp} className="max-w-md text-lg leading-relaxed text-ink/65 sm:text-xl">
+            <motion.p variants={fadeUp} className="max-w-md text-lg leading-relaxed text-ink/80 sm:text-xl">
               Nevatal builds practical AI products, developer tools, and intelligent experiences
               designed to solve real problems.
             </motion.p>
@@ -236,13 +239,13 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
                     <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                     <Shape kind={stat.shape} color={stat.color} className="h-3.5 w-3.5 flex-none sm:h-4 sm:w-4" />
                   </dd>
-                  <dd className="mt-2 text-[11px] leading-snug text-ink/60 sm:text-xs">{stat.label}</dd>
+                  <dd className="mt-2 text-[11px] leading-snug text-ink/75 sm:text-xs">{stat.label}</dd>
                 </div>
               ))}
             </motion.dl>
 
             <motion.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-2">
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink/50">Jump to:</span>
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink/75">Jump to:</span>
               {[
                 { id: 'studio', label: 'Studio' },
                 { id: 'ecosystem', label: 'Ecosystem' },
@@ -254,7 +257,7 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
                   key={item.id}
                   type="button"
                   onClick={() => scrollToSection(item.id)}
-                  className="flex items-center gap-1 rounded-full border border-ink/10 bg-paper-2 px-2.5 py-1 font-mono text-[11px] text-ink/70 transition-colors hover:border-ink hover:text-ink"
+                  className="flex items-center gap-1 rounded-full border border-ink/10 bg-paper-2 px-2.5 py-1 font-mono text-[11px] text-ink/80 transition-colors hover:border-ink hover:text-ink"
                 >
                   <span>{item.label}</span>
                   <ArrowDown className="h-3 w-3 opacity-60" />
@@ -296,7 +299,6 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
               className="col-span-3 sm:col-span-2"
               progress={scrollYProgress}
               depth={-110}
-              eager
             />
             <ShapeCard
               href="https://leetbug.nevatal.id"
@@ -308,7 +310,6 @@ const HomeHero = ({ postTotal }: { postTotal: number | null }) => {
               className="col-span-3 sm:col-span-2"
               progress={scrollYProgress}
               depth={-70}
-              eager
             />
             <motion.a
               variants={cardIn}

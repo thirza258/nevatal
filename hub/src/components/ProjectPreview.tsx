@@ -95,7 +95,7 @@ const ProjectPreview = ({
   const shotExhausted =
     shotMode === 'remote' && tab === 'screenshot' && !shotReady && shotAttempt >= SHOT_MAX_ATTEMPTS - 1
   const host = hostOf(url)
-  const localShot = `/previews/${project.slug}.jpg`
+  const localShot = `/previews/${project.slug}.webp`
 
   const retryScreenshot = () => {
     setSeed(Math.random().toString(36).slice(2, 8))
@@ -129,7 +129,7 @@ const ProjectPreview = ({
         <header className="flex items-center gap-2 border-b border-ink/10 px-3 py-3 sm:gap-3 sm:px-5">
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-[15px] font-semibold tracking-[-0.02em]">{project.name}</p>
-            <p className="truncate font-mono text-[11px] text-ink/60">{host}</p>
+            <p className="truncate font-mono text-[11px] text-ink/75">{host}</p>
           </div>
 
           <div className="flex flex-none rounded-full border border-ink/15 bg-ink/[0.04] p-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]">
@@ -142,7 +142,7 @@ const ProjectPreview = ({
                   aria-pressed={active}
                   onClick={() => setTab(id)}
                   className={`relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-colors ${
-                    active ? 'text-paper' : 'text-ink/60 hover:text-ink'
+                    active ? 'text-paper' : 'text-ink/75 hover:text-ink'
                   }`}
                 >
                   {active && (
@@ -221,7 +221,7 @@ const ProjectPreview = ({
                 {!liveReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-paper">
                     <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-sun border-t-ink" />
-                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink/60">Loading live preview…</p>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink/75">Loading live preview…</p>
                   </div>
                 )}
               </motion.div>
@@ -258,7 +258,7 @@ const ProjectPreview = ({
                     {shotExhausted ? (
                       <>
                         <p className="text-sm font-semibold">The screenshot is still rendering.</p>
-                        <p className="max-w-sm text-xs leading-relaxed text-ink/60">
+                        <p className="max-w-sm text-xs leading-relaxed text-ink/75">
                           A fresh capture can take a minute. Try again, or open the site directly.
                         </p>
                         <motion.button
@@ -273,7 +273,7 @@ const ProjectPreview = ({
                     ) : (
                       <>
                         <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-sun border-t-ink" />
-                        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink/60">
+                        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink/75">
                           {shotMode === 'local'
                             ? 'Loading preview…'
                             : `Generating screenshot… ${
@@ -292,7 +292,7 @@ const ProjectPreview = ({
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-ink/10 px-5 py-3">
-          <p className="text-[11px] leading-relaxed text-ink/60">
+          <p className="text-[11px] leading-relaxed text-ink/75">
             {tab === 'live'
               ? 'Blank frame? The site may block embedding — switch to Screenshot.'
               : shotMode === 'local'

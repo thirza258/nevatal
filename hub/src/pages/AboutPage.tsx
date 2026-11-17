@@ -106,7 +106,7 @@ const AboutPage = () => {
               <dd className="font-display text-4xl font-semibold tracking-[-0.04em]">
                 <AnimatedCounter value={stat.value} suffix={stat.suffix} />
               </dd>
-              <dd className="mt-2 text-xs leading-snug text-ink/60">{stat.label}</dd>
+              <dd className="mt-2 text-xs leading-snug text-ink/75">{stat.label}</dd>
             </div>
           ))}
         </motion.dl>
@@ -120,7 +120,7 @@ const AboutPage = () => {
             </p>
             <Heading text="One studio, many products." accent="many products." className="h-section mt-6" />
           </Reveal>
-          <Reveal delay={0.08} className="space-y-5 text-lg leading-relaxed text-ink/70">
+          <Reveal delay={0.08} className="space-y-5 text-lg leading-relaxed text-ink/80">
             <p>
               The portfolio began with the Nevatal AI Hub — seventeen purpose-built AI tools in one
               workspace, running on the visitor&apos;s own OpenAI, Gemini or OpenRouter key. No
@@ -162,7 +162,7 @@ const AboutPage = () => {
                   className="group h-full rounded-[30px] bg-paper p-7"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-medium text-ink/60">0{index + 1}</span>
+                    <span className="font-mono text-xs font-medium text-ink/75">0{index + 1}</span>
                     <motion.span className="block h-9 w-9" whileHover={{ rotate: 180 }} transition={spring}>
                       <Shape
                         kind={principle.shape}
@@ -172,7 +172,7 @@ const AboutPage = () => {
                     </motion.span>
                   </div>
                   <h3 className="mt-8 font-display text-2xl font-semibold tracking-[-0.03em]">{principle.title}</h3>
-                  <p className="mt-3 max-w-md leading-relaxed text-ink/70">{principle.body}</p>
+                  <p className="mt-3 max-w-md leading-relaxed text-ink/80">{principle.body}</p>
                 </motion.div>
               </StaggerItem>
             ))}
@@ -187,7 +187,7 @@ const AboutPage = () => {
               <Shape kind="dots" color="plum" className="h-3.5 w-3.5" /> The stack
             </p>
             <Heading text="Boring where it counts." accent="it counts." squiggle className="h-section mt-6" />
-            <p className="mt-6 text-lg leading-relaxed text-ink/65">
+            <p className="mt-6 text-lg leading-relaxed text-ink/80">
               The tools are chosen for what they make possible under load, not for a launch post.
               Everything ships in containers and can be rebuilt from source.
             </p>

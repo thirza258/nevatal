@@ -80,27 +80,30 @@ const AICard = ({ project, frame }: { project: Project; frame: string }) => {
       className="group block w-[248px] flex-none snap-start sm:w-[288px]"
     >
       <div className={`relative aspect-square overflow-hidden bg-paper-2 ${frame}`}>
-        <img
-          src={`/previews/${project.slug}.jpg`}
-          alt={`${project.name} interface`}
-          width={1280}
-          height={800}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.08]"
-        />
+        <picture>
+          <source srcSet={`/previews/${project.slug}.webp`} type="image/webp" />
+          <img
+            src={`/previews/${project.slug}.jpg`}
+            alt={`${project.name} interface`}
+            width={1280}
+            height={800}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.08]"
+          />
+        </picture>
         {/* A yellow print of the screenshot; the real colours come through on hover. */}
         <span aria-hidden="true" className="absolute inset-0 bg-sun mix-blend-multiply transition-opacity duration-500 group-hover:opacity-0" />
         <span className="absolute bottom-[14%] right-[14%] grid h-10 w-10 scale-0 place-items-center rounded-full bg-sun text-ink transition-transform duration-300 group-hover:scale-100">
           <ArrowUpRight className="h-4 w-4" />
         </span>
       </div>
-      <p className="mt-5 flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-ink/60">
+      <p className="mt-5 flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-ink/75">
         <Shape kind={glyph.kind} color={glyph.color} className="h-3 w-3" />
         {project.tags.slice(0, 2).join(' · ')}
       </p>
       <h4 className="mt-2 font-display text-xl font-semibold tracking-[-0.03em]">{project.name}</h4>
-      <p className="mt-1 text-sm leading-relaxed text-ink/60">{project.tagline}</p>
+      <p className="mt-1 text-sm leading-relaxed text-ink/75">{project.tagline}</p>
     </motion.a>
   )
 }
@@ -134,7 +137,7 @@ const AICapabilities = () => {
             accent="Into the system."
             className="h-section mt-6 max-w-4xl"
           />
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/65">
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/80">
             AI applications built around retrieval, context, evaluation, and the engineering
             required to turn model capabilities into software that can show its work.
           </p>
@@ -163,12 +166,12 @@ const AICapabilities = () => {
                     whileHover={{ scale: isActive ? 1.18 : 1.08 }}
                     transition={spring}
                     className={`relative grid h-14 w-14 place-items-center rounded-full border-2 font-mono text-xs font-medium transition-colors ${
-                      isActive ? 'border-ink bg-sun text-ink' : 'border-ink/15 bg-paper text-ink/60 group-hover:border-ink'
+                      isActive ? 'border-ink bg-sun text-ink' : 'border-ink/15 bg-paper text-ink/75 group-hover:border-ink'
                     }`}
                   >
                     0{index + 1}
                   </motion.span>
-                  <span className={`text-sm font-medium ${isActive ? 'text-ink' : 'text-ink/60'}`}>{stage.label}</span>
+                  <span className={`text-sm font-medium ${isActive ? 'text-ink' : 'text-ink/75'}`}>{stage.label}</span>
                 </button>
               )
             })}
@@ -185,7 +188,7 @@ const AICapabilities = () => {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
               >
-                <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink/60">
+                <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink/75">
                   Stage active — {active.label}
                 </p>
                 <p className="mt-4 max-w-xl text-lg leading-relaxed text-ink/80">{active.detail}</p>
@@ -221,7 +224,7 @@ const AICapabilities = () => {
           </div>
         </div>
 
-        <p className="mt-4 font-mono text-[11px] text-ink/60">
+        <p className="mt-4 font-mono text-[11px] text-ink/75">
           A representative retrieval workflow based on RAGReader and CRAG MultiHop; individual
           implementations differ.
         </p>
@@ -231,7 +234,7 @@ const AICapabilities = () => {
             <h3 className="font-display text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
               Where the models ship.
             </h3>
-            <p className="mt-3 max-w-lg text-ink/65">
+            <p className="mt-3 max-w-lg text-ink/80">
               {deck.length} projects put AI or machine learning to work across production environments.
             </p>
           </div>

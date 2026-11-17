@@ -115,7 +115,7 @@ const ProjectsPage = () => {
                 <AnimatedCounter value={stat.value} />
                 <Shape kind={stat.shape} color={stat.color} className="h-4 w-4" />
               </dd>
-              <dd className="mt-2 text-xs text-ink/60">{stat.label}</dd>
+              <dd className="mt-2 text-xs text-ink/75">{stat.label}</dd>
             </div>
           ))}
         </motion.dl>
@@ -136,7 +136,7 @@ const ProjectsPage = () => {
                     type="button"
                     onClick={() => setFilter(option)}
                     className={`relative flex flex-none items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
-                      active ? 'border-ink text-paper' : 'border-ink/15 text-ink/70 hover:border-ink hover:text-ink'
+                      active ? 'border-ink text-paper' : 'border-ink/15 text-ink/75 hover:border-ink hover:text-ink'
                     }`}
                   >
                     {active && (
@@ -154,7 +154,7 @@ const ProjectsPage = () => {
                       />
                     )}
                     <span className="relative">{option}</span>
-                    <span className={`relative font-mono text-[10px] tabular-nums ${active ? 'text-sun' : 'text-ink/60'}`}>
+                    <span className={`relative font-mono text-[10px] tabular-nums ${active ? 'text-sun' : 'text-ink/75'}`}>
                       {CATEGORY_COUNTS[option]}
                     </span>
                   </button>
@@ -163,20 +163,20 @@ const ProjectsPage = () => {
             </div>
 
             <label className="flex w-full items-center gap-2 rounded-full border border-ink/15 bg-paper px-4 py-2.5 transition-colors focus-within:border-ink lg:w-72">
-              <Search className="h-4 w-4 flex-none text-ink/60" />
+              <Search className="h-4 w-4 flex-none text-ink/75" />
               <span className="sr-only">Search projects</span>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search the portfolio…"
-                className="w-full min-w-0 bg-transparent text-sm text-ink placeholder:text-ink/45 focus:outline-none"
+                className="w-full min-w-0 bg-transparent text-sm text-ink placeholder:text-ink/70 focus:outline-none"
               />
             </label>
           </div>
         </div>
 
         <div className="container-x relative">
-          <div className="mt-8 flex items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.16em] text-ink/60">
+          <div className="mt-8 flex items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.16em] text-ink/75">
             <p className="flex items-baseline gap-1.5">
               Showing
               <motion.span
@@ -217,7 +217,7 @@ const ProjectsPage = () => {
                 <p className="mt-5 font-display text-2xl font-semibold tracking-[-0.03em]">
                   Nothing matches that search.
                 </p>
-                <p className="mt-2 text-sm text-ink/60">
+                <p className="mt-2 text-sm text-ink/75">
                   Try a broader term, or clear the filters to see the whole portfolio.
                 </p>
                 <button
@@ -280,7 +280,7 @@ const ProjectsPage = () => {
       </MorphSection>
 
       <div className="bg-paper">
-        <div className="container-x py-10 text-center text-sm text-ink/60">
+        <div className="container-x py-10 text-center text-sm text-ink/75">
           Looking for the writing instead?{' '}
           <Link to="/blog" className="font-medium text-ink underline underline-offset-4 hover:text-cobalt">
             Visit the blog

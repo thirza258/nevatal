@@ -2,11 +2,28 @@ import { renderToString } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import App from './App'
+import AboutPage from './pages/AboutPage'
+import BlogPage from './pages/BlogPage'
+import NotFoundPage from './pages/NotFoundPage'
+import PostPage from './pages/PostPage'
+import PrivacyPage from './pages/PrivacyPage'
+import ProjectsPage from './pages/ProjectsPage'
+import TermsPage from './pages/TermsPage'
+
+const TEST_PAGES = {
+  ProjectsPage,
+  BlogPage,
+  PostPage,
+  AboutPage,
+  PrivacyPage,
+  TermsPage,
+  NotFoundPage,
+}
 
 const renderAt = (path: string) =>
   renderToString(
     <MemoryRouter initialEntries={[path]}>
-      <App />
+      <App pages={TEST_PAGES} />
     </MemoryRouter>
   )
 

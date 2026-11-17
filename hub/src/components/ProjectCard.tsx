@@ -27,16 +27,19 @@ const ProjectCard = ({ project, showScreenshot = false }: { project: Project; sh
       >
         {showScreenshot && shotVisible && (
           <div className="relative overflow-hidden rounded-[22px] bg-paper-2">
-            <img
-              src={`/previews/${project.slug}.jpg`}
-              alt={`Screenshot of ${project.name}`}
-              loading="lazy"
-              decoding="async"
-              width={1280}
-              height={800}
-              onError={() => setShotVisible(false)}
-              className="aspect-[16/10] w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.05]"
-            />
+            <picture>
+              <source srcSet={`/previews/${project.slug}.webp`} type="image/webp" />
+              <img
+                src={`/previews/${project.slug}.jpg`}
+                alt={`Screenshot of ${project.name}`}
+                loading="lazy"
+                decoding="async"
+                width={1280}
+                height={800}
+                onError={() => setShotVisible(false)}
+                className="aspect-[16/10] w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+              />
+            </picture>
             <Shape
               kind={glyph.kind}
               color={glyph.color === 'ink' ? 'sun' : glyph.color}
@@ -47,7 +50,7 @@ const ProjectCard = ({ project, showScreenshot = false }: { project: Project; sh
 
         <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-5">
           <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-ink/60">
+            <span className="flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-ink/75">
               <Shape kind={glyph.kind} color={glyph.color} className="h-3.5 w-3.5" />
               {project.category}
             </span>
@@ -60,7 +63,7 @@ const ProjectCard = ({ project, showScreenshot = false }: { project: Project; sh
                   aria-label={`Preview ${project.name}`}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.94 }}
-                  className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink/70 transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+                  className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink/75 transition-colors hover:border-ink hover:bg-ink hover:text-paper"
                 >
                   <Eye className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Preview</span>
@@ -76,7 +79,7 @@ const ProjectCard = ({ project, showScreenshot = false }: { project: Project; sh
                 </a>
               </span>
             ) : (
-              <span className="rounded-full border border-ink/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink/60">
+              <span className="rounded-full border border-ink/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink/75">
                 Internal
               </span>
             )}
@@ -84,7 +87,7 @@ const ProjectCard = ({ project, showScreenshot = false }: { project: Project; sh
 
           <h3 className="mt-5 font-display text-2xl font-semibold tracking-[-0.035em]">{project.name}</h3>
           <p className="mt-1.5 font-medium text-ink/75">{project.tagline}</p>
-          <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-ink/60">{project.description}</p>
+          <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-ink/75">{project.description}</p>
 
           <div className="mt-auto flex flex-wrap gap-1.5 pt-6">
             {project.tags.map((tag) => (

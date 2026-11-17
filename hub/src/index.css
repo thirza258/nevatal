@@ -100,7 +100,7 @@
   }
 
   .tag {
-    @apply rounded-full border border-ink/10 px-2.5 py-1 text-[11px] font-medium text-ink/65;
+    @apply rounded-full border border-ink/10 px-2.5 py-1 text-[11px] font-medium text-ink/75;
   }
 
   .link-underline {
@@ -145,7 +145,7 @@
   margin-top: 0.5rem;
   text-align: center;
   font-size: 0.8rem;
-  color: rgba(11, 11, 13, 0.55);
+  color: rgba(11, 11, 13, 0.75);
 }
 
 .article-body .callout {

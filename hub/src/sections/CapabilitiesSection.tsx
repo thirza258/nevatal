@@ -102,7 +102,7 @@ const CapabilitiesSection = () => {
                   aria-pressed={isActive}
                   onClick={() => setActiveId(capability.id)}
                   className={`group relative flex w-full items-center justify-between gap-4 border-b border-ink/10 py-5 text-left transition-colors ${
-                    isActive ? 'text-ink' : 'text-ink/45 hover:text-ink'
+                    isActive ? 'text-ink' : 'text-ink/75 hover:text-ink'
                   }`}
                 >
                   <span className="flex min-w-0 flex-1 items-baseline gap-3 sm:gap-5">
@@ -138,9 +138,9 @@ const CapabilitiesSection = () => {
                 transition={{ duration: 0.28 }}
                 className="relative w-[78%] rounded-[28px] bg-paper p-6 shadow-[0_40px_90px_-40px_rgba(11,11,13,0.5)] sm:w-[70%]"
               >
-                <p className="font-mono text-xs font-medium text-ink/60">{active.number}</p>
+                <p className="font-mono text-xs font-medium text-ink/75">{active.number}</p>
                 <h3 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em]">{active.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-ink/70">{active.body}</p>
+                <p className="mt-3 text-sm leading-relaxed text-ink/80">{active.body}</p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   {active.links.map((link) =>
                     link.internal ? (

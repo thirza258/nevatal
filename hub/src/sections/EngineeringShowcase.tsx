@@ -121,23 +121,26 @@ const EngineeringShowcase = () => {
           <Reveal delay={0.06} y={60} rotate={-2}>
             <div className="overflow-hidden rounded-[32px] bg-paper p-2.5 shadow-[0_40px_90px_-50px_rgba(11,11,13,0.55)]">
               <div className="flex items-center gap-2 px-3 pb-3 pt-1.5">
-                <span className="rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
+                <span className="rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/75">
                   chat.nevatal.id
                 </span>
-                <span className="ml-auto hidden font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/60 sm:inline">
+                <span className="ml-auto hidden font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/75 sm:inline">
                   Interface layer
                 </span>
               </div>
-              <img
-                src="/previews/ai-hub.jpg"
-                alt="Nevatal AI Hub interface"
-                width={1280}
-                height={800}
-                loading="lazy"
-                decoding="async"
-                className="aspect-[16/10] w-full rounded-[22px] object-cover object-top"
-              />
-              <p className="px-3 pb-2 pt-3 text-xs text-ink/60">
+              <picture>
+                <source srcSet="/previews/ai-hub.webp" type="image/webp" />
+                <img
+                  src="/previews/ai-hub.jpg"
+                  alt="Nevatal AI Hub interface"
+                  width={1280}
+                  height={800}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[16/10] w-full rounded-[22px] object-cover object-top"
+                />
+              </picture>
+              <p className="px-3 pb-2 pt-3 text-xs text-ink/75">
                 The same product shown in the ecosystem above — here as an engineering surface.
               </p>
             </div>
@@ -184,7 +187,7 @@ const EngineeringShowcase = () => {
                 transition={{ duration: 0.25 }}
                 className="mt-5 rounded-[28px] bg-paper p-6"
               >
-                <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink/60">
+                <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink/75">
                   {active.tech}
                 </p>
                 <p className="mt-3 leading-relaxed text-ink/80">{active.detail}</p>
@@ -195,7 +198,7 @@ const EngineeringShowcase = () => {
                     className="overflow-x-auto whitespace-pre font-mono text-[12px] leading-relaxed text-sun"
                   />
                 </div>
-                <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-ink/60">
+                <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-ink/75">
                   Illustrative sample code.
                 </p>
               </motion.div>

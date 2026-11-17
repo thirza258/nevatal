@@ -154,13 +154,13 @@ const BlogPage = () => {
           transition={{ duration: 0.8, ease: easeOut, delay: 0.5 }}
           className="mt-10 flex max-w-xl items-center gap-2 rounded-full border border-ink/15 bg-paper p-1.5 shadow-[0_24px_50px_-34px_rgba(11,11,13,0.45)] transition-colors focus-within:border-ink"
         >
-          <Search className="ml-3 h-5 w-5 flex-none text-ink/60" />
+          <Search className="ml-3 h-5 w-5 flex-none text-ink/75" />
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search the archive…"
             aria-label="Search articles"
-            className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-ink placeholder:text-ink/45 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-ink placeholder:text-ink/70 focus:outline-none"
           />
           <button type="submit" className="btn btn-ink !px-5 !py-2.5">
             Search
@@ -171,7 +171,7 @@ const BlogPage = () => {
       <section className="bg-paper pb-24">
         <div className="container-x scroll-mt-28" ref={resultsRef}>
           <div className="flex flex-col gap-4 border-y border-ink/10 py-6">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink/60">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink/75">
               {status === 'ready'
                 ? `${formatNumber(total)} article${total === 1 ? '' : 's'}`
                 : 'Loading the archive'}
@@ -226,7 +226,7 @@ const BlogPage = () => {
                 <p className="mt-5 font-display text-2xl font-semibold tracking-[-0.03em]">
                   The archive is taking a break.
                 </p>
-                <p className="mx-auto mt-2 max-w-lg text-sm text-ink/60">
+                <p className="mx-auto mt-2 max-w-lg text-sm text-ink/75">
                   WordPress could not be reached from this browser. The posts are still online at
                   wordpress.nevatal.id.
                 </p>
@@ -245,7 +245,7 @@ const BlogPage = () => {
               <div className="rounded-[30px] border border-ink/10 p-10 text-center sm:col-span-2 lg:col-span-3">
                 <Shape kind="squiggle" color="cobalt" className="mx-auto h-12 w-16" />
                 <p className="mt-5 font-display text-2xl font-semibold tracking-[-0.03em]">No articles found.</p>
-                <p className="mt-2 text-sm text-ink/60">Try a different search term or browse every category.</p>
+                <p className="mt-2 text-sm text-ink/75">Try a different search term or browse every category.</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -272,7 +272,7 @@ const BlogPage = () => {
               >
                 <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Previous</span>
               </button>
-              <p className="font-mono text-[11px] text-ink/60 sm:text-xs">
+              <p className="font-mono text-[11px] text-ink/75 sm:text-xs">
                 Page {page} of {totalPages}
               </p>
               <button

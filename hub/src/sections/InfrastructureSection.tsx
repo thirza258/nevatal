@@ -159,7 +159,7 @@ const InfrastructureSection = () => {
                   color="sun"
                   className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 opacity-90"
                 />
-                <p className="relative font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink/60">
+                <p className="relative font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink/75">
                   {active.tech}
                 </p>
                 <h3 className="relative mt-3 font-display text-3xl font-semibold tracking-[-0.035em]">

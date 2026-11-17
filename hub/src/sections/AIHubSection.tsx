@@ -117,7 +117,7 @@ const AIHubSection = () => {
               squiggle
               className="h-section mt-6"
             />
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink/65">
+            <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink/80">
               A single workspace for prompting, writing, translation, documents and data — each
               tool asks for exactly what it needs, on the key you bring.
             </p>
@@ -131,7 +131,7 @@ const AIHubSection = () => {
                 </motion.span>
                 <div>
                   <p className="font-semibold tracking-[-0.01em]">{feature.title}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-ink/60">{feature.body}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink/75">{feature.body}</p>
                 </div>
               </StaggerItem>
             ))}
@@ -163,10 +163,10 @@ const AIHubSection = () => {
                 <span className="h-2.5 w-2.5 rounded-full bg-cobalt" />
                 <span className="h-2.5 w-2.5 rounded-full bg-plum" />
               </span>
-              <span className="rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/70">
+              <span className="rounded-full bg-paper-2 px-3 py-1 font-mono text-[11px] text-ink/75">
                 chat.nevatal.id
               </span>
-              <span className="ml-auto hidden font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/60 sm:inline">
+              <span className="ml-auto hidden font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/75 sm:inline">
                 Local sample
               </span>
             </div>
@@ -181,7 +181,7 @@ const AIHubSection = () => {
                     aria-pressed={isActive}
                     onClick={() => setActiveId(tool.id)}
                     className={`relative flex-none whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                      isActive ? 'text-paper' : 'text-ink/65 hover:text-ink'
+                      isActive ? 'text-paper' : 'text-ink/75 hover:text-ink'
                     }`}
                   >
                     {isActive && (
@@ -211,7 +211,7 @@ const AIHubSection = () => {
                     {active.prompt}
                   </div>
                   <div className="mt-4 max-w-[94%] rounded-[22px] rounded-bl-md bg-sun-soft px-4 py-3.5 text-sm text-ink/85">
-                    <p className="flex items-center gap-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/70">
+                    <p className="flex items-center gap-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink/75">
                       <Shape kind="sparkle" color="ink" className="h-3 w-3" />
                       {active.label} · sample response
                     </p>
@@ -220,7 +220,7 @@ const AIHubSection = () => {
                 </motion.div>
               </AnimatePresence>
 
-              <div className="mt-5 flex min-w-0 items-center justify-between rounded-full border border-ink/10 py-1.5 pl-4 pr-1.5 font-mono text-[11px] text-ink/60">
+              <div className="mt-5 flex min-w-0 items-center justify-between rounded-full border border-ink/10 py-1.5 pl-4 pr-1.5 font-mono text-[11px] text-ink/75">
                 <span className="min-w-0 truncate">{active.meta}</span>
                 <span className="ml-2 flex-none whitespace-nowrap rounded-full bg-sun px-3 py-1 font-medium text-ink">
                   Run
@@ -228,7 +228,7 @@ const AIHubSection = () => {
               </div>
             </div>
           </div>
-          <p className="mt-4 text-center font-mono text-[11px] text-ink/60">
+          <p className="mt-4 text-center font-mono text-[11px] text-ink/75">
             Interactive sample with local data — nothing is sent to a model from this page.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

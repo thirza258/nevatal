@@ -77,7 +77,7 @@ const LearningSection = () => {
             <Shape kind="flower" color="sun" className="h-4 w-4" /> Learning
           </p>
           <Heading text="Learn by building." accent="building." className="h-section mt-6" />
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/65">
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/80">
             Technical concepts explained through working examples — courses, labs and practice that
             stay useful even when you do not have an API key.
           </p>
@@ -92,7 +92,7 @@ const LearningSection = () => {
                   aria-pressed={isActive}
                   onClick={() => setActiveId(topic.id)}
                   className={`relative flex w-full items-center justify-between gap-3 border-b border-ink/10 px-4 py-5 text-left transition-colors ${
-                    isActive ? 'text-ink' : 'text-ink/60 hover:text-ink'
+                    isActive ? 'text-ink' : 'text-ink/75 hover:text-ink'
                   }`}
                 >
                   {isActive && (
@@ -126,7 +126,7 @@ const LearningSection = () => {
             />
             <div className="relative overflow-hidden rounded-[32px] border border-ink/10 bg-paper shadow-[0_50px_100px_-60px_rgba(11,11,13,0.5)]">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-ink/10 px-5 py-3.5 sm:px-6 sm:py-4">
-                <span className="min-w-0 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink/60 sm:text-[11px] sm:tracking-[0.14em]">
+                <span className="min-w-0 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink/75 sm:text-[11px] sm:tracking-[0.14em]">
                   {active.course}
                 </span>
                 <span className="flex-none rounded-full bg-sun-soft px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink">
@@ -152,7 +152,7 @@ const LearningSection = () => {
                     {active.output}
                   </div>
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-xs text-ink/60">Sample content from the live curriculum.</p>
+                    <p className="text-xs text-ink/75">Sample content from the live curriculum.</p>
                     <a href={active.url} target="_blank" rel="noopener noreferrer" className="btn btn-ink !py-2.5">
                       Open {active.project} <ArrowUpRight className="h-4 w-4" />
                     </a>
