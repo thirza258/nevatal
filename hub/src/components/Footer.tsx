@@ -164,6 +164,8 @@ const Footer = () => (
             { label: 'LeetBug', href: 'https://leetbug.nevatal.id', external: true },
             { label: 'Recommendica', href: 'https://recommendica.nevatal.id', external: true },
             { label: 'Uptime Medics', href: 'https://uptime.nevatal.id', external: true },
+            { label: 'AdControl Learning', href: 'https://marketing.nevatal.id/', external: true },
+            { label: 'Nevatal Cloud', href: 'https://cloud.nevatal.id/', external: true },
           ]}
         />
 

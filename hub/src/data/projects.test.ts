@@ -21,4 +21,16 @@ describe('project catalog', () => {
   it('does not surface the telenursing work', () => {
     expect(PROJECTS.some((project) => /telenursing/i.test(`${project.name} ${project.slug}`))).toBe(false)
   })
+
+  it('includes AdControl Learning and Nevatal Cloud with demo link', () => {
+    const marketing = PROJECTS.find((p) => p.slug === 'adcontrol-learning')
+    expect(marketing).toBeDefined()
+    expect(marketing?.url).toBe('https://marketing.nevatal.id/')
+
+    const cloud = PROJECTS.find((p) => p.slug === 'nevatal-cloud')
+    expect(cloud).toBeDefined()
+    expect(cloud?.url).toBe('https://cloud.nevatal.id/')
+    expect(cloud?.demoUrl).toBe('https://demo.nevatal.id/')
+    expect(cloud?.note).toContain('weekends')
+  })
 })

@@ -20,10 +20,10 @@ const COMPONENTS: Array<{
   {
     id: 'edge',
     label: 'Edge & delivery',
-    tech: 'Cloudflare Tunnel',
+    tech: 'Cloudflare Tunnel · Bare-Metal Nodes',
     detail:
-      'Public hostnames terminate at the edge and tunnel back to services on hardware we control — no inbound ports for each app.',
-    link: { label: 'Uptime Medics', href: 'https://uptime.nevatal.id' },
+      'Public hostnames terminate at the edge and tunnel back to bare-metal servers and Proxmox compute we control.',
+    link: { label: 'Nevatal Cloud', href: 'https://cloud.nevatal.id/' },
     shape: 'arch',
   },
   {

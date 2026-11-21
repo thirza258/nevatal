@@ -159,6 +159,24 @@ const ProjectPreview = ({
             })}
           </div>
 
+          {project.note && (
+            <span className="hidden lg:inline-block rounded-full bg-sun-soft px-2.5 py-1 font-mono text-[10px] text-ink/80">
+              {project.note}
+            </span>
+          )}
+
+          {project.demoUrl && (
+            <a
+              href={project.demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-none items-center gap-1 rounded-full border border-ink/20 px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink transition hover:border-ink hover:bg-ink hover:text-paper"
+            >
+              <span className="hidden sm:inline">Demo</span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </a>
+          )}
+
           <a
             href={url}
             target="_blank"

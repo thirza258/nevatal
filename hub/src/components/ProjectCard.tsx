@@ -56,6 +56,17 @@ const ProjectCard = ({ project, showScreenshot = false }: { project: Project; sh
             </span>
             {project.url ? (
               <span className="flex items-center gap-1.5">
+                {project.demoUrl && (
+                  <a
+                    href={project.demoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Visit demo for ${project.name}`}
+                    className="flex items-center gap-1 rounded-full border border-ink/15 px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink/75 transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+                  >
+                    Demo
+                  </a>
+                )}
                 <motion.button
                   ref={previewTriggerRef}
                   type="button"
@@ -88,6 +99,12 @@ const ProjectCard = ({ project, showScreenshot = false }: { project: Project; sh
           <h3 className="mt-5 font-display text-2xl font-semibold tracking-[-0.035em]">{project.name}</h3>
           <p className="mt-1.5 font-medium text-ink/75">{project.tagline}</p>
           <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-ink/75">{project.description}</p>
+          {project.note && (
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-sun/60 bg-sun-soft/60 px-3 py-1.5 text-xs text-ink/85">
+              <span className="inline-block h-2 w-2 flex-none rounded-full bg-sun animate-pulse" />
+              <span>{project.note}</span>
+            </div>
+          )}
 
           <div className="mt-auto flex flex-wrap gap-1.5 pt-6">
             {project.tags.map((tag) => (

@@ -16,9 +16,11 @@ export interface Project {
   category: ProjectCategory
   tags: string[]
   url?: string
+  demoUrl?: string
   featured?: boolean
   /** Uses AI or ML in the product itself — these headline the Applied AI section. */
   ai?: boolean
+  note?: string
 }
 
 export const PROJECTS: Project[] = [
@@ -184,7 +186,20 @@ export const PROJECTS: Project[] = [
       'Free, practical courses on digital marketing, SEO, GEO, SEM, affiliate marketing, analytics and conversion optimization — from AdControl Learning.',
     category: 'Learning',
     tags: ['Courses', 'Marketing'],
-    url: 'https://marketing.nevatal.id',
+    url: 'https://marketing.nevatal.id/',
+  },
+  {
+    name: 'Nevatal Cloud',
+    slug: 'nevatal-cloud',
+    tagline: 'Bare-metal cloud compute, game servers & Android environments.',
+    description:
+      'High-performance developer cloud running on Dell PowerEdge R640 bare-metal nodes and Proxmox VE 8. Deploy KVM Linux VPS, Minecraft & Terraria game servers, Waydroid Android containers, and AI Cloud Agent in seconds. Currently in active development and always turned on during weekends; visit demo.nevatal.id for full details and preview.',
+    category: 'Tools & Ops',
+    tags: ['Bare-Metal', 'Proxmox', 'Linux VPS', 'Game Servers'],
+    url: 'https://cloud.nevatal.id/',
+    demoUrl: 'https://demo.nevatal.id/',
+    note: 'In active development · Live on weekends (visit demo.nevatal.id for details)',
+    featured: true,
   },
   {
     name: 'SDG Country Profiles',

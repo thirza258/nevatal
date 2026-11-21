@@ -56,6 +56,7 @@ const CAPABILITIES: Capability[] = [
     links: [
       { label: 'LeetBug', href: 'https://leetbug.nevatal.id' },
       { label: 'Gemini Japanese', href: 'https://hira.nevatal.id' },
+      { label: 'AdControl Learning', href: 'https://marketing.nevatal.id/' },
     ],
     shape: 'flower',
     color: 'plum',
@@ -66,6 +67,7 @@ const CAPABILITIES: Capability[] = [
     title: 'Infrastructure',
     body: 'Deployment, automation, observability and self-hosted systems that keep independent projects online.',
     links: [
+      { label: 'Nevatal Cloud', href: 'https://cloud.nevatal.id/' },
       { label: 'Uptime Medics', href: 'https://uptime.nevatal.id' },
       { label: 'VideoTex', href: 'https://video.nevatal.id' },
     ],
